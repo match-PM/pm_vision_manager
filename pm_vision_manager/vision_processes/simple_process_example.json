@@ -1,0 +1,66 @@
+{
+    "vision_process_name": "simple_process_example",
+    "id_process": "001",
+    "vision_pipeline": [
+        {
+            "Set_camera_exposure_time": {
+                "active": false,
+                "value": 10000.0
+            }
+        },
+        {
+            "BGR2GRAY": {
+                "active": true
+            }
+        },
+        {
+            "threshold": {
+                "active": true,
+                "thresh": 20,
+                "maxval": 255,
+                "type": "THRESH_BINARY"
+            }
+        },
+        {
+            "Canny": {
+                "active": false,
+                "threshold1": 100,
+                "threshold2": 200,
+                "aperatureSize": 5,
+                "L2gradient": "nothing"
+            }
+        },
+        {
+            "ROI": {
+                "active": true,
+                "ROI_center_x": 300,
+                "ROI_center_y": 0,
+                "ROI_height": 1000,
+                "ROI_width": 1000
+            }
+        },
+        {
+            "Morphology_Ex_Opening": {
+                "active": false,
+                "kernelsize": 5
+            }
+        },
+        {
+            "select_Area": {
+                "active": true,
+                "mode": "RETR_LIST",
+                "method": "CHAIN_APPROX_SIMPLE",
+                "max_area": 200000,
+                "min_area": 20
+            }
+        },
+        {
+            "minEnclosingCircle": {
+                "active": true,
+                "draw_circles": true,
+                "mode": "RETR_EXTERNAL",
+                "method": "CHAIN_APPROX_SIMPLE"
+            }
+        }
+    ]
+}

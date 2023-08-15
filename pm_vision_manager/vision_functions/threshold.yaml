@@ -1,0 +1,18 @@
+function_name: "threshold"
+description: "BlaBla"
+param:
+  - param_name: "active"
+    type: "bool"
+
+  - param_name: "thresh"
+    type: "int"
+    min_val: 0
+    max_val: 255
+
+  - param_name: "maxval"
+    type: "fix"
+    value: 255
+
+  - param_name: "type"
+    type: "fix"
+    value: "THRESH_BINARY"

@@ -1,0 +1,10 @@
+function_name: "Set_camera_exposure_time"
+description: "BlaBla"
+param:
+  - param_name: "active"
+    type: "bool"
+
+  - param_name: "value"
+    type: "int"
+    min_val: 0
+    max_val: 255

@@ -1,0 +1,25 @@
+function_name: "ROI"
+description: "BlaBla"
+param:
+  - param_name: "active"
+    type: "bool"
+
+  - param_name: "ROI_center_x"
+    type: "float"
+    min_val: "-inf"
+    max_val: "inf"
+
+  - param_name: "ROI_center_y"
+    type: "float"
+    min_val: "-inf"
+    max_val: "inf"
+    
+  - param_name: "ROI_height"
+    type: "int"
+    min_val: "-inf"
+    max_val: "inf"
+    
+  - param_name: "ROI_width"
+    type: "int"
+    min_val: "-inf"
+    max_val: "inf"

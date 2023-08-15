@@ -1,0 +1,17 @@
+function_name: "minEnclosingCircle"
+description: "BlaBla"
+param:
+  - param_name: "active"
+    type: "bool"
+
+  - param_name: "draw_circles"
+    type: "bool"
+
+  - param_name: "mode"
+    type: "fix"
+    value: "RETR_EXTERNAL"
+
+  - param_name: "method"
+    type: "fix"
+    value: "CHAIN_APPROX_SIMPLE"
+

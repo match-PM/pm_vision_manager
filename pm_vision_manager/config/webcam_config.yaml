@@ -1,0 +1,15 @@
+camera_params:
+  cameraname: 'Webcam'
+  pixelsize: 1 # in um
+  magnification: 1 
+  camera_axis_1: 'x'
+  camera_axis_2: 'y'
+  camera_axis_1_angle: 0                # Starting from normal 'x' in math. positive direction
+  camera_axis_2_angle: '+'              # '+' -> 90 degree; '-' -> -90 degree 
+  subscription_topic: 'video_frames'
+  coaxial_light:
+    channel: 'message'
+    name: 'blabla/camera1_ring_light'
+    type: 'bool'
+    minVal: 100
+    maxVal: 0

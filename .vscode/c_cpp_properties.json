@@ -1,0 +1,30 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/niklas/ros2_ws/install/spawn_object_interfaces/include/**",
+        "/home/niklas/ros2_ws/install/pm_robot_interfaces/include/**",
+        "/home/niklas/ros2_ws/install/pm_moveit_interfaces/include/**",
+        "/home/niklas/ros2_ws/install/pm_hardware_interface/include/**",
+        "/home/niklas/ros2_ws/install/pm_client/include/**",
+        "/home/niklas/ros2_ws/install/open62541/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/niklas/ros2_ws/src/match_pm_robot/open62541/include/**",
+        "/home/niklas/ros2_ws/src/match_pm_robot/pm_client/include/**",
+        "/home/niklas/ros2_ws/src/match_pm_robot/pm_hardware_interface/include/**",
+        "/home/niklas/ros2_ws/src/test_node_1/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

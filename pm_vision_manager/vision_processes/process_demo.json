@@ -1,0 +1,192 @@
+{
+    "vision_process_name": "process_demo",
+    "id_process": "001",
+    "vision_pipeline": [
+        {
+            "Draw_Grid": {
+                "active": true,
+                "grid_spacing": 200
+            }
+        },
+        {
+            "Set_camera_exposure_time": {
+                "active": false,
+                "value": 10000.0
+            }
+        },
+        {
+            "Draw_CS": {
+                "active": true
+            }
+        },
+        {
+            "Blur": {
+                "active": false,
+                "kernelsize": 3,
+                "type": "GaussianBlur"
+            }
+        },
+        {
+            "BGR2GRAY": {
+                "active": true
+            }
+        },
+        {
+            "save_image": {
+                "active": false,
+                "prefix": "_7",
+                "with_vision_elements": false,
+                "save_in_cross_val": false
+            }
+        },
+        {
+            "threshold": {
+                "active": true,
+                "thresh": 20,
+                "maxval": 255,
+                "type": "THRESH_BINARY"
+            }
+        },
+        {
+            "adaptiveThreshold": {
+                "active": false,
+                "maxValue": 100,
+                "adaptiveMethod": "ADAPTIVE_THRESH_GAUSSIAN_C",
+                "thresholdType": "THRESH_BINARY",
+                "blockSize": 11,
+                "C": 2
+            }
+        },
+        {
+            "Canny": {
+                "active": false,
+                "threshold1": 100,
+                "threshold2": 200,
+                "aperatureSize": 5,
+                "L2gradient": "nothing"
+            }
+        },
+        {
+            "ROI": {
+                "active": true,
+                "ROI_center_x": 300,
+                "ROI_center_y": 0,
+                "ROI_height": 1000,
+                "ROI_width": 1000
+            }
+        },
+        {
+            "HoughLinesP": {
+                "active": false,
+                "threshold": 10,
+                "minLineLength": 50,
+                "maxLineGap": 5
+            }
+        },
+        {
+            "Horizontal": {
+                "active": false,
+                "h_kernelsize": 100
+            }
+        },
+        {
+            "Vertical": {
+                "active": false,
+                "v_kernelsize": 100
+            }
+        },
+        {
+            "findContours": {
+                "active": false,
+                "draw_contours": false,
+                "mode": "RETR_EXTERNAL",
+                "method": "CHAIN_APPROX_SIMPLE",
+                "fill": true
+            }
+        },
+        {
+            "Morphology_Ex_Opening": {
+                "active": false,
+                "kernelsize": 5
+            }
+        },
+        {
+            "Morphology_Ex_Closing": {
+                "active": false,
+                "kernelsize": 3
+            }
+        },
+        {
+            "Morphology_Ex_Gradient": {
+                "active": false,
+                "kernelsize": 7
+            }
+        },
+        {
+            "select_Area": {
+                "active": true,
+                "mode": "RETR_LIST",
+                "method": "CHAIN_APPROX_SIMPLE",
+                "max_area": 450000,
+                "min_area": 1000000
+            }
+        },
+        {
+            "bitwise_not": {
+                "active": true
+            }
+        },
+        {
+            "Canny": {
+                "active": true,
+                "threshold1": 100,
+                "threshold2": 200,
+                "aperatureSize": 5,
+                "L2gradient": "nothing"
+            }
+        },
+        {
+            "HoughCircles": {
+                "active": true,
+                "draw_circles": true,
+                "method": "HOUGH_GRADIENT",
+                "dp": 50,
+                "minDist": 1000,
+                "param1": 150,
+                "param2": 9,
+                "minRadius": 330,
+                "maxRadius": 340
+            }
+        },
+        {
+            "minEnclosingCircle": {
+                "active": false,
+                "draw_circles": true,
+                "mode": "RETR_EXTERNAL",
+                "method": "CHAIN_APPROX_SIMPLE"
+            }
+        },
+        {
+            "save_image": {
+                "active": false,
+                "prefix": "_checktest",
+                "with_vision_elements": false,
+                "save_in_cross_val": false
+            }
+        },
+        {
+            "Errosion": {
+                "active": false,
+                "kernelsize": 5,
+                "iterations": 1
+            }
+        },
+        {
+            "Dilation": {
+                "active": false,
+                "kernelsize": 5,
+                "iterations": 1
+            }
+        }
+    ]
+}

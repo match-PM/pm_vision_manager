@@ -1,0 +1,22 @@
+function_name: "select_Area"
+description: "BlaBla"
+param:
+  - param_name: "active"
+    type: "bool"
+
+  - param_name: "mode"
+    type: "fix"
+    value: "RETR_LIST"
+
+  - param_name: "method"
+    type: "fix"
+    value: "CHAIN_APPROX_SIMPLE"
+
+  - param_name: "max_area"
+    min_val: 0
+    max_val: "inf"  
+    
+  - param_name: "min_area"
+    type: "int"
+    min_val: 0
+    max_val: "max_area"

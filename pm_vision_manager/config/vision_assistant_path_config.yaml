@@ -1,0 +1,6 @@
+vision_assistant_path_config:
+  process_library_path: "/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_processes/"
+  vision_database_path: "/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_db/"
+  camera_config_path: "/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/config/"
+  vision_assistant_config: "/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/config/vision_assistant_config.yaml"
+

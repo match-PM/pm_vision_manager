@@ -1,0 +1,4 @@
+function_name: "BGR2GRAY"
+param:
+  - param_name: "active"
+    type: "bool"
