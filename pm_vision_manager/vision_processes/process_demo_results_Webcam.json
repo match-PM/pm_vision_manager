@@ -1,1 +1,1 @@
-{"vision_process_name": "process_demo.json", "exec_timestamp": "26_09_2023_14_53_54", "vision_OK": false, "process_UID": "myassistant", "VisionOK_cross_val": false, "image_name": "001_08_05_2023_20_09_28.png", "vision_crossval_OK": false, "failed_images_cross_val": ["001_08_05_2023_20_09_28.png"], "vision_results": []}
+{"vision_process_name": "process_demo.json", "exec_timestamp": "29_09_2023_17_48_18", "vision_OK": true, "process_UID": "None", "VisionOK_cross_val": true, "failed_images_cross_val": [], "vision_results": []}

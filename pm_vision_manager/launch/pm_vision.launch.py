@@ -14,6 +14,7 @@ def generate_launch_description():
         executable='vision_node',
         name='PM_Vision_node',
         #parameters=[{'param_name': LaunchConfiguration('my_param')}]
+        emulate_tty=True
     )
     
     ld = LaunchDescription()

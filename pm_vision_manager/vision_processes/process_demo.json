@@ -124,21 +124,21 @@
         },
         {
             "select_Area": {
-                "active": true,
+                "active": false,
                 "mode": "RETR_LIST",
                 "method": "CHAIN_APPROX_SIMPLE",
-                "max_area": 450000,
+                "max_area": 100,
                 "min_area": 1000000
             }
         },
         {
             "bitwise_not": {
-                "active": true
+                "active": false
             }
         },
         {
             "Canny": {
-                "active": true,
+                "active": false,
                 "threshold1": 100,
                 "threshold2": 200,
                 "aperatureSize": 5,
@@ -147,7 +147,7 @@
         },
         {
             "HoughCircles": {
-                "active": true,
+                "active": false,
                 "draw_circles": true,
                 "method": "HOUGH_GRADIENT",
                 "dp": 50,

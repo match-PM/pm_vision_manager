@@ -21,7 +21,6 @@ import time
 from pathlib import Path
 
 from pm_vision_manager.va_py_modules.vision_utils import image_resize, degrees_to_rads, rads_to_degrees, get_screen_resolution, rotate_image
-from pm_vision_manager.va_py_modules.vision_utils import image_resize
  
 def process_image(self,received_frame,_process_pipeline_list):
     self.img_width  = received_frame.shape[1]
@@ -48,8 +47,9 @@ def process_image(self,received_frame,_process_pipeline_list):
             case "Set_camera_exposure_time":
               active = function_parameter['active']
               value = function_parameter['value']
-              if active:
-                self.set_camera_exposure_time(value)
+              if active and not self.cross_val_running:
+                self.set_camera_exposure_time(value)  
+              break
                             
             case "threshold":
               active = function_parameter['active']

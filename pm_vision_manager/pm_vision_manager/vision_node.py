@@ -60,9 +60,12 @@ class VisionNode(Node):
       camera_config_filename=request.camera_config_filename,
       db_cross_val_only=request.db_cross_val_only,
       process_UID=request.process_uid,
-      image_display_time_in_execution_mode=request.image_display_time,
+      image_display_time_visualization=request.image_display_time,
       open_process_file=False,
-      cross_validate_in_execution=request.cross_validate_in_execution)
+      run_cross_validation= request.run_cross_validation,
+      show_image_on_error = False,
+      step_through_images = False
+      )
     
     while(not VisionProcess.delete_this_object):
       time.sleep(0.5)
@@ -81,15 +84,20 @@ class VisionNode(Node):
       camera_config_filename=request.camera_config_filename,
       db_cross_val_only=request.db_cross_val_only,
       process_UID=request.process_uid,
-      image_display_time_in_execution_mode=-1,
+      image_display_time_visualization=-1,
       open_process_file=request.open_process_file,
-      cross_validate_in_execution=False)
+      run_cross_validation = request.run_cross_validation,
+      show_image_on_error = request.show_image_on_error,
+      step_through_images = request.step_through_images
+      )
     
     self.running_vision_assistants.append(request.process_uid)
 
     while(not VisionProcess.stop_image_subscription):
       time.sleep(0.1)
       if not request.process_uid in self.running_vision_assistants:
+        VisionProcess.set_display_time_for_exit()
+        time.sleep(0.5)
         VisionProcess.stop_image_subscription = True
 
     response.success = VisionProcess.VisionOK

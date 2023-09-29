@@ -1,7 +1,4 @@
 vision_assistant_config:
-  cross_validation: true
-  image_display_time_in_execution_mode: 5
   scale_ouput_window_to_screen_size: true
-  show_image_on_error: true
   show_input_and_output_image: true
-  step_though_images: true
+

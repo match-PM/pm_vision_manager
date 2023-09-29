@@ -2,6 +2,9 @@ string process_filename
 string camera_config_filename
 string process_uid
 bool db_cross_val_only
+bool run_cross_validation
+bool show_image_on_error
+bool step_through_images
 bool open_process_file
 ---
 bool success

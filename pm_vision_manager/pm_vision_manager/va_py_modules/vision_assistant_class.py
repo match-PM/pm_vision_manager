@@ -15,6 +15,7 @@ import math
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 from math import pi
 import time
+from pynput import keyboard
 from pathlib import Path
 import sys
 from functools import partial
@@ -34,9 +35,11 @@ class VisionProcessClass():
                camera_config_filename,
                db_cross_val_only,
                process_UID,
-               image_display_time_in_execution_mode,
+               image_display_time_visualization,
                open_process_file,
-               cross_validate_in_execution
+               run_cross_validation,
+               show_image_on_error,
+               step_through_images
                ):
     """
     Class constructor to set up the node
@@ -50,18 +53,19 @@ class VisionProcessClass():
     self.path_config_path = package_share_directory + '/vision_assistant_path_config.yaml'
 
     self.launch_as_assistant = launch_as_assistant
-    self.image_display_time_in_execution_mode = image_display_time_in_execution_mode
+    self.image_display_time_visualization = image_display_time_visualization
 
     if self.launch_as_assistant:
       self.vision_node .get_logger().info('Starting node in assistant mode!')
+      self.image_display_time_visualization = 10        # Set the display time in assistant mode
     else:
       self.vision_node .get_logger().info('Starting node in processing mode!')
-      if self.image_display_time_in_execution_mode <= 0:
-        self.image_display_time_in_execution_mode = 5
+      if self.image_display_time_visualization <= 0:
+        self.image_display_time_visualization = 5
 
     self.vision_node .get_logger().info('Current vision process: ' + self.process_filename)
     self.vision_node .get_logger().info('Current process ID: ' + self.process_UID)
-    self.cross_validate_in_execution = cross_validate_in_execution
+    self.run_cross_validation = run_cross_validation
     timestamp = datetime.now()
     self.screen_resolution=get_screen_resolution()
     self.screen_height=int(self.screen_resolution["height"].decode('UTF-8'))
@@ -71,7 +75,15 @@ class VisionProcessClass():
     # Used to convert between ROS and OpenCV images
 
     self.process_start_time_ms = self.vision_node.get_clock().now()
-    
+
+    self.show_image_on_error = False
+    self.step_through_images = False
+    self.show_cross_validation_images = False # This variable is used for the display of images in cross validation mode
+
+    if launch_as_assistant:
+      self.show_image_on_error=show_image_on_error
+      self.step_through_images=step_through_images
+
     self.load_path_config()
     self.load_assistant_config()
     self.check_process_file_existence()
@@ -92,6 +104,7 @@ class VisionProcessClass():
 
     if db_cross_val_only:
       self.cycle_though_db()
+
     else:
       self.subscription = vision_node.create_subscription(
         Image, 
@@ -118,34 +131,106 @@ class VisionProcessClass():
       self.vision_node.destroy_subscription(self.subscription)
       self.delete_this_object = True
       # if in assist mode display time is set to -1 as default. Time has to be set to a positive value to close the image
-      if self.launch_as_assistant:
-        self.image_display_time_in_execution_mode = 0.5
     
     # run crossvalidation
-    self.run_crossvalidation()        # Cossvalidation needs to run before the received image is processed, otherwise results dict will contain results from cossvalidation
+    self.execute_crossvalidation()        # Cossvalidation needs to run before the received image is processed, otherwise results dict will contain results from cossvalidation
 
     display_image = process_image(self,received_frame,self.process_pipeline_list)
 
     # Show image
-    # CHeck if image is already in image list of node
+    self.apply_image_for_vizualization(self.window_name,display_image,self.image_display_time_visualization)
+
+    if self.stop_image_subscription:
+      self.vision_node.get_logger().info('Vision Process Ended!')     
+
+  def apply_image_for_vizualization(self, window_name, image, display_time):
+    #Check if image is already in image list of node
     found_tuples = [(index,item) for index, item in enumerate(self.vision_node.image_list) if self.window_name == item[0]]
+
+    image_display_start_time = self.vision_node.get_clock().now()
 
     # if not in image list, add image to image list
     if not found_tuples:
-      self.vision_node.image_list.append((self.window_name, display_image, self.image_display_time_in_execution_mode, self.vision_node.get_clock().now()))
+      self.vision_node.image_list.append((window_name, image, display_time, image_display_start_time))
     
     # if in image list delete it and reappend to list
     else:
       for index, item in found_tuples:
         del self.vision_node.image_list[index]
-        image_display_start_time = self.vision_node.get_clock().now()
-        self.vision_node.image_list.append((self.window_name, display_image, self.image_display_time_in_execution_mode, image_display_start_time))
-    
-    if self.stop_image_subscription:
-      self.vision_node.get_logger().info('Vision Process Ended!')     
+        self.vision_node.image_list.append((window_name, image, display_time, image_display_start_time))
 
+  def crossvalidation_keyboard_interrupt(self, key):
+    if key == keyboard.Key.space:
+      self.next_image = True
+      self.show_cross_validation_images=True
+      time.sleep(0.75)
+      self.vision_node.get_logger().info('SPACE PRESSED!')
 
-      
+  def execute_crossvalidation(self):
+    # Starting cross validation with images in folder
+    #keyboard_listener.join()
+
+    if self.run_cross_validation:
+      self.cross_val_failed_images.clear()
+      self.cross_val_running = True
+      self.counter_error_cross_val=0
+      self.VisionOK_cross_val=True
+      print("----------------------------")
+      print("Starting Cross Validation...")
+      try:
+        self.next_image = False
+        if self.launch_as_assistant and (self.show_image_on_error or self.step_through_images):
+          keyboard_listener=keyboard.Listener(on_press=self.crossvalidation_keyboard_interrupt)
+          keyboard_listener.start()
+        # Get number of images to be processed
+        numb_images_cross_val=len(fnmatch.filter(os.listdir(self.process_db_path),'*.png'))
+        print(str(numb_images_cross_val)+" images for crossvalidation")
+        for image_in_folder in os.listdir(self.process_db_path):
+          if (image_in_folder.endswith(".png")):
+            image=cv2.imread(self.process_db_path+"/"+image_in_folder)
+            print("----------------------------")
+            print("Processing image: " + image_in_folder)
+            # Calculate VisionOK on image
+            self.load_process_file()
+            self.crossval_image_name = image_in_folder
+            display_image = process_image(self,image,self.process_pipeline_list)
+
+            if not self.VisionOK:
+              self.VisionOK_cross_val=False
+              self.cross_val_failed_images.append(image_in_folder)
+
+            # Display image if in assist mode and (step_though images or an error accured)
+            print(self.launch_as_assistant)
+            print(self.VisionOK)
+            print(self.show_image_on_error)
+            print(self.step_through_images)
+            if ((not self.VisionOK and self.show_image_on_error) or self.step_through_images) and self.launch_as_assistant and self.show_cross_validation_images: 
+              self.next_image=False
+              while(not self.next_image):
+                self.load_process_file()
+                display_image = process_image(self,image,self.process_pipeline_list)
+                self.apply_image_for_vizualization(self.window_name, display_image,self.image_display_time_visualization)
+                time.sleep(0.5)
+              
+        if self.counter_error_cross_val==0:
+          self.vision_node.get_logger().info("Crossvalidation exited with no Error!")
+
+        else:
+          print("Crossvalidation error!")
+          self.vision_node.get_logger().warning('Crossvalidation had errors! ' + str(self.counter_error_cross_val)+"/"+str(numb_images_cross_val)+" images had errors!")
+        print(self.cross_val_failed_images)
+
+        if self.launch_as_assistant and (self.show_image_on_error or self.step_through_images):
+          keyboard_listener.stop()
+
+      except:
+        self.vision_node.get_logger().error("No images in DB yet or other error in execution of cross validation!")
+      print("Cross Validation Ended...")
+      print("----------------------------")
+
+      self.show_cross_validation_images = False       # reset so that published image is displayed
+      self.cross_val_running = False
+
   def load_path_config(self):
       try:
         f = open(self.path_config_path)
@@ -166,16 +251,6 @@ class VisionProcessClass():
       f = open(self.vision_assistant_config)
       FileData = yaml.load(f,Loader=SafeLoader)
       config=FileData["vision_assistant_config"]
-      # The setting for crossvalidation is set from yaml for assistant mode and via parameter (default False) for execution mode
-      if not self.launch_as_assistant:
-        self.run_cross_validation = self.cross_validate_in_execution
-        self.show_image_on_error = False
-        self.step_though_images = False
-      else:
-        self.run_cross_validation=config["cross_validation"]
-        self.show_image_on_error=config["show_image_on_error"]
-        self.step_though_images=config["step_though_images"]
-
       self.show_input_and_output_image=config["show_input_and_output_image"]
       self.scale_ouput_window_to_screen_size=config["scale_ouput_window_to_screen_size"]      
       f.close()
@@ -184,12 +259,17 @@ class VisionProcessClass():
       self.vision_node.get_logger().error('Error opening vision assistant configuration: ' + str(self.vision_assistant_config)+ "!")
   
   def open_process_file_in_vcode(self):
-      try:
-          Comand = 'code ' + self.process_file_path
-          os.system(Comand)
-      except Exception as e:
-          print(e)
-          print("Process File could not be opened")
+    try:
+      Comand = 'code ' + self.process_file_path
+      self.vision_node.get_logger().info(Comand)
+      os.system(Comand)
+      self.vision_node.get_logger().info("Process File opened!")
+    except Exception as e:
+      self.vision_node.get_logger().error(e)
+      self.vision_node.get_logger().error("Process File could not be opened!")
+
+  def set_display_time_for_exit(self):  # this function is used when the vision assistant instance is ended. 
+    self.image_display_time_visualization = 1
 
   def load_camera_config(self):
     try:
@@ -223,7 +303,7 @@ class VisionProcessClass():
           self.exposure_time_interface_available = True
       except Exception as e:
         self.vision_node.get_logger().error(str(e))
-        self.vision_node.get_logger().warn('Error in configuring camera or no exposre time interface available!')
+        self.vision_node.get_logger().warn('Error in configuring camera or no exposure time interface available!')
 
       # Calculate Camera parameter
       self.pixelPROum=self.magnification/self.pixelsize
@@ -441,60 +521,6 @@ class VisionProcessClass():
         time.sleep(1)
     except KeyboardInterrupt:
       pass
-    
-  def run_crossvalidation(self):
-    # Starting cross validation with images in folder
-    print("test")
-    print(self.run_cross_validation)
-    if self.run_cross_validation:
-      self.cross_val_failed_images.clear()
-      self.cross_val_running = True
-      self.counter_error_cross_val=0
-      self.VisionOK_cross_val=True
-      print("----------------------------")
-      print("Starting Cross Validation...")
-      # Get number of images to be processed
-      try:
-        numb_images_cross_val=len(fnmatch.filter(os.listdir(self.process_db_path),'*.png'))
-        print(str(numb_images_cross_val)+" images for crossvalidation")
-        for image_in_folder in os.listdir(self.process_db_path):
-          if (image_in_folder.endswith(".png")):
-            image=cv2.imread(self.process_db_path+"/"+image_in_folder)
-            print("----------------------------")
-            print("Processing image: " + image_in_folder)
-            # Calculate VisionOK on image
-            self.load_process_file()
-            self.crossval_image_name = image_in_folder
-            display_image = process_image(self,image,self.process_pipeline_list)
-
-            if not self.VisionOK:
-              self.VisionOK_cross_val=False
-              self.cross_val_failed_images.append(image_in_folder)
-
-            # Display image if in assist mode and (step_though images or an error accured)
-            print(self.launch_as_assistant)
-            print(self.VisionOK)
-            print(self.show_image_on_error)
-            print(self.step_though_images)
-            if ((not self.VisionOK and self.show_image_on_error) or self.step_though_images) and (self.launch_as_assistant): 
-              self.image_display_time_in_execution_mode = 0.5
-              while(True):
-                self.load_process_file()
-                display_image = process_image(self,image,self.process_pipeline_list)
-                self.vision_node.image_list.append((self.window_name, display_image, self.image_display_time_in_execution_mode, self.vision_node.get_clock().now()))
-        
-        if self.counter_error_cross_val==0:
-          self.vision_node.get_logger().info("Crossvalidation exited with no Error!")
-
-        else:
-          print("Crossvalidation error!")
-          self.vision_node.get_logger().warning('Crossvalidation had errors! ' + str(self.counter_error_cross_val)+"/"+str(numb_images_cross_val)+" images had errors!")
-        print(self.cross_val_failed_images)
-      except:
-        self.vision_node.get_logger().info("No images in DB yet!")
-      print("Cross Validation Ended...")
-      print("----------------------------")
-      self.cross_val_running = False
      
 
   # def process_image(self,received_frame,_process_pipeline_list):
