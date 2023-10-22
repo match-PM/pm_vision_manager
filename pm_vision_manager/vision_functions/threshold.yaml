@@ -1,18 +1,24 @@
 function_name: "threshold"
 description: "BlaBla"
-param:
+params:
   - param_name: "active"
+    description: "tbd"
     type: "bool"
 
   - param_name: "thresh"
-    type: "int"
+    description: "tbd"
+    type: "unsigned_int"
     min_val: 0
     max_val: 255
 
   - param_name: "maxval"
-    type: "fix"
-    value: 255
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 255
+    max_val: 255
 
   - param_name: "type"
-    type: "fix"
-    value: "THRESH_BINARY"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "THRESH_BINARY"

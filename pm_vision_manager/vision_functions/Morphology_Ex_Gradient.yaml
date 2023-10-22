@@ -1,4 +1,4 @@
-function_name: "Morphology_Ex_Opening"
+function_name: "Morphology_Ex_Gradient"
 description: "BlaBla"
 params:
   - param_name: "active"

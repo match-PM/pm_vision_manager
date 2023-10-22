@@ -1,4 +1,4 @@
-function_name: "Morphology_Ex_Opening"
+function_name: "Errosion"
 description: "BlaBla"
 params:
   - param_name: "active"
@@ -10,3 +10,9 @@ params:
     type: "kernel"
     min_val: 1
     max_val: 10000
+
+  - param_name: "iterations"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 1
+    max_val: 255

@@ -1,25 +1,30 @@
 function_name: "ROI"
 description: "BlaBla"
-param:
+params:
   - param_name: "active"
+    description: "tbd"
     type: "bool"
 
   - param_name: "ROI_center_x"
+    description: "tbd"
     type: "float"
     min_val: "-inf"
     max_val: "inf"
 
   - param_name: "ROI_center_y"
+    description: "tbd"
     type: "float"
     min_val: "-inf"
     max_val: "inf"
     
   - param_name: "ROI_height"
+    description: "tbd"
     type: "int"
     min_val: "-inf"
     max_val: "inf"
     
   - param_name: "ROI_width"
+    description: "tbd"
     type: "int"
     min_val: "-inf"
     max_val: "inf"

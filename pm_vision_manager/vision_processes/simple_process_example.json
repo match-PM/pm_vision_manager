@@ -1,11 +1,11 @@
 {
     "vision_process_name": "simple_process_example",
-    "id_process": "001",
+    "process creation": "2023-10-22 19:17:46",
     "vision_pipeline": [
         {
             "Set_camera_exposure_time": {
                 "active": false,
-                "value": 10000.0
+                "value": 10000
             }
         },
         {
@@ -24,34 +24,29 @@
         {
             "Canny": {
                 "active": false,
-                "threshold1": 100,
-                "threshold2": 200,
-                "aperatureSize": 5,
-                "L2gradient": "nothing"
+                "theshold1": 0,
+                "theshold2": 0,
+                "L2gradient": "nothing",
+                "aperatureSize": 5
             }
         },
         {
             "ROI": {
-                "active": true,
-                "ROI_center_x": 300,
-                "ROI_center_y": 0,
+                "active": false,
+                "ROI_center_x": 300.0,
+                "ROI_center_y": 0.0,
                 "ROI_height": 1000,
                 "ROI_width": 1000
             }
         },
         {
-            "Morphology_Ex_Opening": {
-                "active": false,
-                "kernelsize": 5
-            }
-        },
-        {
             "select_Area": {
                 "active": true,
+                "max_area": 200000,
+                "min_area": 20,
                 "mode": "RETR_LIST",
                 "method": "CHAIN_APPROX_SIMPLE",
-                "max_area": 200000,
-                "min_area": 20
+                "testdddd": "0.0"
             }
         },
         {

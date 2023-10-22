@@ -1,0 +1,22 @@
+function_name: "save_image"
+description: "BlaBla"
+params:
+  - param_name: "active"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "active"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "prefix"
+    description: "tbd"
+    type: "string"
+
+  - param_name: "with_vision_elements"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "save_in_cross_val"
+    description: "tbd"
+    type: "bool"

@@ -1,0 +1,1 @@
+{"vision_process_name": "my_test", "process creation": "2023-10-22 20:35:51", "vision_pipeline": [{"save_image": {"active": true, "with_vision_elements": true, "save_in_cross_val": false, "prefix": "test2"}}, {"Set_camera_exposure_time": {"active": true, "value": 0}}]}

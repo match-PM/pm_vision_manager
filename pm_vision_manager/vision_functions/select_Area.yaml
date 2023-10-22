@@ -1,22 +1,40 @@
 function_name: "select_Area"
 description: "BlaBla"
-param:
+params:
   - param_name: "active"
+    description: "tbd"
     type: "bool"
 
   - param_name: "mode"
-    type: "fix"
-    value: "RETR_LIST"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "RETR_LIST"
 
   - param_name: "method"
-    type: "fix"
-    value: "CHAIN_APPROX_SIMPLE"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "CHAIN_APPROX_SIMPLE"
 
   - param_name: "max_area"
+    description: "tbd"
+    type: "unsigned_int"
     min_val: 0
-    max_val: "inf"  
+    max_val: 1000000
     
   - param_name: "min_area"
-    type: "int"
+    description: "tbd"
+    type: "unsigned_int"
     min_val: 0
-    max_val: "max_area"
+    max_val: 1000000
+
+
+  - param_name: "testdddd"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "0.0"
+      - "1.0"
+      - "2.0"
+      - "3.0"

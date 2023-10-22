@@ -1,6 +1,5 @@
-function_name: "BGR2GRAY"
+function_name: "Draw_CS"
 description: "BlaBla"
-
 params:
   - param_name: "active"
     description: "tbd"
