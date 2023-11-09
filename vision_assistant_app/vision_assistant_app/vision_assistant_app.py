@@ -94,6 +94,9 @@ class VisionAssistantApp(QMainWindow):
     def set_widget_pipeline_name(self, text):
         self.pipeline_name_widget.setText("Process name: " + text)
 
+    def testprint(self):
+        print("YESSSs")
+
     def open_process_file(self):
         if self.current_vision_pipeline.vision_pipeline_json_dir == None:
             self.current_vision_pipeline.vision_pipeline_json_dir = self.default_process_libary_path
@@ -192,12 +195,12 @@ class VisionAssistantApp(QMainWindow):
             
     def delete_function_from_pipeline(self):
         selected_function = self.checkbox_list.currentItem()
+        index_selected_function = self.checkbox_list.currentRow()
         if selected_function:
             function_name = selected_function.text()
             # Remove the function from the pipeline and the list
-            self.current_vision_pipeline.remove_function_by_name(function_name)
-            row = self.checkbox_list.currentRow()
-            self.checkbox_list.takeItem(row)
+            self.current_vision_pipeline.remove_function_by_index(index_selected_function)
+            self.checkbox_list.takeItem(index_selected_function)
             self.text_output.append(f"Deleted function: {function_name}")
             # Save JSON
             self.current_vision_pipeline.process_to_JSON()
@@ -210,11 +213,14 @@ class VisionAssistantApp(QMainWindow):
         This function basically creates a layout to interact with the values of all the parameters of a function.
         The widgets are connected to a clb function which sets the parameter in the internal vision_pipeline and then saves the pipeline to json.
         """
+        selected_function = None
         self.remove_all_function_parameter_widgets_from_layout()
         
         selected_function_name = self.checkbox_list.currentItem()
         if selected_function_name is not None:
-            selected_function = self.current_vision_pipeline.return_function_by_name(selected_function_name.text())
+
+            function_position_in_pipeline = self.checkbox_list.currentIndex().row()
+            selected_function = self.current_vision_pipeline.return_function_by_index(function_position_in_pipeline)
 
             if selected_function:
                 # Add Bool Widgets
@@ -378,7 +384,12 @@ class VisionAssistantApp(QMainWindow):
 
     def on_drop(self):
         #print(window.checkbox_list.get_widget_list_names())
-        window.current_vision_pipeline.sort_functions_accto_names_list(window.checkbox_list.get_widget_list_names())
+        print(window.checkbox_list.drag_source_position)
+        print(window.checkbox_list.currentRow())
+        # print(window.checkbox_list.currentItem().text())
+        self.current_vision_pipeline.swap_functions_by_indices(old_index=window.checkbox_list.drag_source_position,
+                                                                 new_index=window.checkbox_list.currentRow())
+        #window.current_vision_pipeline.sort_functions_accto_names_list(window.checkbox_list.get_widget_list_names())
         self.current_vision_pipeline.process_to_JSON()
     
     def initializeAppPaths(self):
@@ -421,6 +432,10 @@ class ReorderableCheckBoxListWidget(QListWidget):
         super(ReorderableCheckBoxListWidget,self).dropEvent(event)
         event.accept()
         self.CustDragSig.emit()
+
+    def dragEnterEvent(self, event):
+        self.drag_source_position = self.currentRow()  # Capture the source position
+        super(ReorderableCheckBoxListWidget, self).dragEnterEvent(event)
 
 class ReorderableCheckBoxListItem(QListWidgetItem):
     def __init__(self, function_name):

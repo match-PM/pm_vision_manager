@@ -25,6 +25,9 @@ pip3 install keyboard
 ```
 pip3 install PyQt6
 ```
+```
+sudo apt install libxcb-cursor0
+```
 * Go into the pm_vision_manager folder in your workspace and configure the node as described in the pm_vision_manager/pm_vision_manager/README.me
 
 ## Notes

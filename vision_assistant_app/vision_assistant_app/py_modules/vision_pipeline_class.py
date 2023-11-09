@@ -31,7 +31,10 @@ class VisionPipeline():
         return return_str
     
     def append_vision_funciton_by_name(self, function_name):
-        self.vision_functions.append(copy.copy(self.vison_functions_libary.return_by_name(function_name)))
+        self.vision_functions.append(copy.deepcopy(self.vison_functions_libary.return_by_name(function_name)))
+
+    def remove_function_by_index(self, function_index_in_pipeline: int):
+        del self.vision_functions[function_index_in_pipeline]
 
     def vision_pipeline_to_process_list(self):
         process_list = []
@@ -104,18 +107,49 @@ class VisionPipeline():
                 return function
         return False
     
-    def sort_functions_accto_names_list(self, names_list):
-        # Create a custom sorting key function
+    def return_function_by_index(self, function_index_in_pipeline: int) -> VisionFunction:
+        function_to_return = self.vision_functions[function_index_in_pipeline]
+        print(function_to_return.vision_function_name)
+        print(function_index_in_pipeline)
+        return function_to_return
+    
+    def swap_functions_by_indices(self, old_index: int, new_index:int):
         print("Before")
-        for obj in self.vision_functions:
-            print(obj.vision_function_name)
+        # for obj in self.vision_functions:
+        #     print(obj.vision_function_name)
+        print(old_index)
+        print(new_index)
+        _function_old_index = copy.deepcopy(self.vision_functions[old_index])
+
+        self.vision_functions[old_index] = copy.deepcopy(self.vision_functions[new_index])
+
+        self.vision_functions[new_index] = _function_old_index
+        # Check if the old_index and new_index are within the bounds of the list
+        # if 0 <= old_index < len(self.vision_functions) and 0 <= new_index < len(self.vision_functions):
+        #     # Swap the elements at old_index and new_index
+        #self.vision_functions[old_index], self.vision_functions[new_index] = , copy.deepcopy(self.vision_functions[old_index])
+
+        # print("----------")
+        # print("After")
+        # for obj in self.vision_functions:
+        #     print(obj.vision_function_name)
+
+
+    def sort_functions_accto_names_list(self, names_list):
+        """
+        Do not use this function
+        """
+        # Create a custom sorting key function
+        # print("Before")
+        # for obj in self.vision_functions:
+        #     print(obj.vision_function_name)
 
         def custom_sort_key(obj:VisionFunction):
             return names_list.index(obj.vision_function_name)
 
         self.vision_functions = sorted(self.vision_functions, key=custom_sort_key)
 
-        print("----------")
-        print("After")
-        for obj in self.vision_functions:
-            print(obj.vision_function_name)
+        # print("----------")
+        # print("After")
+        # for obj in self.vision_functions:
+        #     print(obj.vision_function_name)
