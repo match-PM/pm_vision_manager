@@ -60,7 +60,7 @@ class VisionProcessClass():
       self.image_display_time_visualization = 10        # Set the display time in assistant mode
     else:
       self.vision_node .get_logger().info('Starting node in processing mode!')
-      if self.image_display_time_visualization <= 0:
+      if self.image_display_time_visualization < 0:
         self.image_display_time_visualization = 5
 
     self.vision_node .get_logger().info('Current vision process: ' + self.process_filename)
@@ -101,6 +101,7 @@ class VisionProcessClass():
     self.results_dict = {}
     self.cross_val_failed_images = []
     self.delete_this_object=False
+    self.vision_results_path = "None"
 
     if db_cross_val_only:
       self.cycle_though_db()
@@ -126,14 +127,10 @@ class VisionProcessClass():
   
     if not self.launch_as_assistant:
       self.stop_image_subscription = True   # in exection mode is this set before the image is processed with the pipeline. This is due to the ability of process_image to set the stop_image_subscription
-
-    if self.stop_image_subscription:
-      self.vision_node.destroy_subscription(self.subscription)
-      self.delete_this_object = True
-      # if in assist mode display time is set to -1 as default. Time has to be set to a positive value to close the image
-    
+          
     # run crossvalidation
-    self.execute_crossvalidation()        # Cossvalidation needs to run before the received image is processed, otherwise results dict will contain results from cossvalidation
+    if self.run_cross_validation:
+      self.execute_crossvalidation()        # Cossvalidation needs to run before the received image is processed, otherwise results dict will contain results from cossvalidation
 
     display_image = process_image(self,received_frame,self.process_pipeline_list)
 
@@ -141,6 +138,8 @@ class VisionProcessClass():
     self.apply_image_for_vizualization(self.window_name,display_image,self.image_display_time_visualization)
 
     if self.stop_image_subscription:
+      self.vision_node.destroy_subscription(self.subscription)
+      self.delete_this_object = True
       self.vision_node.get_logger().info('Vision Process Ended!')     
 
   def apply_image_for_vizualization(self, window_name, image, display_time):
@@ -175,8 +174,7 @@ class VisionProcessClass():
       self.cross_val_running = True
       self.counter_error_cross_val=0
       self.VisionOK_cross_val=True
-      print("----------------------------")
-      print("Starting Cross Validation...")
+      self.vision_node.get_logger().info("Starting crossvalidation...")
       try:
         self.next_image = False
         if self.launch_as_assistant and (self.show_image_on_error or self.step_through_images):
@@ -222,11 +220,10 @@ class VisionProcessClass():
 
         if self.launch_as_assistant and (self.show_image_on_error or self.step_through_images):
           keyboard_listener.stop()
-
       except:
         self.vision_node.get_logger().error("No images in DB yet or other error in execution of cross validation!")
-      print("Cross Validation Ended...")
-      print("----------------------------")
+
+      self.vision_node.get_logger().info("Crossvalidation ended...")
 
       self.show_cross_validation_images = False       # reset so that published image is displayed
       self.cross_val_running = False
@@ -415,7 +412,19 @@ class VisionProcessClass():
   
   def save_vision_results(self, result_dict):
     result_meta_dict={}
-    vision_results_path = self.process_library_path + '/' + Path(self.process_file_path).stem + '_results_'+ self.camera_id +'.json' 
+
+    # Set path for results dict
+    if not self.cross_val_running:
+      vision_results_path = self.process_library_path + Path(self.process_file_path).stem + '_results_' + self.camera_id +'.json' 
+      self.vision_results_path = vision_results_path  # needed for the service response
+    else:
+      results_folder_path = f"{self.vision_database_path}/{Path(self.process_file_path).stem}_{self.camera_id}"
+      vision_results_path = results_folder_path + '/' + 'results_' + str(self.crossval_image_name) + '.json' 
+
+      if not os.path.exists(results_folder_path):
+        os.makedirs(results_folder_path)
+        print("Results folder crossval created!")
+    
     result_meta_dict['vision_process_name'] = self.process_filename
     result_meta_dict['exec_timestamp'] = str(datetime.now().strftime("%d_%m_%Y_%H_%M_%S"))
     result_meta_dict['vision_OK'] = self.VisionOK
@@ -424,7 +433,6 @@ class VisionProcessClass():
 
     if self.cross_val_running:
       result_meta_dict['image_name'] = str(self.crossval_image_name)
-      result_meta_dict['vision_crossval_OK'] = self.VisionOK_cross_val
     result_meta_dict['failed_images_cross_val'] = self.cross_val_failed_images
     #Insert metadata at the beginning of the dictionary
     result_dict={**result_meta_dict,**result_dict}
@@ -512,17 +520,13 @@ class VisionProcessClass():
     x_cs_camera, y_cs_camera = self.CS_Image_TO_Camera(x_center_image_um, y_center_image_um)
     return x_cs_camera, y_cs_camera
   
-  
   def cycle_though_db(self):
     try:
       while(True):
-        k=cv2.waitKey(1) & 0xFF
-        self.run_crossvalidation()
-        time.sleep(1)
+        self.run_cross_validation()
     except KeyboardInterrupt:
       pass
      
-
   # def process_image(self,received_frame,_process_pipeline_list):
 
   #   self.img_width  = received_frame.shape[1]

@@ -160,7 +160,7 @@
         },
         {
             "minEnclosingCircle": {
-                "active": false,
+                "active": true,
                 "draw_circles": true,
                 "mode": "RETR_EXTERNAL",
                 "method": "CHAIN_APPROX_SIMPLE"

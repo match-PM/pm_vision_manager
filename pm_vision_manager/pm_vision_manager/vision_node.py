@@ -66,12 +66,12 @@ class VisionNode(Node):
       show_image_on_error = False,
       step_through_images = False
       )
-    
     while(not VisionProcess.delete_this_object):
       time.sleep(0.5)
 
     response.success = VisionProcess.VisionOK
     response.results_dict = str(VisionProcess.results_dict)
+    response.results_path = str(VisionProcess.vision_results_path)
     del VisionProcess
 
     return response
@@ -124,7 +124,7 @@ class VisionNode(Node):
       # Access elements within the tuple
       name, image, display_time, start_time = image_item
 
-      if not(display_time == -1) and (self.get_clock().now().nanoseconds/1e9 > start_time.nanoseconds/1e9+ display_time):
+      if not(display_time == 0) and (self.get_clock().now().nanoseconds/1e9 > start_time.nanoseconds/1e9+ display_time):
         del self.image_list[index]
         cv2.destroyWindow(name)
         self.get_logger().info(f'Closing image: {name}')

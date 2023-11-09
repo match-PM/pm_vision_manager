@@ -1,1 +1,1 @@
-{"vision_process_name": "process_demo.json", "exec_timestamp": "18_10_2023_23_06_15", "vision_OK": true, "process_UID": "None", "VisionOK_cross_val": true, "failed_images_cross_val": [], "vision_results": []}
+{"vision_process_name": "process_demo.json", "exec_timestamp": "09_11_2023_23_12_42", "vision_OK": true, "process_UID": "test", "VisionOK_cross_val": true, "failed_images_cross_val": [], "vision_results": [{"Circle": {"axis_1": 681.0, "axis_2": -499.0, "axis_1_suffix": "x", "axis_2_suffix": "y", "radius": 2.0000998973846436, "Unit": "um"}}]}

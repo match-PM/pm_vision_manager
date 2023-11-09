@@ -592,11 +592,11 @@ def process_image(self,received_frame,_process_pipeline_list):
       cv2.rectangle(frame_visual_elements,(0,0),(frame_visual_elements.shape[1],frame_visual_elements.shape[0]),(0,255,0),3)
     
     # Add the vision_results_list to the vision_results_file
+    vision_results_file_dict = {}
     vision_results_file_dict["vision_results"] = vision_results_list
 
-    # Save the vision_results_file - File save for crossvalidation is only executed when in assist mode 
-    if self.launch_as_assistant or not self.cross_val_running:
-      self.save_vision_results(vision_results_file_dict)
+    # Save the vision_results_file
+    self.save_vision_results(vision_results_file_dict)
 
     display_frame=self.create_vision_element_overlay(display_frame,frame_visual_elements)
 
