@@ -94,9 +94,6 @@ class VisionAssistantApp(QMainWindow):
     def set_widget_pipeline_name(self, text):
         self.pipeline_name_widget.setText("Process name: " + text)
 
-    def testprint(self):
-        print("YESSSs")
-
     def open_process_file(self):
         if self.current_vision_pipeline.vision_pipeline_json_dir == None:
             self.current_vision_pipeline.vision_pipeline_json_dir = self.default_process_libary_path
@@ -220,8 +217,11 @@ class VisionAssistantApp(QMainWindow):
         if selected_function_name is not None:
 
             function_position_in_pipeline = self.checkbox_list.currentIndex().row()
+            print("Plot function...")
+            print(f"Funktions Position: {function_position_in_pipeline}")
+            
             selected_function = self.current_vision_pipeline.return_function_by_index(function_position_in_pipeline)
-
+            print(f"Funktions Name: {selected_function.vision_function_name}")
             if selected_function:
                 # Add Bool Widgets
                 for param in selected_function.bool_params_list:
@@ -383,13 +383,11 @@ class VisionAssistantApp(QMainWindow):
         self.current_vision_pipeline.process_to_JSON()
 
     def on_drop(self):
-        #print(window.checkbox_list.get_widget_list_names())
-        print(window.checkbox_list.drag_source_position)
-        print(window.checkbox_list.currentRow())
-        # print(window.checkbox_list.currentItem().text())
+
         self.current_vision_pipeline.swap_functions_by_indices(old_index=window.checkbox_list.drag_source_position,
                                                                  new_index=window.checkbox_list.currentRow())
-        #window.current_vision_pipeline.sort_functions_accto_names_list(window.checkbox_list.get_widget_list_names())
+        self.create_function_parameters_layout()
+        self.set_vision_ui_from_pipeline()
         self.current_vision_pipeline.process_to_JSON()
     
     def initializeAppPaths(self):

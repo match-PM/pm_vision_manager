@@ -36,10 +36,12 @@ class VisionPipeline():
     def remove_function_by_index(self, function_index_in_pipeline: int):
         del self.vision_functions[function_index_in_pipeline]
 
-    def vision_pipeline_to_process_list(self):
+    def vision_pipeline_to_process_list(self) -> list[dict]:
         process_list = []
+        
         for function in self.vision_functions:
             process_list.append(function.function_dictionary())
+        print(process_list)
         return process_list
 
     def set_vision_pipeline_from_process_json(self, file_path:str) -> bool:
@@ -109,9 +111,17 @@ class VisionPipeline():
     
     def return_function_by_index(self, function_index_in_pipeline: int) -> VisionFunction:
         function_to_return = self.vision_functions[function_index_in_pipeline]
-        print(function_to_return.vision_function_name)
-        print(function_index_in_pipeline)
+        
+        print(f"return {function_to_return.vision_function_name}")
+        print(f"return {function_index_in_pipeline}")
         return function_to_return
+    
+    def return_function_names_list(self)-> list[VisionFunction]:
+        function_names = []
+        for function in self.vision_functions:
+            function_names.append(function.vision_function_name)
+        return function_names
+    
     
     def swap_functions_by_indices(self, old_index: int, new_index:int):
         print("Before")
@@ -128,26 +138,6 @@ class VisionPipeline():
         # if 0 <= old_index < len(self.vision_functions) and 0 <= new_index < len(self.vision_functions):
         #     # Swap the elements at old_index and new_index
         #self.vision_functions[old_index], self.vision_functions[new_index] = , copy.deepcopy(self.vision_functions[old_index])
-
-        # print("----------")
-        # print("After")
-        # for obj in self.vision_functions:
-        #     print(obj.vision_function_name)
-
-
-    def sort_functions_accto_names_list(self, names_list):
-        """
-        Do not use this function
-        """
-        # Create a custom sorting key function
-        # print("Before")
-        # for obj in self.vision_functions:
-        #     print(obj.vision_function_name)
-
-        def custom_sort_key(obj:VisionFunction):
-            return names_list.index(obj.vision_function_name)
-
-        self.vision_functions = sorted(self.vision_functions, key=custom_sort_key)
 
         # print("----------")
         # print("After")

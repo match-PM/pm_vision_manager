@@ -44,6 +44,13 @@ class UnsignedInt(VisionFunctionTypeBaseClass):
         self.correct_min_val()  # In case the the definition in the yaml is faulty
 
     def set_value(self, new_value):
+        if not isinstance(self.max_val,str):
+            if new_value > self.max_val:
+                new_value = self.max_val
+        if not isinstance(self.min_val,str):
+            if new_value < self.min_val:
+                new_value = self.min_val  
+        
         self._value = int(new_value)
 
     def correct_min_val(self):
@@ -86,6 +93,13 @@ class ParamFloat(VisionFunctionTypeBaseClass):
         self._value = self._default_value
 
     def set_value(self, new_value):
+        if not isinstance(self.max_val,str):
+            if new_value > self.max_val:
+                new_value = self.max_val
+        if not isinstance(self.min_val,str):
+            if new_value < self.min_val:
+                new_value = self.min_val  
+
         self._value = float(new_value)
 
 class ParamInt(VisionFunctionTypeBaseClass):
@@ -109,6 +123,12 @@ class ParamInt(VisionFunctionTypeBaseClass):
         self._value = self._default_value
 
     def set_value(self, new_value):
+        if not isinstance(self.max_val,str):
+            if new_value > self.max_val:
+                new_value = self.max_val
+        if not isinstance(self.min_val,str):
+            if new_value < self.min_val:
+                new_value = self.min_val  
         self._value = int(new_value)
 
 
@@ -121,6 +141,12 @@ class Kernel(VisionFunctionTypeBaseClass):
         self.max_val = max_value
 
     def set_value(self, new_value):
+        if not isinstance(self.max_val,str):
+            if new_value > self.max_val:
+                new_value = self.max_val
+        if not isinstance(self.min_val,str):
+            if new_value < self.min_val:
+                new_value = self.min_val           
         if new_value % 2 == 0:
             # If the new value is odd, adjust it to the nearest even value
             adjusted_value = new_value + 1
