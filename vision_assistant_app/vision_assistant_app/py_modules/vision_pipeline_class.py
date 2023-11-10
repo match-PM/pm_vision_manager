@@ -30,7 +30,7 @@ class VisionPipeline():
 
         return return_str
     
-    def append_vision_funciton_by_name(self, function_name):
+    def append_vision_funciton_by_name(self, function_name) -> None:
         self.vision_functions.append(copy.deepcopy(self.vison_functions_libary.return_by_name(function_name)))
 
     def remove_function_by_index(self, function_index_in_pipeline: int):
@@ -110,10 +110,8 @@ class VisionPipeline():
         return False
     
     def return_function_by_index(self, function_index_in_pipeline: int) -> VisionFunction:
+        """Returns the function at the index of the vision pipeline (functions_list)"""
         function_to_return = self.vision_functions[function_index_in_pipeline]
-        
-        print(f"return {function_to_return.vision_function_name}")
-        print(f"return {function_index_in_pipeline}")
         return function_to_return
     
     def return_function_names_list(self)-> list[VisionFunction]:
@@ -121,25 +119,15 @@ class VisionPipeline():
         for function in self.vision_functions:
             function_names.append(function.vision_function_name)
         return function_names
-    
-    
-    def swap_functions_by_indices(self, old_index: int, new_index:int):
-        print("Before")
-        # for obj in self.vision_functions:
-        #     print(obj.vision_function_name)
-        print(old_index)
-        print(new_index)
-        _function_old_index = copy.deepcopy(self.vision_functions[old_index])
+        
+    def move_function_to_indice(self, old_index: int, new_index:int) -> None:
+        function_at_old_index = copy.deepcopy(self.vision_functions[old_index])
+        del self.vision_functions[old_index]
+        self.vision_functions.insert(new_index,function_at_old_index)
 
-        self.vision_functions[old_index] = copy.deepcopy(self.vision_functions[new_index])
+    def swap_functions_by_indices(self, index_1: int, index_2:int) -> None:
+        """Swaps the functions in the vision pipeline given two indicies. """
+        _function_old_index = copy.deepcopy(self.vision_functions[index_1])
+        self.vision_functions[index_1] = copy.deepcopy(self.vision_functions[index_2])
+        self.vision_functions[index_2] = _function_old_index
 
-        self.vision_functions[new_index] = _function_old_index
-        # Check if the old_index and new_index are within the bounds of the list
-        # if 0 <= old_index < len(self.vision_functions) and 0 <= new_index < len(self.vision_functions):
-        #     # Swap the elements at old_index and new_index
-        #self.vision_functions[old_index], self.vision_functions[new_index] = , copy.deepcopy(self.vision_functions[old_index])
-
-        # print("----------")
-        # print("After")
-        # for obj in self.vision_functions:
-        #     print(obj.vision_function_name)

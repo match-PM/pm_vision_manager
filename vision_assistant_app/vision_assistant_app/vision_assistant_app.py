@@ -217,11 +217,8 @@ class VisionAssistantApp(QMainWindow):
         if selected_function_name is not None:
 
             function_position_in_pipeline = self.checkbox_list.currentIndex().row()
-            print("Plot function...")
-            print(f"Funktions Position: {function_position_in_pipeline}")
-            
             selected_function = self.current_vision_pipeline.return_function_by_index(function_position_in_pipeline)
-            print(f"Funktions Name: {selected_function.vision_function_name}")
+
             if selected_function:
                 # Add Bool Widgets
                 for param in selected_function.bool_params_list:
@@ -384,7 +381,7 @@ class VisionAssistantApp(QMainWindow):
 
     def on_drop(self):
 
-        self.current_vision_pipeline.swap_functions_by_indices(old_index=window.checkbox_list.drag_source_position,
+        self.current_vision_pipeline.move_function_to_indice(old_index=window.checkbox_list.drag_source_position,
                                                                  new_index=window.checkbox_list.currentRow())
         self.create_function_parameters_layout()
         self.set_vision_ui_from_pipeline()
