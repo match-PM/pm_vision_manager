@@ -70,6 +70,7 @@ class VisionNode(Node):
       time.sleep(0.5)
 
     response.success = VisionProcess.VisionOK
+    response.process_uid = request.process_uid
     response.results_dict = str(VisionProcess.results_dict)
     response.results_path = str(VisionProcess.vision_results_path)
     del VisionProcess
@@ -77,44 +78,52 @@ class VisionNode(Node):
     return response
   
   def start_vision_assistant(self, request: StartVisionAssistant.Request , response: StartVisionAssistant.Response):
-    VisionProcess = VisionProcessClass(
-      self,
-      launch_as_assistant=True,
-      process_filename=request.process_filename,
-      camera_config_filename=request.camera_config_filename,
-      db_cross_val_only=request.db_cross_val_only,
-      process_UID=request.process_uid,
-      image_display_time_visualization=-1,
-      open_process_file=request.open_process_file,
-      run_cross_validation = request.run_cross_validation,
-      show_image_on_error = request.show_image_on_error,
-      step_through_images = request.step_through_images
-      )
-    
-    self.running_vision_assistants.append(request.process_uid)
+    try:
 
-    while(not VisionProcess.stop_image_subscription):
-      time.sleep(0.1)
-      if not request.process_uid in self.running_vision_assistants:
-        VisionProcess.set_display_time_for_exit()
-        time.sleep(0.5)
-        VisionProcess.stop_image_subscription = True
+      for tpl in self.running_vision_assistants:
+        if tpl[0] == request.process_uid:
+          self.get_logger().error(f'Vision Assistant cannot be launched because a process with id: {tpl[0]} is already running!')
+          raise Exception
+        
+      VisionProcess = VisionProcessClass(
+        self,
+        launch_as_assistant=True,
+        process_filename=request.process_filename,
+        camera_config_filename=request.camera_config_filename,
+        db_cross_val_only=request.db_cross_val_only,
+        process_UID=request.process_uid,
+        image_display_time_visualization=-1,
+        open_process_file=request.open_process_file,
+        run_cross_validation = request.run_cross_validation,
+        show_image_on_error = request.show_image_on_error,
+        step_through_images = request.step_through_images
+        )
+      
+      self.running_vision_assistants.append((request.process_uid, VisionProcess))
 
-    response.success = VisionProcess.VisionOK
-    response.results_dict = str(VisionProcess.results_dict)
-    del VisionProcess
+      response.success = True
+      response.process_uid = request.process_uid
 
+    except Exception:
+      response.success = False
     return response
   
   def stop_vision_assistant(self, request: StopVisionAssistant.Request , response: StopVisionAssistant.Response):
-    
-    if request.process_uid in self.running_vision_assistants:
-      index = self.running_vision_assistants.index(request.process_uid)  # Find the index of the value
-      self.running_vision_assistants.pop(index)  # Remove the value at the found index
-      response.success = True
-      self.get_logger().info(f'Vision Assistant: {request.process_uid} stoped!')
-    else:
-      response.success =  False
+    #if request.process_uid in self.running_vision_assistants:
+    response.success =  False
+    for index, VisionInstance in enumerate(self.running_vision_assistants):
+      if VisionInstance[0] == request.process_uid:
+        VisionInstance[1].stop_image_subscription = True
+        VisionInstance[1].set_display_time_for_exit()
+        while(not VisionInstance[1].delete_this_object):
+          time.sleep(0.5)
+        del self.running_vision_assistants[index]
+        self.get_logger().info(f'Vision Assistant: {request.process_uid} stoped!')
+        response.success = True
+        response.process_uid = request.process_uid
+        break
+
+    if not response.success:
       self.get_logger().error(f'Vision Assistant with ID {request.process_uid} does not exist!')
 
     return response

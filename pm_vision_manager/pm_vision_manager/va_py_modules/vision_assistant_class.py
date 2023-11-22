@@ -22,14 +22,14 @@ from functools import partial
 from pm_vision_manager.va_py_modules.vision_processes import process_image
 from pm_vision_manager.va_py_modules.vision_utils import image_resize, degrees_to_rads, rads_to_degrees, get_screen_resolution, rotate_image
 from pm_vision_interfaces.srv import ExecuteVision
-
+from rclpy.node import Node 
 
 class VisionProcessClass():
   """
   Create an ImagePublisher class, which is a subclass of the Node class.
   """
   def __init__(self, 
-               vision_node,
+               vision_node :Node,
                launch_as_assistant,
                process_filename,
                camera_config_filename,
@@ -112,7 +112,7 @@ class VisionProcessClass():
         self.camera_subscription_topic,   #defined in camera_config.yaml
         self.Vision_callback, 
         10,
-        callback_group=vision_node.callback_group_image_subscriptions)
+        callback_group = vision_node.callback_group_image_subscriptions)
       self.subscription # prevent unused variable warning  
       vision_node.get_logger().info('Subscribing to: ' + self.camera_subscription_topic)
 

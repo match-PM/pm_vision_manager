@@ -8,3 +8,4 @@ bool run_cross_validation
 bool success
 string results_dict
 string results_path
+string process_uid

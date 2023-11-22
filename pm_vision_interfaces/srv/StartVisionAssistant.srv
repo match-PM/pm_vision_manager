@@ -8,5 +8,4 @@ bool step_through_images
 bool open_process_file
 ---
 bool success
-string results_dict
-string results_path
+string process_uid
