@@ -1,1 +1,55 @@
-{"vision_process_name": "test_13", "process creation": "2023-11-09 15:47:31", "vision_pipeline": [{"BGR2GRAY": {"active": true}}, {"ROI": {"active": true, "ROI_center_x": 0.0, "ROI_center_y": 0.0, "ROI_height": 5, "ROI_width": 5}}, {"Set_camera_exposure_time": {"active": true, "value": 12}}, {"ROI": {"active": true, "ROI_center_x": 0.0, "ROI_center_y": 0.0, "ROI_height": 5, "ROI_width": 5}}]}
+{
+    "vision_process_name": "test_13",
+    "process creation": "2023-11-24 18:09:03",
+    "vision_pipeline": [
+        {
+            "BGR2GRAY": {
+                "active": false
+            }
+        },
+        {
+            "ROI": {
+                "active": false,
+                "ROI_center_x": 0.0,
+                "ROI_center_y": 0.0,
+                "ROI_height": 38,
+                "ROI_width": 99
+            }
+        },
+        {
+            "Set_camera_exposure_time": {
+                "active": false,
+                "value": 12
+            }
+        },
+        {
+            "Draw_CS": {
+                "active": true
+            }
+        },
+        {
+            "save_image": {
+                "active": true,
+                "with_vision_elements": false,
+                "save_in_cross_val": false,
+                "prefix": "test"
+            }
+        },
+        {
+            "threshold": {
+                "active": true,
+                "thresh": 100,
+                "maxval": 255,
+                "type": "THRESH_BINARY"
+            }
+        },
+        {
+            "save_image": {
+                "active": true,
+                "with_vision_elements": false,
+                "save_in_cross_val": false,
+                "prefix": "test"
+            }
+        }
+    ]
+}

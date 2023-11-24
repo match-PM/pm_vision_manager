@@ -1,0 +1,23 @@
+camera_params:
+  cameraname: 'Cam_2_Bottom'
+  pixelsize: 2.2 # in um
+  magnification: 0.5 
+  camera_axis_1: 'x'
+  camera_axis_2: 'y'
+  camera_axis_1_angle: 0                # Starting from normal 'x' in math. positive direction
+  camera_axis_2_angle: '+'              # '+' -> 90 degree; '-' -> -90 degree 
+  subscription_topic: 'Camera_Bottom_View/pylon_ros2_camera_node/image_raw'
+  shutter_time_topic: 'top'
+  
+  coaxial_light:
+    channel: 'topic'
+    name: 'blabla/camera1_ring_light'
+    type: 'bool'
+    
+  exposure_time:
+    channel: 'service'
+    name: '/Camera_Bottom_View/pylon_ros2_camera_node/set_exposure'
+    type: 'float'
+    min_val: 0.0
+    max_val: 35000.0
+   

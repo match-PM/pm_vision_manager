@@ -16,15 +16,15 @@ params:
     type: "float"
     min_val: "-inf"
     max_val: "inf"
-    
+
   - param_name: "ROI_height"
     description: "tbd"
-    type: "int"
-    min_val: "-inf"
+    type: "unsigned_int"
+    min_val: 0
     max_val: "inf"
-    
+
   - param_name: "ROI_width"
     description: "tbd"
-    type: "int"
-    min_val: "-inf"
+    type: "unsigned_int"
+    min_val: 0
     max_val: "inf"
