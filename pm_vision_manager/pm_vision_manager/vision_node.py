@@ -5,6 +5,10 @@ from sensor_msgs.msg import Image  # Image is the message type
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
 import cv2
 import json
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication
+from PyQt6.QtGui import QColor, QTextCursor, QFont, QImage, QPixmap
+from PyQt6.QtCore import Qt, QByteArray
+from threading import Thread 
 from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
@@ -75,11 +79,11 @@ class VisionNode(Node):
             self.stop_vision_assistant,
             callback_group=self.callback_group,
         )
-        self.timer = self.create_timer(
-            1.5, self.display_image_callback, callback_group=self.callback_group
-        )
+        self.timer = self.create_timer(0.5, self.display_image_callback, callback_group=self.callback_group)
+
         self.pub = self.create_publisher(Image, f"VisionManager/test", 10)
         self.get_logger().info("Vision node started!")
+        self.image_widgets = {}
 
     def execute_vision(
         self, request: ExecuteVision.Request, response: ExecuteVision.Response
@@ -177,8 +181,8 @@ class VisionNode(Node):
                 VisionInstance[1].set_display_time_for_exit()
 
                 while not VisionInstance[1].delete_this_object:
-                    # time.sleep(0.5)
-                    self.get_logger().info(f"Stuck: {request.process_uid}")
+                    time.sleep(0.5)
+                    self.get_logger().debug(f"Stuck in loop of '{request.process_uid}'")
                 del self.running_vision_assistants[index]
                 self.get_logger().info(
                     f"Vision Assistant: {request.process_uid} stoped!"
@@ -194,58 +198,146 @@ class VisionNode(Node):
 
         return response
 
-    def display_image_callback(self):
+    # def display_image_callback(self):
+    #     try:
+    #         for index, image_item in enumerate(self.image_list):
+    #             # Access elements within the tuple
+    #             name, image, display_time, start_time = image_item
+
+    #             if not (display_time == 0) and (
+    #                 self.get_clock().now().nanoseconds / 1e9
+    #                 > start_time.nanoseconds / 1e9 + display_time
+    #             ):
+    #                 del self.image_list[index]
+    #                 # cv2.destroyWindow(name)
+    #                 self.get_logger().info(f"Closing image: {name}")
+
+    #         for index, image_item in enumerate(self.image_list):
+    #             # Access elements within the tuple
+    #             name, image, display_time, start_time = image_item
+
+    #             if not display_time == 0:
+    #                 window_name = name
+    #                 self.pub.publish(self.br.cv2_to_imgmsg(image, encoding="rgb8"))
+    #                 # cv2.imshow(window_name, image)
+    #                 self.get_logger().warn("Show cv2 image")
+
+    #         # cv2.waitKey(1)
+
+    #         if len(self.image_list) == 0:
+    #             # cv2.destroyAllWindows()
+    #             pass
+    #     except Exception as e:
+    #         self.get_logger().error("Error occured in displaying image!")
+    #         self.get_logger().error(e)
+
+    def display_image_callback(self)-> None:
+        images_to_remove = []
         try:
+            # looking for timed out elements
             for index, image_item in enumerate(self.image_list):
                 # Access elements within the tuple
                 name, image, display_time, start_time = image_item
 
                 if not (display_time == 0) and (
                     self.get_clock().now().nanoseconds / 1e9
-                    > start_time.nanoseconds / 1e9 + display_time
-                ):
-                    del self.image_list[index]
-                    # cv2.destroyWindow(name)
-                    self.get_logger().info(f"Closing image: {name}")
+                    > start_time.nanoseconds / 1e9 + display_time):
+                    images_to_remove.append(image_item)
 
+            # removing timed out elements
+            for image_item in images_to_remove:
+                self.get_logger().info(f"Closing image: {name}")
+                name = image_item[0]
+                self.image_list.remove(image_item)
+                self.image_widgets[name].destroy()
+                del self.image_widgets[name]
+
+            # Creating or updating the image outputs for the list
             for index, image_item in enumerate(self.image_list):
                 # Access elements within the tuple
                 name, image, display_time, start_time = image_item
 
                 if not display_time == 0:
-                    window_name = name
-                    self.pub.publish(self.br.cv2_to_imgmsg(image, encoding="rgb8"))
-                    # cv2.imshow(window_name, image)
-                    self.get_logger().warn("Show cv2 image")
 
-            # cv2.waitKey(1)
+                    if name not in self.image_widgets:
+                        # Create a new widget if it doesn't exist
+                        widget = ImageDisplayWidget(name, image)
+                        widget.show()
+                        self.image_widgets[name] = widget
+                        self.get_logger().debug("Creating new image window '{name}'!")
+                    else:
+                        # Update the existing widget
+                        self.image_widgets[name].set_image(image)
+                        self.get_logger().warn(f"Updating image window '{name}'!")
+                    
+                    #self.pub.publish(self.br.cv2_to_imgmsg(image, encoding="rgb8"))
+                    QApplication.processEvents()
 
-            if len(self.image_list) == 0:
-                # cv2.destroyAllWindows()
-                pass
         except Exception as e:
-            self.get_logger().error("Error occured in displaying image!")
+            self.get_logger().error("Error occurred in displaying image!")
             self.get_logger().error(e)
 
+class ImageDisplayWidget(QWidget):
+    def __init__(self, name, image, parent=None):
+        super(ImageDisplayWidget, self).__init__(parent)
+
+        self.setWindowTitle(name)
+        self.image_label = QLabel(self)
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.image_label)
+
+        self.set_image(image)
+
+    def set_image(self, image):
+
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        height, width, channel = image.shape
+        bytes_per_line = 3 * width
+        q_image = QImage(image.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
+        pixmap = QPixmap.fromImage(q_image)
+        self.image_label.clear()
+        self.image_label.setPixmap(pixmap)
+        self.image_label.repaint()
+        self.update()
 
 def main(args=None):
-    # Initialize the rclpy library
-    rclpy.init(args=args)
+    # # Initialize the rclpy library
+    # rclpy.init(args=args)
+    # # Create the node
+    # vision_node = VisionNode()
+    # executor = MultiThreadedExecutor(num_threads=6)
+    # executor.add_node(vision_node)
+    # # Spin the node so the callback function is called.
+    # executor.spin()
 
-    # Create the node
+    # executor.shutdown()
+    # vision_node.destroy_node()
+
+    # # Shutdown the ROS client library for Python
+    # rclpy.shutdown()
+
+    rclpy.init(args=args)
+    executor = MultiThreadedExecutor(num_threads=6) 
+
+    app = QApplication(sys.argv)
+
     vision_node = VisionNode()
-    executor = MultiThreadedExecutor(num_threads=6)
     executor.add_node(vision_node)
 
-    # Spin the node so the callback function is called.
-    executor.spin()
+    thread = Thread(target=executor.spin)
+    thread.start()
+    
+    try:
+        #rsap_node.qt_window.show()
+        sys.exit(app.exec())
 
-    executor.shutdown()
-    vision_node.destroy_node()
-
-    # Shutdown the ROS client library for Python
-    rclpy.shutdown()
-
+    finally:
+        vision_node.destroy_node()
+        executor.shutdown()
+        rclpy.shutdown()
 
 if __name__ == "__main__":
     main()
