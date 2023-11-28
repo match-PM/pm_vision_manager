@@ -24,14 +24,19 @@ from PyQt6.QtWidgets import (
 import os
 from ament_index_python.packages import get_package_share_directory
 from PyQt6 import QtCore
-from py_modules.vision_functions_loader import VisionFunctionsLoader
-from py_modules.vision_pipeline_class import VisionPipeline
-import py_modules.type_classes as TC
 from PyQt6.QtGui import QAction
 from functools import partial
 import yaml
 from yaml.loader import SafeLoader
 from PyQt6.QtCore import pyqtSignal
+
+# from py_modules.vision_functions_loader import VisionFunctionsLoader
+# from py_modules.vision_pipeline_class import VisionPipeline
+# import py_modules.type_classes as TC
+
+from py_modules.vision_functions_loader import VisionFunctionsLoader
+from py_modules.vision_pipeline_class import VisionPipeline
+import py_modules.type_classes as TC
 
 N_INF_INT = -2147483647
 INF_INT = 2147483647
@@ -41,11 +46,11 @@ INF_FLOAT = 1e20
 
 
 class VisionAssistantApp(QMainWindow):
-    def __init__(self):
+    def __init__(self, initial_pipeline_file:str = None):
         super().__init__()
         self.function_parameter_widgets = (
             []
-        )  # tis is a list of widgets that represent all the parameter of a vision function; it is used to display widgets when a vision function is klicked
+        )  # this is a list of widgets that represent all the parameter of a vision function; it is used to display widgets when a vision function is klicked
 
         self.initializeAppPaths()
         self.current_vision_pipeline = VisionPipeline(self.functions_library_path)
@@ -53,6 +58,10 @@ class VisionAssistantApp(QMainWindow):
         self.initUI()
         self.save_as = False  # This is a helper bool used for saving files
         self.print_available_functions()
+
+        # Load an initial file if given in startup.
+        if initial_pipeline_file is not None:
+            self.open_process_file(initial_pipeline_file) 
 
     def initUI(self):
         self.setWindowTitle("Vision Assistant App")
@@ -127,19 +136,21 @@ class VisionAssistantApp(QMainWindow):
     def set_widget_pipeline_name(self, text):
         self.pipeline_name_widget.setText("Process name: " + text)
 
-    def open_process_file(self):
+    def open_process_file(self, file_path_load = None):
         if self.current_vision_pipeline.vision_pipeline_json_dir == None:
-            self.current_vision_pipeline.vision_pipeline_json_dir = (
-                self.default_process_libary_path
-            )
+            self.current_vision_pipeline.vision_pipeline_json_dir = (self.default_process_libary_path)
 
-        file_filter = "JSON Files (*.json);;All Files (*)"
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Open JSON File",
-            self.current_vision_pipeline.vision_pipeline_json_dir,
-            file_filter,
-        )
+        if not file_path_load:
+            file_filter = "JSON Files (*.json);;All Files (*)"
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Open JSON File",
+                self.current_vision_pipeline.vision_pipeline_json_dir,
+                file_filter,
+            )
+        else:
+            file_path = file_path_load
+
         self.current_vision_pipeline.vision_pipeline_json_dir = os.path.dirname(
             file_path
         )
@@ -558,7 +569,14 @@ class ReorderableCheckBoxListItem(QListWidgetItem):
 
 
 if __name__ == "__main__":
+    pipeline_file = None
+    for arg in sys.argv:
+        # Check if the argument starts with "pipeline_file:"
+        if arg.startswith("pipeline_file_path:"):
+            # Extract the filename after the colon
+            pipeline_file = arg.split(":")[1]
     app = QApplication(sys.argv)
-    window = VisionAssistantApp()
+    
+    window = VisionAssistantApp(initial_pipeline_file = pipeline_file)
     window.show()
     sys.exit(app.exec())

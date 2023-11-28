@@ -1,0 +1,52 @@
+function_name: "HoughCircles"
+description: "BlaBla"
+params:
+  - param_name: "active"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "draw_circles"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "method"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "HOUGH_GRADIENT"
+
+  - param_name: "dp"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 'inf'
+
+  - param_name: "minDist"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 'inf'
+
+  - param_name: "param1"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 'inf'
+
+  - param_name: "param2"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 'inf'
+
+  - param_name: "minRadius"
+    description: "tbd"
+    type: "float"
+    min_val: 0
+    max_val: "inf"
+
+  - param_name: "maxRadius"
+    description: "tbd"
+    type: "float"
+    min_val: 0
+    max_val: "inf"

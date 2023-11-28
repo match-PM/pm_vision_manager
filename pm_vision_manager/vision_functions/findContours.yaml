@@ -1,0 +1,26 @@
+function_name: "findContours"
+description: "BlaBla"
+params:
+  - param_name: "active"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "draw_contours"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "mode"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "RETR_EXTERNAL"
+
+  - param_name: "method"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "CHAIN_APPROX_SIMPLE"
+
+  - param_name: "fill"
+    description: "tbd"
+    type: "bool"

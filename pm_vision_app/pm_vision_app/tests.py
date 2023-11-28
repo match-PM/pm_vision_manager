@@ -1,6 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QFrame, QGroupBox, QFormLayout, QSpinBox, QDoubleSpinBox, QCheckBox, QComboBox
 from PyQt6.QtCore import Qt
+from pm_vision_app.py_modules.type_classes import VisionFunctionTypeBaseClass
 
 class YourMainWindow(QWidget):
     def __init__(self):
@@ -38,6 +39,7 @@ class YourMainWindow(QWidget):
             layout.addRow(widget)
 
 def main():
+    test = VisionFunctionTypeBaseClass("test","Test")
     app = QApplication(sys.argv)
     window = YourMainWindow()
     window.show()

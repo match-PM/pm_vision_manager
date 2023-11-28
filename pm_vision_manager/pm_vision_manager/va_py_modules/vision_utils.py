@@ -8,10 +8,10 @@ def get_screen_resolution():
    resolution = output.split()[0].split(b'x')
    return {'width':resolution[0],'height':resolution[1]}
 
-def degrees_to_rads(deg):
+def degrees_to_rads(deg:float) -> float:
   return (deg * pi) / 180.0
 
-def rads_to_degrees(rad):
+def rads_to_degrees(rad:float) -> float:
   return (180.0*rad)/pi
 
 def rotate_image(image, angle):

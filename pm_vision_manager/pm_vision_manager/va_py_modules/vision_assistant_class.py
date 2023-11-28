@@ -10,7 +10,7 @@ import yaml
 import fnmatch
 from yaml.loader import SafeLoader
 import subprocess
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
 import math
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
 from math import pi
@@ -18,6 +18,7 @@ import time
 from pynput import keyboard
 from pathlib import Path
 import sys
+import threading
 from functools import partial
 from pm_vision_manager.va_py_modules.vision_processes import process_image
 from pm_vision_manager.va_py_modules.vision_utils import (
@@ -118,12 +119,13 @@ class VisionProcessClass:
         ):
             self.init_success = True
         else:
+            self.vision_node.get_logger().error(f"Initialization of '{self.process_UID} failed!")
             self.init_success = False
             # return early if not success
             return
 
         if open_process_file:
-            self.open_process_file_in_vcode()
+            self.start_vision_app()
 
         self.counter_error_cross_val = 0
         self.VisionOK_cross_val = True
@@ -364,6 +366,25 @@ class VisionProcessClass:
         except Exception as e:
             self.vision_node.get_logger().error(e)
             self.vision_node.get_logger().error("Process File could not be opened!")
+
+    def start_vision_app(self):
+        try:
+            app_thread = threading.Thread(target=self.open_process_file_in_app)
+            app_thread.start()
+            
+        except Exception as e:
+            self.vision_node.get_logger().error(e)
+            self.vision_node.get_logger().error("Process File could not be opened!")
+
+    def open_process_file_in_app(self):
+        try:
+            arguments = [f"pipeline_file_path:{self.process_file_path}"]
+            python_file_path = f"{get_package_prefix('pm_vision_app')}/lib/python3.10/site-packages/pm_vision_app/vision_assistant_app.py"
+            command = ['python3', python_file_path] + arguments
+            subprocess.run(command)
+            
+        except Exception as e:
+            print(e)
 
     def set_display_time_for_exit(
         self,

@@ -1,0 +1,12 @@
+function_name: "Draw_Grid"
+description: "BlaBla"
+params:
+  - param_name: "active"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "grid_spacing"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 1
+    max_val: 'inf'

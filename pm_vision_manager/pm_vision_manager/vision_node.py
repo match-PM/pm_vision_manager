@@ -41,7 +41,6 @@ from pm_vision_interfaces.srv import StopVisionAssistant
 from pm_vision_interfaces.srv import StartVisionAssistant
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
 from sensor_msgs.msg import Image  # Image is the message type
-
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
 
 
