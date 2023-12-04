@@ -426,6 +426,9 @@ def process_image(self,received_frame,_process_pipeline_list):
               active = function_parameter['active']
               grid_spacing = function_parameter['grid_spacing']
               
+              if grid_spacing == 0:
+                break
+
               if active:
                 Grid_frame = np.zeros((received_frame.shape[0]+received_frame.shape[1], received_frame.shape[0]+received_frame.shape[1], 3), dtype = np.uint8)
                 #numb = int(round((Grid_frame.shape[0]/2)/grid_spacing*self.pixelPROum))+1 # This is a bug

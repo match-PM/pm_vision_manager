@@ -12,7 +12,7 @@ def generate_launch_description():
     my_node = Node(
         package='pm_vision_manager',
         executable='vision_node',
-        name='PM_Vision_node',
+        name='pm_vision_manager',
         #parameters=[{'param_name': LaunchConfiguration('my_param')}]
         emulate_tty=True
     )

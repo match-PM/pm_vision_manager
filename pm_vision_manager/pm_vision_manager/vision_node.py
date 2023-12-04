@@ -42,7 +42,7 @@ from pm_vision_interfaces.srv import StartVisionAssistant
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
 from sensor_msgs.msg import Image  # Image is the message type
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
-
+from geometry_msgs.msg import Point
 
 class VisionNode(Node):
     """
@@ -62,19 +62,19 @@ class VisionNode(Node):
         self.running_vision_assistants = []
         self.execute_vision_srv = self.create_service(
             ExecuteVision,
-            "ExecuteVision",
+            f"{self.get_name()}/ExecuteVision",
             self.execute_vision,
             callback_group=self.callback_group,
         )
         self.execute_vision_srv = self.create_service(
             StartVisionAssistant,
-            "StartVisionAssistant",
+            f"{self.get_name()}/StartVisionAssistant",
             self.start_vision_assistant,
             callback_group=self.callback_group,
         )
         self.execute_vision_srv = self.create_service(
             StopVisionAssistant,
-            "StopVisionAssistant",
+            f"{self.get_name()}/StopVisionAssistant",
             self.stop_vision_assistant,
             callback_group=self.callback_group,
         )
@@ -119,6 +119,19 @@ class VisionNode(Node):
         response.results_path = str(VisionProcess.vision_results_path)
         del VisionProcess
 
+        self.get_logger().warn(str(type(response.points)))
+
+        point1 = Point()
+        point1.x = 1.5
+        point1.y = 2.5
+        point1.z = 3.5
+
+        point2 = Point()
+        point2.x = 4.5
+        point2.y = 5.5
+        point2.z = 6.5        
+        response.points.append(point1)
+        response.points.append(point2)
         return response
 
     def start_vision_assistant(
