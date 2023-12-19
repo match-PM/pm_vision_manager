@@ -46,7 +46,7 @@ INF_FLOAT = 1e20
 
 
 class VisionAssistantApp(QMainWindow):
-    def __init__(self, initial_pipeline_file:str = None):
+    def __init__(self, initial_pipeline_file: str = None):
         super().__init__()
         self.function_parameter_widgets = (
             []
@@ -61,7 +61,7 @@ class VisionAssistantApp(QMainWindow):
 
         # Load an initial file if given in startup.
         if initial_pipeline_file is not None:
-            self.open_process_file(initial_pipeline_file) 
+            self.open_process_file(initial_pipeline_file)
 
     def initUI(self):
         self.setWindowTitle("Vision Assistant App")
@@ -136,9 +136,11 @@ class VisionAssistantApp(QMainWindow):
     def set_widget_pipeline_name(self, text):
         self.pipeline_name_widget.setText("Process name: " + text)
 
-    def open_process_file(self, file_path_load = None):
+    def open_process_file(self, file_path_load=None):
         if self.current_vision_pipeline.vision_pipeline_json_dir == None:
-            self.current_vision_pipeline.vision_pipeline_json_dir = (self.default_process_libary_path)
+            self.current_vision_pipeline.vision_pipeline_json_dir = (
+                self.default_process_libary_path
+            )
 
         if not file_path_load:
             file_filter = "JSON Files (*.json);;All Files (*)"
@@ -369,7 +371,7 @@ class VisionAssistantApp(QMainWindow):
                         double_spinbox.setMaximum(param.max_val)
 
                     if isinstance(param.min_val, float):
-                        double_spinbox.setMinimum(param.max_val)
+                        double_spinbox.setMinimum(param.min_val)
 
                     double_spinbox.setSingleStep(1.0)
                     double_spinbox.setDecimals(2)
@@ -576,7 +578,7 @@ if __name__ == "__main__":
             # Extract the filename after the colon
             pipeline_file = arg.split(":")[1]
     app = QApplication(sys.argv)
-    
-    window = VisionAssistantApp(initial_pipeline_file = pipeline_file)
+
+    window = VisionAssistantApp(initial_pipeline_file=pipeline_file)
     window.show()
     sys.exit(app.exec())

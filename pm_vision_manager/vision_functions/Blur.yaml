@@ -1,4 +1,4 @@
-function_name: "Canny"
+function_name: "Blur"
 description: "BlaBla"
 params:
   - param_name: "active"

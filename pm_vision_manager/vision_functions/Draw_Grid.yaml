@@ -6,7 +6,7 @@ params:
     type: "bool"
 
   - param_name: "grid_spacing"
-    description: "tbd"
+    description: "Grid spacing in um."
     type: "unsigned_int"
-    min_val: 1
-    max_val: 'inf'
+    min_val: 100
+    max_val: "inf"
