@@ -1,0 +1,39 @@
+function_name: "AdaptiveThreshold"
+description: "BlaBla"
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "blockSize"
+    description: "A variable of the integer type representing size of the pixelneighborhood used to calculate the threshold value."
+    type: "kernel"
+    min_val: 3
+    max_val: 999
+
+  - param_name: "maxValue"
+    description: "A variable of double type representing the value that is to be given if pixel value is more than the threshold value."
+    type: "float"
+    min_val: 0.0
+    max_val: 255.0
+
+  - param_name: "C"
+    description: "A variable of double type representing the constant used in the both methods (subtracted from the mean or weighted mean)."
+    type: "float"
+    min_val: "-inf"
+    max_val: "inf"
+
+  - param_name: "adaptiveMethod"
+    description: "A variable of integer the type representing the adaptive method to be used."
+    type: "string_list"
+    values: 
+      - "ADAPTIVE_THRESH_MEAN_C"
+      - "ADAPTIVE_THRESH_GAUSSIAN_C"
+
+  - param_name: "thresholdType"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "THRESH_BINARY"
+      - "THRESH_BINARY_INV"
+

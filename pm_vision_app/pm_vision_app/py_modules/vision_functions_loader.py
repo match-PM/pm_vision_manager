@@ -4,7 +4,7 @@ import yaml
 from py_modules.vision_functions_class import VisionFunction
 import fnmatch
 import py_modules.type_classes as TC
-
+import copy
 
 class VisionFunctionsLoader():
     def __init__(self, lib_path) -> None:
@@ -93,7 +93,7 @@ class VisionFunctionsLoader():
         for function in self.vision_functions:
             if function_name == function.vision_function_name:
                 # early return
-                return function
+                return copy.copy(function)
         
         # Return False if function not found
         return False

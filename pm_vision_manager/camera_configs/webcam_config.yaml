@@ -7,9 +7,16 @@ camera_params:
   camera_axis_1_angle: 0                # Starting from normal 'x' in math. positive direction
   camera_axis_2_angle: '+'              # '+' -> 90 degree; '-' -> -90 degree 
   subscription_topic: 'video_frames'
+
   coaxial_light:
     channel: 'message'
     name: 'blabla/camera1_ring_light'
     type: 'bool'
     minVal: 100
     maxVal: 0
+
+  exposure_time:
+    srv_client_name: '/webcam_image_publisher/demo_set_exposure'
+    srv_type: 'pm_vision_interfaces/srv/DemoSetExposure'
+    min_val: 4.0
+    max_val: 35000.0

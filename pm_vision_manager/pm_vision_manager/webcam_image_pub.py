@@ -10,7 +10,7 @@ from rclpy.node import Node # Handles the creation of nodes
 from sensor_msgs.msg import Image # Image is the message type
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 import cv2 # OpenCV library
- 
+from pm_vision_interfaces.srv import DemoSetExposure
 class ImagePublisher(Node):
   """
   Create an ImagePublisher class, which is a subclass of the Node class.
@@ -31,14 +31,20 @@ class ImagePublisher(Node):
       
     # Create the timer
     self.timer = self.create_timer(timer_period, self.timer_callback)
-         
+    self.exposure_clinet = self.create_service(DemoSetExposure,f"{self.get_name()}/demo_set_exposure",self.set_exposure)
+
     # Create a VideoCapture object
     # The argument '0' gets the default webcam.
     self.cap = cv2.VideoCapture(0)
          
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
-   
+     
+  def set_exposure(self,request: DemoSetExposure.Request, response: DemoSetExposure.Response):
+    self.get_logger().warn(f"exposure time set to {request.target_value}")
+    response.success = True
+    return response
+  
   def timer_callback(self):
     """
     Callback function.

@@ -7,7 +7,6 @@ camera_params:
   camera_axis_1_angle: 0                # Starting from normal 'x' in math. positive direction
   camera_axis_2_angle: '+'              # '+' -> 90 degree; '-' -> -90 degree 
   subscription_topic: 'Camera_Bottom_View/pylon_ros2_camera_node/image_raw'
-  shutter_time_topic: 'top'
   
   coaxial_light:
     channel: 'topic'
@@ -15,9 +14,8 @@ camera_params:
     type: 'bool'
     
   exposure_time:
-    channel: 'service'
-    name: '/Camera_Bottom_View/pylon_ros2_camera_node/set_exposure'
-    type: 'float'
+    srv_client_name: '/Camera_Bottom_View/pylon_ros2_camera_node/set_exposure'
+    srv_type: 'pm_vision_interfaces/srv/DemoSetExposure'
     min_val: 0.0
-    max_val: 35000.0
+    max_val: 35000.0    
    

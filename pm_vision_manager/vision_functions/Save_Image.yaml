@@ -1,12 +1,8 @@
-function_name: "save_image"
+function_name: "Save_Image"
 description: "BlaBla"
 params:
   - param_name: "active"
-    description: "tbd"
-    type: "bool"
-
-  - param_name: "active"
-    description: "tbd"
+    description: "Parameter to activate or deactivate this function."
     type: "bool"
 
   - param_name: "prefix"

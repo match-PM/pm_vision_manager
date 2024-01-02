@@ -41,7 +41,7 @@ class VisionPipeline():
         
         for function in self.vision_functions:
             process_list.append(function.function_dictionary())
-        print(process_list)
+        #print(process_list)
         return process_list
 
     def set_vision_pipeline_from_process_json(self, file_path:str) -> bool:

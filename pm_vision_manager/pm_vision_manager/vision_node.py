@@ -4,38 +4,16 @@ from rclpy.node import Node  # Handles the creation of nodes
 from sensor_msgs.msg import Image  # Image is the message type
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
 import cv2
-import json
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication, QSizePolicy
 from PyQt6.QtGui import QColor, QTextCursor, QFont, QImage, QPixmap
 from PyQt6.QtCore import Qt, QByteArray
 from threading import Thread 
 from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
-from ament_index_python.packages import get_package_share_directory
-import numpy as np
-import os
-from os import listdir
-from datetime import datetime
-import yaml
-import fnmatch
-from yaml.loader import SafeLoader
-import subprocess
-from ament_index_python.packages import get_package_share_directory
-import math
-from math import pi
 import time
 from rclpy.executors import MultiThreadedExecutor, SingleThreadedExecutor
-from pathlib import Path
 import sys
-from pm_vision_manager.va_py_modules.vision_processes import process_image
-from pm_vision_manager.va_py_modules.vision_utils import (
-    image_resize,
-    degrees_to_rads,
-    rads_to_degrees,
-    get_screen_resolution,
-    rotate_image,
-)
-from functools import partial
-
+from pm_vision_manager.va_py_modules.vision_utils import get_screen_resolution, image_resize
+from copy import copy
 from pm_vision_interfaces.srv import ExecuteVision
 from pm_vision_interfaces.srv import StopVisionAssistant
 from pm_vision_interfaces.srv import StartVisionAssistant
@@ -80,13 +58,16 @@ class VisionNode(Node):
         )
         self.timer = self.create_timer(0.5, self.display_image_callback, callback_group=self.callback_group)
 
+        self.screen_resolution = get_screen_resolution()
+        self.screen_height = int(self.screen_resolution["height"].decode("UTF-8"))
+        self.screen_width = int(self.screen_resolution["width"].decode("UTF-8"))
+        self.get_logger().info(f"Screen resolution: {str(self.screen_width)}x{str(self.screen_height)}")
+
         self.pub = self.create_publisher(Image, f"VisionManager/test", 10)
         self.get_logger().info("Vision node started!")
         self.image_widgets = {}
 
-    def execute_vision(
-        self, request: ExecuteVision.Request, response: ExecuteVision.Response
-    ):
+    def execute_vision(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
         VisionProcess = VisionProcessClass(
             self,
             launch_as_assistant=False,
@@ -120,7 +101,8 @@ class VisionNode(Node):
         del VisionProcess
 
         self.get_logger().warn(str(type(response.points)))
-
+        self.get_logger().warn(str(response.get_fields_and_field_types()))
+        
         point1 = Point()
         point1.x = 1.5
         point1.y = 2.5
@@ -210,39 +192,6 @@ class VisionNode(Node):
 
         return response
 
-    # def display_image_callback(self):
-    #     try:
-    #         for index, image_item in enumerate(self.image_list):
-    #             # Access elements within the tuple
-    #             name, image, display_time, start_time = image_item
-
-    #             if not (display_time == 0) and (
-    #                 self.get_clock().now().nanoseconds / 1e9
-    #                 > start_time.nanoseconds / 1e9 + display_time
-    #             ):
-    #                 del self.image_list[index]
-    #                 # cv2.destroyWindow(name)
-    #                 self.get_logger().info(f"Closing image: {name}")
-
-    #         for index, image_item in enumerate(self.image_list):
-    #             # Access elements within the tuple
-    #             name, image, display_time, start_time = image_item
-
-    #             if not display_time == 0:
-    #                 window_name = name
-    #                 self.pub.publish(self.br.cv2_to_imgmsg(image, encoding="rgb8"))
-    #                 # cv2.imshow(window_name, image)
-    #                 self.get_logger().warn("Show cv2 image")
-
-    #         # cv2.waitKey(1)
-
-    #         if len(self.image_list) == 0:
-    #             # cv2.destroyAllWindows()
-    #             pass
-    #     except Exception as e:
-    #         self.get_logger().error("Error occured in displaying image!")
-    #         self.get_logger().error(e)
-
     def display_image_callback(self)-> None:
         images_to_remove = []
         try:
@@ -273,13 +222,13 @@ class VisionNode(Node):
 
                     if name not in self.image_widgets:
                         # Create a new widget if it doesn't exist
-                        widget = ImageDisplayWidget(name, image)
+                        widget = ImageDisplayWidget(name, image, screen_height=self.screen_height)
                         widget.show()
                         self.image_widgets[name] = widget
                         self.get_logger().debug("Creating new image window '{name}'!")
                     else:
                         # Update the existing widget
-                        self.image_widgets[name].set_image(image)
+                        self.image_widgets[name].set_image(image,screen_height=self.screen_height)
                         self.get_logger().warn(f"Updating image window '{name}'!")
                     
                     #self.pub.publish(self.br.cv2_to_imgmsg(image, encoding="rgb8"))
@@ -290,7 +239,7 @@ class VisionNode(Node):
             self.get_logger().error(e)
 
 class ImageDisplayWidget(QWidget):
-    def __init__(self, name, image, parent=None):
+    def __init__(self, name, image, screen_height = None, parent=None):
         super(ImageDisplayWidget, self).__init__(parent)
 
         self.setWindowTitle(name)
@@ -299,15 +248,24 @@ class ImageDisplayWidget(QWidget):
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.image_label)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
-        self.set_image(image)
+        self.set_image(image, screen_height)
 
-    def set_image(self, image):
+    def set_image(self, image, screen_height = None):
+        height, width, channel = image.shape
 
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
+        if screen_height is None:
+            screen_height = height
+
+        image = image_resize(image,height=screen_height-100)
+
         height, width, channel = image.shape
+
         bytes_per_line = 3 * width
+
         q_image = QImage(image.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
         pixmap = QPixmap.fromImage(q_image)
         self.image_label.clear()
@@ -343,13 +301,14 @@ def main(args=None):
     thread.start()
     
     try:
-        #rsap_node.qt_window.show()
         sys.exit(app.exec())
 
     finally:
+        
         vision_node.destroy_node()
         executor.shutdown()
         rclpy.shutdown()
+        app.closeAllWindows()
 
 if __name__ == "__main__":
     main()

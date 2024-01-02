@@ -60,7 +60,7 @@ class VisionFunction():
             if param.param_name == 'active':
                 return param
                 
-    def set_param_by_param_name(self, param_to_set, new_param_value):
+    def set_param_by_param_name(self, param_to_set:str, new_param_value:any):
         # iterate through all list of param types
         for param_type_list in self.global_param_list:
             # iterate through the specific param type
