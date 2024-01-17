@@ -208,6 +208,8 @@ def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, metho
   print("select_Area executed")
   
 def morphologyExOpening(image_processing_handler: ImageProcessingHandler,kernelsize:int):
+  if not image_processing_handler.is_process_image_binary():
+    raise ImageNotBinaryError()
   frame_processed = image_processing_handler.get_processing_image()
   kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernelsize, kernelsize))
   frame_processed = cv2.morphologyEx(frame_processed, cv2.MORPH_OPEN, kernel)
@@ -215,6 +217,8 @@ def morphologyExOpening(image_processing_handler: ImageProcessingHandler,kernels
   print("Morphology_Ex_Opening executed")
 
 def morphologyExClosing(image_processing_handler: ImageProcessingHandler,kernelsize:int):
+  if not image_processing_handler.is_process_image_binary():
+    raise ImageNotBinaryError()
   frame_processed = image_processing_handler.get_processing_image()
   kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernelsize, kernelsize))
   frame_processed = cv2.morphologyEx(frame_processed, cv2.MORPH_CLOSE, kernel)
@@ -620,7 +624,7 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
                                   
           case "Morphology_Ex_Closing":
             active = function_parameter['active']
-            kernelsize = function_parameter['kernelsize']
+            p_kernelsize = function_parameter['kernelsize']
 
             if active:
               morphologyExClosing(image_processing_handler=image_processing_handler,

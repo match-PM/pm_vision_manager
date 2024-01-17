@@ -1,5 +1,8 @@
-import py_modules.type_classes as TC
-
+import sys
+import os
+sys.path.append(os.getcwd())
+#import py_modules.type_classes as TC
+import pm_vision_app.py_modules.type_classes as TC
 
 class VisionFunction():
     def __init__(self,vision_function_name, description) -> None:
@@ -22,7 +25,7 @@ class VisionFunction():
                                 self.int_list, 
                                 self.string_list]
 
-    def function_dictionary(self) -> dict:
+    def return_function_dictionary(self) -> dict:
         """
         This function returns the dictionary of a function. It iterates through all the parameters in the respective list and creates a dict.
         """

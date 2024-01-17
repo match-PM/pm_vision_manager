@@ -18,7 +18,7 @@ from pathlib import Path
 import threading
 from rosidl_runtime_py.utilities import get_service #, get_interface, get_message
 from pm_vision_manager.va_py_modules.vision_pipline_processing import process_image
-
+from threading import Thread
 from rclpy.node import Node
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler
 
@@ -66,9 +66,13 @@ class VisionProcessClass:
         self.vision_process_id = process_UID
         
         self.run_cross_validation = run_cross_validation
+
         if launch_as_assistant:
             self.show_image_on_error = show_image_on_error
             self.step_through_images = step_through_images
+        else:
+            self.show_image_on_error = False
+            self.step_through_images = False
 
         self.image_processing_handler = ImageProcessingHandler()
         package_share_directory = get_package_share_directory("pm_vision_manager")
@@ -96,8 +100,7 @@ class VisionProcessClass:
 
         self.process_start_time_ms = self.vision_node.get_clock().now()
 
-        self.show_image_on_error = False
-        self.step_through_images = False
+
         self.show_cross_validation_images = False  # This variable is used for the display of images in cross validation mode
 
         # self.check_process_file_existence()
@@ -124,15 +127,20 @@ class VisionProcessClass:
 
         self.counter_error_cross_val = 0
         self.VisionOK_cross_val = True
-        self.VisionOK = False
+        #self.VisionOK = False
         self.stop_image_subscription = False
         self.cross_val_failed_images = []
         self.delete_this_object = False
         self.vision_results_path = "None"
         self.results_dict = {}
 
-        if db_cross_val_only:
-            self.cycle_though_db()
+        if db_cross_val_only: # Hier haben wir ja die Abfahrt Richtung Iterieren der Bilder im Ordner...
+            if not launch_as_assistant:
+                self.cycle_though_db()
+            else:
+                self.db_thread = Thread(target=self.cycle_though_db)
+                self.db_thread.setDaemon(True)
+                self.db_thread.start()
         else:
             self.subscription = vision_node.create_subscription(
                 Image,
@@ -149,7 +157,7 @@ class VisionProcessClass:
     def vision_callback(self, data):
         self.load_assistant_config()
         self.load_process_file()
-        self.window_name = f"PM Vision Assistant_{self.vision_process_name}_ID: {self.process_UID}"
+    
 
         self.vision_node.get_logger().info("Receiving video frame")
         # Convert ROS Image message to OpenCV image
@@ -160,7 +168,7 @@ class VisionProcessClass:
 
         # run crossvalidation
         if self.run_cross_validation:
-            self.execute_crossvalidation()  # Cossvalidation needs to run before the received image is processed, otherwise results dict will contain results from cossvalidation
+            self.execute_crossvalidation()  # Crossvalidation needs to run before the received image is processed, otherwise results dict will contain results from cossvalidation
         
         image_name = self.vision_process_id+"_"+self.process_start_time
         self.image_processing_handler.set_image_metatdata(self.vision_process_id, self.process_db_path, image_name)
@@ -215,7 +223,7 @@ class VisionProcessClass:
         # Starting cross validation with images in folder
         # keyboard_listener.join()
 
-        if self.run_cross_validation:
+        if self.run_cross_validation and not self.stop_image_subscription:
             self.cross_val_failed_images.clear()
             self.image_processing_handler.cross_val_running = True
             self.counter_error_cross_val = 0
@@ -223,61 +231,49 @@ class VisionProcessClass:
             self.vision_node.get_logger().info("Starting crossvalidation...")
             try:
                 self.next_image = False
-                if self.launch_as_assistant and (
-                    self.show_image_on_error or self.step_through_images
-                ):
-                    keyboard_listener = keyboard.Listener(
-                        on_press=self.crossvalidation_keyboard_interrupt
-                    )
+                if self.launch_as_assistant and (self.show_image_on_error or self.step_through_images):
+                    self.vision_node.get_logger().error("Keyboard listener started! Press 'Space'.")
+                    keyboard_listener = keyboard.Listener(on_press=self.crossvalidation_keyboard_interrupt)
                     keyboard_listener.start()
-                # Get number of images to be processed
+
                 numb_images_cross_val = len(fnmatch.filter(os.listdir(self.process_db_path), "*.png"))
 
                 print(str(numb_images_cross_val) + " images for crossvalidation")
-
                 for image_in_folder in os.listdir(self.process_db_path):
                     if image_in_folder.endswith(".png"):
+
                         image = cv2.imread(self.process_db_path + "/" + image_in_folder)
-                        print("----------------------------")
+                    
                         print("Processing image: " + image_in_folder)
-                        # Calculate VisionOK on image
                         self.load_process_file()
                         self.crossval_image_name = image_in_folder.rstrip(".png")
-
                         image_name = f"{self.vision_process_id}_{image_in_folder}"
                         
                         self.image_processing_handler.set_image_metatdata(self.vision_process_id, self.process_db_path, image_name)
                         self.image_processing_handler.set_initial_image(image)
-
                         display_image, _ = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
-                        
                         self.save_vision_results(self.image_processing_handler.vision_results_dict)
 
                         if not self.image_processing_handler.get_vision_ok():
                             self.VisionOK_cross_val = False
                             self.cross_val_failed_images.append(image_in_folder)
                             self.counter_error_cross_val += 1
-
+                                                
                         if (((not self.image_processing_handler.get_vision_ok() and self.show_image_on_error) or self.step_through_images)
-                            and self.launch_as_assistant
-                            and self.show_cross_validation_images):
+                            and self.launch_as_assistant):
+                            #and self.show_cross_validation_images
                             self.next_image = False
-
-                            while not self.next_image:
+                            while not self.next_image and not self.stop_image_subscription:
                                 self.load_process_file()
                                 display_image, _ = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
-
                                 self.apply_image_for_vizualization(
                                     self.window_name,
                                     display_image,
                                     self.image_display_time_visualization,
                                 )
                                 time.sleep(0.5)
-
                 if self.counter_error_cross_val == 0:
-                    self.vision_node.get_logger().info(
-                        "Crossvalidation exited with no Error!"
-                    )
+                    self.vision_node.get_logger().info("Crossvalidation exited with no Error!")
 
                 else:
                     print("Crossvalidation error!")
@@ -290,14 +286,13 @@ class VisionProcessClass:
                     )
                 print(self.cross_val_failed_images)
 
-                if self.launch_as_assistant and (
-                    self.show_image_on_error or self.step_through_images
-                ):
+                if self.launch_as_assistant and (self.show_image_on_error or self.step_through_images):
                     keyboard_listener.stop()
-            except:
+            except Exception as e:
                 self.vision_node.get_logger().error(
                     "No images in DB yet or other error in execution of cross validation!"
                 )
+                self.vision_node.get_logger().error(str(e))
 
             self.vision_node.get_logger().info("Crossvalidation ended...")
 
@@ -305,7 +300,6 @@ class VisionProcessClass:
                 False  # reset so that published image is displayed
             )
             self.image_processing_handler.cross_val_running = False
-            keyboard_listener.stop()
 
     def load_path_config(self) -> bool:
         try:
@@ -525,7 +519,9 @@ class VisionProcessClass:
             FileData = json.load(f)
             self.vision_process_name = FileData["vision_process_name"]
             # self.vision_process_id=FileData['id_process']
-            self.process_db_path = self.vision_database_path + self.vision_process_name
+            #self.process_db_path = self.vision_database_path + self.vision_process_name
+            self.process_db_path = self.vision_database_path + self.process_filename.split('.json')[0]
+            self.window_name = f"PM Vision Assistant_{self.vision_process_name}_ID: {self.process_UID}"
             f.close()
             self.vision_node.get_logger().info("Process meta data loaded!")
             return True
@@ -549,18 +545,15 @@ class VisionProcessClass:
 
     def save_vision_results(self, result_dict):
         result_meta_dict = {}
-
+        
         # Set path for results dict
         if not self.image_processing_handler.cross_val_running:
             vision_results_path = f"{self.process_library_path}{Path(self.process_file_path).stem}_results_{self.camera_id}.json"
-            self.vision_results_path = (
-                vision_results_path  # needed for the service response
-            )
+            self.vision_results_path = (vision_results_path)  # needed for the service response
         else:
-            results_folder_path = f"{self.vision_database_path}{Path(self.process_file_path).stem}_{self.camera_id}"
+            results_folder_path = f"{self.vision_database_path}{self.process_filename.split('.json')[0]}/{self.camera_id}"
             vision_results_path = f"{results_folder_path}/results_{str(self.crossval_image_name)}.json"
-            print(results_folder_path)
-            print(vision_results_path)
+
             if not os.path.exists(results_folder_path):
                 os.makedirs(results_folder_path)
                 print("Results folder crossval created!")
@@ -591,8 +584,15 @@ class VisionProcessClass:
 
     def cycle_though_db(self):
         try:
-            while True:
-                self.run_cross_validation()
+            if self.launch_as_assistant:
+                while (not self.stop_image_subscription):
+                    self.execute_crossvalidation()
+                self.set_display_time_for_exit()
+                self.delete_this_object = True
+            else:
+                self.execute_crossvalidation()
+                self.delete_this_object = True
+                
         except KeyboardInterrupt:
             pass
 
