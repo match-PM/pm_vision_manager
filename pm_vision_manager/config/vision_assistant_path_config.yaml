@@ -19,9 +19,18 @@
 #   camera_config_path: "/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/camera_configs/"
 #   vision_assistant_config: "/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/config/vision_assistant_config.yaml"
 
+# Für Niklas Laptop 
+#vision_assistant_path_config:
+#  process_library_path: "/home/niklodion/Data_MA/test_GA/testlauf_0" # Hier das / weglassen
+#  function_libary_path: "/home/niklosion/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/vision_functions/"
+#  vision_database_path: "/home/niklodion/Data_MA/test_GA" # Hier das / weglassen
+#  camera_config_path: "/home/niklodion/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/camera_configs/"
+#  vision_assistant_config: "/home/niklodion/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/config/vision_assistant_config.yaml"
+
+
 vision_assistant_path_config:
-  process_library_path: "/home/pmlab/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/vision_processes/"
-  function_libary_path: "/home/pmlab/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/vision_functions/"
-  vision_database_path: "/home/pmlab/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/vision_image_db/"
-  camera_config_path: "/home/pmlab/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/camera_configs/"
-  vision_assistant_config: "/home/pmlab/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/config/vision_assistant_config.yaml"
+  process_library_path: "/home/niklodion/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/vision_processes/"
+  function_libary_path: "/home/niklodion/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/vision_functions/"
+  vision_database_path: "/home/niklodion/Data_MA/"
+  camera_config_path: "/home/niklodion/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/camera_configs/"
+  vision_assistant_config: "/home/niklodion/ros2_ws_VA/src/pm_vision_manager/pm_vision_manager/config/vision_assistant_config.yaml"

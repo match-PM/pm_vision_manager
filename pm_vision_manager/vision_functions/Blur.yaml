@@ -10,9 +10,17 @@ params:
     type: "kernel"
     min_val: 1
     max_val: 10000
+
+  - param_name: "gaus_std"
+    description: "Standard deviation of the gaussian distribution in x- and y-direction"
+    type: "unsigned_int"
+    min_val: 1
+    max_val: 10
     
   - param_name: "type"
     description: "tbd"
     type: "string_list"
     values: 
       - "GaussianBlur"
+      - "Blur"
+      - "medianBlur"

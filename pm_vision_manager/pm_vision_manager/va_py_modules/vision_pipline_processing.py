@@ -3,7 +3,7 @@ from rclpy.node import Node # Handles the creation of nodes
 import cv2 # OpenCV library
 import numpy as np
 import os
-from math import pi
+from math import pi                              
 from pm_vision_manager.va_py_modules.vision_utils import rotate_image
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError
 
@@ -245,11 +245,11 @@ def vertical(image_processing_handler: ImageProcessingHandler, v_kernelsize):
   print("vertical executed")
 
 
-def blur(image_processing_handler: ImageProcessingHandler, kernelsize:int, blur_type:str):
+def blur(image_processing_handler: ImageProcessingHandler, kernelsize: int, blur_type: str, gaus_std: int):
 
   frame_processed = image_processing_handler.get_processing_image()
   if blur_type == "GaussianBlur":
-    frame_processed = cv2.GaussianBlur(frame_processed, (kernelsize, kernelsize),0)
+    frame_processed = cv2.GaussianBlur(frame_processed, (kernelsize, kernelsize), gaus_std)
   elif blur_type == "Blur":
     frame_processed = cv2.blur(frame_processed, (kernelsize, kernelsize))
   elif blur_type == "medianBlur":
@@ -406,15 +406,21 @@ def drawGrid(image_processing_handler: ImageProcessingHandler, grid_spacing):
   cv2.putText(img=image_processing_handler.frame_visual_elements,text="Grid: "+ str(grid_spacing) + "um", org=(5,30), fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1,color=(255,0,0), thickness=1)
   print("Grid executed")
 
-def saveImage(image_processing_handler: ImageProcessingHandler, prefix: str, with_vision_elements: bool, save_in_cross_val :bool):
+
+def saveImage(image_processing_handler: ImageProcessingHandler, 
+              prefix: str, with_vision_elements: bool, save_in_cross_val :bool):
+  
   if not os.path.exists(image_processing_handler.process_db_path):
     os.makedirs(image_processing_handler.process_db_path)
     print(f"Process DB folder created {image_processing_handler.process_db_path}!")
   
-  image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.image_name}{prefix}.png"
+  # image_processing_handler.image_name comes from (image_name = f"{self.vision_process_id}_{image_in_folder}")
+  # in "vision_assistant_class.py" line 250. Maybe good to know... --> Don't use "/" in your process_uid
+  image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.image_name}{prefix}"
 
   #image_name=self.process_db_path+"/"+self.vision_process_id+"_"+self.process_start_time+prefix+".png"
 
+  # if not os.path.isfile verstehe ich an dieser Stelle nicht... Test ob es schon ein Bild gibt...?
   if not os.path.isfile(image_name) and (not image_processing_handler.cross_val_running or save_in_cross_val):
     if with_vision_elements:
       frame_processed = image_processing_handler.get_processing_image()   
@@ -424,15 +430,77 @@ def saveImage(image_processing_handler: ImageProcessingHandler, prefix: str, wit
                                                                              image_processing_handler.frame_visual_elements)
     else:
       image_to_save = image_processing_handler.get_processing_image()   
-    cv2.imwrite(image_name,image_to_save)
+    cv2.imwrite(image_name, image_to_save)
     print("Image saved!")
 
   if (not image_processing_handler.cross_val_running or save_in_cross_val):
-    Save_image_results_dict={"Image saved:": image_processing_handler.image_name}
+    Save_image_results_dict={"Image saved:": image_name} # image_processing_handler.
     image_processing_handler.vision_results_list.append(Save_image_results_dict)
 
   print("save_image executed")
-  
+
+
+def reduce_saturation(image_processing_handler: ImageProcessingHandler, 
+                      HueMin: int, HueMax: int, f_reduce_s: int):
+  """
+  Converts the BGR-image into the HSV-Colorspace to reduce the saturation for the hues given
+  in the 'HueRange'. Then the methods returns an BGR-image.
+    
+  :param bgr_img: Image in BGR.
+  :param HueMin: Min value for the range of hue values, which saturation will be reduced.
+  :param HueMax: Max value for the range of hue values, which saturation will be reduced.
+  :param f_reduce_s: Factor of how much the saturation should be reduced.
+  :return: Image in BGR.
+  """
+  # TODO Evtl. wäre ein Test gut, zuschauen ob das Bild ein BGR-Image ist
+
+  frame_processed = image_processing_handler.get_processing_image()
+
+  hsv_img = cv2.cvtColor(frame_processed, cv2.COLOR_BGR2HSV)  # Convert given BGR-image into the HSV-ColorSpace
+  h, s, v = cv2.split(hsv_img)    # Splits image into its three channels
+  # Reduces saturation by factor x in a given range of the hue-values
+  s = np.where((h >= HueMin) & (h <= HueMax), (s / f_reduce_s).astype('uint8'), s)  
+  new_hsv_img = cv2.merge([h, s, v])  # Gets all three channels back together
+  frame_processed = cv2.cvtColor(new_hsv_img, cv2.COLOR_HSV2BGR) # Converts image back into BGR-Colorspace
+
+  image_processing_handler.set_processing_image(frame_processed)
+
+
+def CLAHE_on_V_Channel(image_processing_handler: ImageProcessingHandler,
+                       clipLimit: float, tileGridSize_M: int, tileGridSize_N: int):
+  """
+  Apply the Contrast Limited Adaptive Histogram Equalization (CLAHE) the Value-Channel of the converted HSV-Image.
+  Helps to get a better contrast of the brightness in the image. Therefore it should get more easy to find edges for example.
+
+  :param bgr_img: Image in BGR.
+  :param clipLimit: This is the threshold for contrast limiting
+  :param tileGridSize: Divides the input image into M x N tiles and 
+                       then applies histogram equalization to each local tile
+  :return: Image in BGR.
+  """
+  # TODO Evtl. wäre ein Test gut, zuschauen ob das Bild ein BGR-Image ist
+
+  frame_processed = image_processing_handler.get_processing_image()
+
+  clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=(tileGridSize_M,tileGridSize_N)) # Create CLAHE-Object
+  hsv_img = cv2.cvtColor(frame_processed, cv2.COLOR_BGR2HSV)  # Convert given BGR-image into the HSV-ColorSpace
+  h, s, v = cv2.split(hsv_img)    # Splits image into its three channels
+  v = clahe.apply(v)  # Apply contrasting vie CLAHE on the value channel of the HSV-image
+  v = (v).astype('uint8') # Important for merging to image
+  new_hsv_img = cv2.merge([h, s, v])  # Gets all three channels back together
+  frame_processed = cv2.cvtColor(new_hsv_img, cv2.COLOR_HSV2BGR) # Converts image back into BGR-Colorspace
+
+  image_processing_handler.set_processing_image(frame_processed)
+
+
+def EqualizeHist(image_processing_handler: ImageProcessingHandler):
+  """
+  Equalizes the Histogram of an Gray-Image or a Channel of an Image.
+  """
+  frame_processed = image_processing_handler.get_processing_image()
+  frame_processed = cv2.equalizeHist(frame_processed)
+  image_processing_handler.set_processing_image(frame_processed)
+
 
 def example_function(image_processing_handler: ImageProcessingHandler):
   """
@@ -647,14 +715,14 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
                         v_kernelsize=p_v_kernelsize)  
               
           case "Blur":
-            active = function_parameter['active']
-            p_kernelsize = function_parameter['kernelsize']
-            p_blur_type = function_parameter['type']
+            active = function_parameter.get('active')
+            p_kernelsize = function_parameter.get('kernelsize')
+            p_blur_type = function_parameter.get('type')
+            p_gaus_std = function_parameter.get('gaus_std')
 
             if active:
               blur(image_processing_handler=image_processing_handler,
-                   kernelsize=p_h_kernelsize,
-                   blur_type=p_blur_type)             
+                   kernelsize=p_kernelsize, blur_type=p_blur_type, gaus_std=p_gaus_std)             
 
           case "Morphology_Ex_Gradient":
             active = function_parameter['active']
@@ -731,6 +799,38 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
                                           param2=p_param2,
                                           minRadius=p_minRadius,
                                           maxRadius=p_maxRadius)
+              
+          case "ReduceSaturation":
+            active = function_parameter.get('active')
+            p_HueMin = function_parameter.get('HueMin')
+            p_HueMax = function_parameter.get('HueMax')
+            p_f_reduce_s = function_parameter.get('f_reduce_s')
+            if active:
+              reduce_saturation(
+                image_processing_handler=image_processing_handler,
+                HueMin=p_HueMin,
+                HueMax=p_HueMax,
+                f_reduce_s=p_f_reduce_s
+              )
+
+          case "CLAHE_on_V_Channel":
+            active = function_parameter.get('active')
+            p_clipLimit = function_parameter.get('clipLimit')
+            p_tileGridSize_M = function_parameter.get('tileGridSize_M')
+            p_tileGridSize_N = function_parameter.get('tileGridSize_N')
+            if active:
+              CLAHE_on_V_Channel(
+                image_processing_handler=image_processing_handler,
+                clipLimit=p_clipLimit,
+                tileGridSize_M=p_tileGridSize_M,
+                tileGridSize_N=p_tileGridSize_N
+              )
+
+          case "EqualizeHist":
+            active = function_parameter.get('active')
+            if active:
+              EqualizeHist(image_processing_handler=image_processing_handler)
+              
                 
     if image_processing_handler.get_vision_ok():
       vision_node.get_logger().info('Vision process executed cleanly!')
