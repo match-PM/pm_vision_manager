@@ -286,7 +286,7 @@ def Dilation(image_processing_handler: ImageProcessingHandler, kernelsize:int, i
 def HoughCircles(image_processing_handler: ImageProcessingHandler,
                  draw_circles:bool,
                  method:str,
-                 dp,
+                 dp: float,
                  minDist,
                  param1,
                  param2,
