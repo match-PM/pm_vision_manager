@@ -1,10 +1,17 @@
-from py_modules.vision_functions_class import VisionFunction
-import py_modules.type_classes as TC
-from py_modules.vision_functions_loader import VisionFunctionsLoader
 import json
 import os
 import datetime
 import copy
+
+import sys
+sys.path.append(os.getcwd())
+from pm_vision_app.py_modules.vision_functions_class import VisionFunction
+from pm_vision_app.py_modules.vision_functions_loader import VisionFunctionsLoader
+import pm_vision_app.py_modules.type_classes as TC
+
+# from py_modules.vision_functions_class import VisionFunction
+# import py_modules.type_classes as TC
+# from py_modules.vision_functions_loader import VisionFunctionsLoader
 
 class VisionPipeline():
     def __init__(self, vision_yaml_libary_path) -> None:
@@ -30,8 +37,22 @@ class VisionPipeline():
 
         return return_str
     
+    def print_pipeline_dict(self):
+        """
+        Prints the dict of the pipeline.
+        """
+        self.create_process_dict()
+        print(self.process_dict)
+
+    def return_available_functions(self):
+        self.vison_functions_libary.list_all_vision_functions()
+    
     def append_vision_funciton_by_name(self, function_name) -> None:
-        self.vision_functions.append(copy.deepcopy(self.vison_functions_libary.return_by_name(function_name)))
+        new_function = copy.deepcopy(self.vison_functions_libary.return_by_name(function_name))
+        if new_function is not None:
+            self.vision_functions.append(new_function)
+        else:
+            raise ValueError(f"Given function '{function_name}' is not an available vision function! Call 'return_available_functions' to list possibilites.")
 
     def remove_function_by_index(self, function_index_in_pipeline: int):
         del self.vision_functions[function_index_in_pipeline]
@@ -40,7 +61,7 @@ class VisionPipeline():
         process_list = []
         
         for function in self.vision_functions:
-            process_list.append(function.function_dictionary())
+            process_list.append(function.return_function_dictionary())
         #print(process_list)
         return process_list
 
@@ -96,11 +117,17 @@ class VisionPipeline():
                              "process creation": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                              self.vision_process_json_pipeline_tag: self.vision_pipeline_to_process_list()}
         
-    def process_to_JSON(self):
+    def process_to_JSON(self, file_dir = None, file_name = None):
+        if file_dir is None:
+            file_dir = self.vision_pipeline_json_dir
+        if file_name is None:
+            file_name = self.process_name
         self.create_process_dict()
-        if self.process_name != None and self.vision_pipeline_json_dir!= None:
-            with open(self.vision_pipeline_json_dir + '/' + self.process_name+".json", "w") as outfile: 
-                json.dump(self.process_dict, outfile,indent=4)
+        if file_name != None and file_dir!= None:
+            with open(file_dir + '/' + file_name +".json", "w") as outfile: 
+                json.dump(self.process_dict, outfile)
+        else:
+            print("Error: Set json dir first!")
 
     def return_function_by_name(self, function_name: str) -> VisionFunction:
         for function in self.vision_functions:

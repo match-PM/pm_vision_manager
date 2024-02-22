@@ -12,7 +12,8 @@
   <depend>cv_bridge</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
-  <depend>opencv2</depend>
+  <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>pynput-pip</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

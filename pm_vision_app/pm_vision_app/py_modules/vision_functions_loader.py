@@ -1,10 +1,14 @@
 
 import os
 import yaml
-from py_modules.vision_functions_class import VisionFunction
 import fnmatch
-import py_modules.type_classes as TC
 import copy
+import sys
+sys.path.append(os.getcwd())
+#from py_modules.vision_functions_class import VisionFunction
+from pm_vision_app.py_modules.vision_functions_class import VisionFunction
+import pm_vision_app.py_modules.type_classes as TC
+#import py_modules.type_classes as TC
 
 class VisionFunctionsLoader():
     def __init__(self, lib_path) -> None:
@@ -87,7 +91,7 @@ class VisionFunctionsLoader():
 
     def list_all_function_dictionarys(self):
         for function in self.vision_functions:
-            print(function.function_dictionary())
+            print(function.return_function_dictionary())
 
     def return_by_name(self, function_name: str) -> VisionFunction:
         for function in self.vision_functions:
@@ -96,7 +100,7 @@ class VisionFunctionsLoader():
                 return copy.copy(function)
         
         # Return False if function not found
-        return False
+        return None
 
 
 

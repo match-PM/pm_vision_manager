@@ -77,7 +77,7 @@ class VisionNode(Node):
             process_UID=request.process_uid,
             image_display_time_visualization=request.image_display_time,
             open_process_file=False,
-            run_cross_validation=request.run_cross_validation,
+            run_cross_validation=request.run_cross_validation, # TODO Was ist request?
             show_image_on_error=False,
             step_through_images=False,
         )
@@ -94,14 +94,11 @@ class VisionNode(Node):
         while not VisionProcess.delete_this_object:
             time.sleep(0.5)
 
-        response.success = VisionProcess.VisionOK
+        response.success = VisionProcess.image_processing_handler.get_vision_ok()
         response.process_uid = request.process_uid
         response.results_dict = str(VisionProcess.results_dict)
         response.results_path = str(VisionProcess.vision_results_path)
         del VisionProcess
-
-        self.get_logger().warn(str(type(response.points)))
-        self.get_logger().warn(str(response.get_fields_and_field_types()))
         
         point1 = Point()
         point1.x = 1.5
@@ -167,13 +164,17 @@ class VisionNode(Node):
     ):
         # if request.process_uid in self.running_vision_assistants:
         response.success = False
-        self.get_logger().info(f"Stop Vision assistant: {request.process_uid}")
+        self.get_logger().error(f"Stop Vision assistant: {request.process_uid}")
 
         for index, VisionInstance in enumerate(self.running_vision_assistants):
+            # VisionInstance is a douple of name, visionassistantclass
             if VisionInstance[0] == request.process_uid:
                 VisionInstance[1].stop_image_subscription = True
                 VisionInstance[1].set_display_time_for_exit()
-
+                try:
+                    VisionInstance[1].db_thread.join()
+                except:
+                    pass
                 while not VisionInstance[1].delete_this_object:
                     time.sleep(0.5)
                     self.get_logger().debug(f"Stuck in loop of '{request.process_uid}'")
