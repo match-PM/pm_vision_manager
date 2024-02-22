@@ -64,7 +64,7 @@ class VisionProcessClass:
         self.camera_config_filename = camera_config_filename
         self.process_UID = process_UID
         self.vision_process_id = process_UID
-        
+        self.topic_available = False
         self.run_cross_validation = run_cross_validation
         if launch_as_assistant:
             self.show_image_on_error = show_image_on_error
@@ -78,12 +78,12 @@ class VisionProcessClass:
         self.image_display_time_visualization = image_display_time_visualization
 
         if self.launch_as_assistant:
-            self.vision_node.get_logger().info("Starting node in assistant mode!")
+            self.vision_node.get_logger().info("Starting Vision Assistant!")
             self.image_display_time_visualization = (
                 10  # Set the display time in assistant mode
             )
         else:
-            self.vision_node.get_logger().info("Starting node in processing mode!")
+            self.vision_node.get_logger().info("Execute Vision!")
             if self.image_display_time_visualization < 0:
                 self.image_display_time_visualization = 5
 
@@ -134,19 +134,28 @@ class VisionProcessClass:
         if db_cross_val_only:
             self.cycle_though_db()
         else:
+            self.topic_timer = self.vision_node.create_timer(10, self.image_topic_watchdog, callback_group=vision_node.callback_group)
+
             self.subscription = vision_node.create_subscription(
                 Image,
                 self.camera_subscription_topic,  # defined in camera_config.yaml
                 self.vision_callback,
                 10,
-                callback_group=vision_node.callback_group_image_subscriptions,
-            )
+                callback_group=vision_node.callback_group_image_subscriptions)
             self.subscription  # prevent unused variable warning
-            vision_node.get_logger().info(
-                "Subscribing to: " + self.camera_subscription_topic
-            )
+            vision_node.get_logger().info(f"Subscribing to: '{self.camera_subscription_topic}'. Timeout: 10s")
+
+    def image_topic_watchdog(self):
+        if self.topic_available:
+            self.topic_available = False
+        else:
+            self.vision_node.get_logger().error("Timed out! Image topic not available!")
+            self.delete_this_object = True
+            self.vision_node.destroy_subscription(self.subscription)
+            self.topic_timer.cancel()
 
     def vision_callback(self, data):
+        self.topic_available = True
         self.load_assistant_config()
         self.load_process_file()
         self.window_name = f"PM Vision Assistant_{self.vision_process_name}_ID: {self.process_UID}"
@@ -157,7 +166,7 @@ class VisionProcessClass:
 
         if not self.launch_as_assistant:
             self.stop_image_subscription = True  # in exection mode is this set before the image is processed with the pipeline. This is due to the ability of process_image to set the stop_image_subscription
-
+    
         # run crossvalidation
         if self.run_cross_validation:
             self.execute_crossvalidation()  # Cossvalidation needs to run before the received image is processed, otherwise results dict will contain results from cossvalidation
@@ -178,6 +187,7 @@ class VisionProcessClass:
         if self.stop_image_subscription:
             self.vision_node.get_logger().info("Vision Process Ended!")
             self.delete_this_object = True
+            self.topic_timer.cancel()
             self.vision_node.destroy_subscription(self.subscription)
 
     def apply_image_for_vizualization(self, window_name, image, display_time):
@@ -514,7 +524,7 @@ class VisionProcessClass:
                 parents=True, exist_ok=True
             )
             with open(self.process_file_path, "w+") as outputfile:
-                json.dump(default_process_file_metadata_dict, outputfile)
+                json.dump(default_process_file_metadata_dict, outputfile,indent=4)
         except Exception as e:
             print(e)
             self.vision_node.get_logger().error("Error creating process file")
@@ -585,7 +595,7 @@ class VisionProcessClass:
 
         try:
             with open(vision_results_path, "w") as outputfile:
-                json.dump(result_dict, outputfile)
+                json.dump(result_dict, outputfile,indent=4)
         except:
             self.vision_node.get_logger().error("Error saving vision results!")
 

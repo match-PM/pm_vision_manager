@@ -100,7 +100,7 @@ class VisionPipeline():
         self.create_process_dict()
         if self.process_name != None and self.vision_pipeline_json_dir!= None:
             with open(self.vision_pipeline_json_dir + '/' + self.process_name+".json", "w") as outfile: 
-                json.dump(self.process_dict, outfile)
+                json.dump(self.process_dict, outfile,indent=4)
 
     def return_function_by_name(self, function_name: str) -> VisionFunction:
         for function in self.vision_functions:
