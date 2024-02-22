@@ -125,7 +125,7 @@ class VisionPipeline():
         self.create_process_dict()
         if file_name != None and file_dir!= None:
             with open(file_dir + '/' + file_name +".json", "w") as outfile: 
-                json.dump(self.process_dict, outfile)
+                json.dump(self.process_dict, outfile,indent=4)
         else:
             print("Error: Set json dir first!")
 
