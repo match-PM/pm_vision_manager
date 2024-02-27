@@ -17,6 +17,7 @@ from copy import copy
 from pm_vision_interfaces.srv import ExecuteVision
 from pm_vision_interfaces.srv import StopVisionAssistant
 from pm_vision_interfaces.srv import StartVisionAssistant
+from pm_vision_interfaces.srv import GetRunningAssistants
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
 from sensor_msgs.msg import Image  # Image is the message type
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
@@ -44,16 +45,22 @@ class VisionNode(Node):
             self.execute_vision,
             callback_group=self.callback_group,
         )
-        self.execute_vision_srv = self.create_service(
+        self.start_assistant_srv = self.create_service(
             StartVisionAssistant,
             f"{self.get_name()}/StartVisionAssistant",
             self.start_vision_assistant,
             callback_group=self.callback_group,
         )
-        self.execute_vision_srv = self.create_service(
+        self.stop_assistant_vision_srv = self.create_service(
             StopVisionAssistant,
             f"{self.get_name()}/StopVisionAssistant",
             self.stop_vision_assistant,
+            callback_group=self.callback_group,
+        )
+        self.get_running_assistants_srv = self.create_service(
+            GetRunningAssistants,
+            f"{self.get_name()}/GetRunningAssistants",
+            self.get_running_assistants,
             callback_group=self.callback_group,
         )
         self.timer = self.create_timer(0.5, self.display_image_callback, callback_group=self.callback_group)
@@ -193,6 +200,17 @@ class VisionNode(Node):
 
         return response
 
+    def get_running_assistants(
+        self,
+        request: GetRunningAssistants.Request,
+        response: GetRunningAssistants.Response,
+        ):
+        # get list of the first element of the tuple
+        list_of_running_assistants = [tpl[0] for tpl in self.running_vision_assistants]
+        response.running_assistants = list_of_running_assistants
+
+        return response
+    
     def display_image_callback(self)-> None:
         images_to_remove = []
         try:

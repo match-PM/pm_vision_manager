@@ -156,11 +156,18 @@ class VisionProcessClass:
     def image_topic_watchdog(self):
         if self.topic_available:
             self.topic_available = False
-        else:
-            self.vision_node.get_logger().error("Timed out! Image topic not available!")
+        # if in execute mode
+        elif not self.launch_as_assistant:
+            self.vision_node.get_logger().error("Timed out! Image topic not available! Exiting...")
             self.delete_this_object = True
             self.vision_node.destroy_subscription(self.subscription)
             self.topic_timer.cancel()
+        # if in assistant mode
+        elif self.launch_as_assistant and self.stop_image_subscription:
+            self.delete_this_object = True
+            self.vision_node.destroy_subscription(self.subscription)
+            self.topic_timer.cancel()
+
 
     def vision_callback(self, data):
         self.topic_available = True
@@ -506,13 +513,14 @@ class VisionProcessClass:
 
     def create_process_file(self):
         try:
-            default_process_file_metadata_dict = {}
-            default_process_file_metadata_dict["vision_process_name"] = self.pro
-            default_process_file_metadata_dict["id_process"] = "default_ID"
-            default_process_file_metadata_dict["File_created"] = str(
-                datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
-            )
-            default_process_file_metadata_dict["vision_pipeline"] = []
+            # default_process_file_metadata_dict = {}
+            # default_process_file_metadata_dict["vision_process_name"] = self.process_filename
+            # default_process_file_metadata_dict["id_process"] = "default_ID"
+            # default_process_file_metadata_dict["File_created"] = str(
+            #     datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+            # )
+            # default_process_file_metadata_dict["vision_pipeline"] = []
+            default_process_file_metadata_dict = self.create_default_process_dict(self.process_filename)
             # Create folders if not existend
             Path(os.path.dirname(self.process_file_path)).mkdir(
                 parents=True, exist_ok=True
@@ -522,7 +530,18 @@ class VisionProcessClass:
         except Exception as e:
             print(e)
             self.vision_node.get_logger().error("Error creating process file")
-
+    
+    @staticmethod
+    def create_default_process_dict(process_name):
+        default_process_file_metadata_dict = {}
+        default_process_file_metadata_dict["vision_process_name"] = process_name
+        default_process_file_metadata_dict["id_process"] = "default_ID"
+        default_process_file_metadata_dict["File_created"] = str(
+            datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+        )
+        default_process_file_metadata_dict["vision_pipeline"] = []
+        return default_process_file_metadata_dict
+    
     def load_process_file_metadata(self) -> bool:
         try:
             f = open(self.process_file_path)

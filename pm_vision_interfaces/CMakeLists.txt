@@ -19,6 +19,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/StopVisionAssistant.srv"
   "srv/StartVisionAssistant.srv"
   "srv/DemoSetExposure.srv"
+  "srv/GetRunningAssistants.srv"
   DEPENDENCIES geometry_msgs # dd packages that above messages depend on, in this case geometry_msgs for Sphere.msg
 )
 
