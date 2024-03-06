@@ -9,22 +9,19 @@ params:
 
   # TODO muss ich das hier in HueMin und HueMax aufspalten?
   - param_name: "HueMin"
-    description: "Sets the min value of the Range of Hues (Color in the HSV-Colorspace),
-    which saturation should be lowered"
+    description: "Sets the min value of the Range of Hues (Color in the HSV-Colorspace), which saturation should be lowered"
     type: "unsigned_int"
     min_val: 0 # Hues-values in the HSV-Colorspace implemented in cv2 goes from 0-180
     max_val: 180
 
   - param_name: "HueMax"
-    description: "Sets the max value of the Range of Hues (Color in the HSV-Colorspace),
-    which saturation should be lowered"
+    description: "Sets the max value of the Range of Hues (Color in the HSV-Colorspace),which saturation should be lowered"
     type: "unsigned_int"
     min_val: 0
     max_val: 180
     
   - param_name: "f_reduce_s"
-    description: "Factor of how much the saturation should be lowered. 
-    lowered_s = [s / f_reduce_s]"
+    description: "Factor of how much the saturation should be lowered. lowered_s = [s / f_reduce_s]"
     type: "unsigned_int"
     min_val: 1
     max_val: 20 # Could maybe higher, but it may be a good default.

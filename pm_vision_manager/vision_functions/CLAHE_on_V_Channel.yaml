@@ -16,15 +16,13 @@ params:
     max_val: 10.0 
 
   - param_name: "tileGridSize_M"
-    description: "Divides the input image into M x N tiles 
-    and then applies histogram equalization to each local tile"
+    description: "Divides the input image into M x N tiles and then applies histogram equalization to each local tile"
     type: "unsigned_int"
     min_val: 2
     max_val: 30
     
   - param_name: "tileGridSize_N"
-    description: "Divides the input image into M x N tiles 
-    and then applies histogram equalization to each local tile"
+    description: "Divides the input image into M x N tiles and then applies histogram equalization to each local tile"
     type: "unsigned_int"
     min_val: 2
     max_val: 30

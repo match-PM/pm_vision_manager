@@ -546,10 +546,11 @@ class VisionProcessClass:
         try:
             f = open(self.process_file_path)
             FileData = json.load(f)
-            self.vision_process_name = FileData["vision_process_name"]
-            #self.process_db_path = self.vision_database_path + self.process_filename.split('.json')[0] # default
+            #self.vision_process_name = FileData["vision_process_name"]
+            #default
+            self.process_db_path = self.vision_database_path + self.process_filename.split('.json')[0] # default
             """ Braucht Niklas für seine MA """
-            self.process_db_path = self.vision_database_path # Einstellen über die config-file
+            #self.process_db_path = self.vision_database_path # Einstellen über die config-file
             """"""
             self.window_name = f"PM Vision Assistant_{self.vision_process_name}_ID: {self.process_UID}"
             f.close()
@@ -581,11 +582,12 @@ class VisionProcessClass:
             vision_results_path = f"{self.process_library_path}{Path(self.process_file_path).stem}_results_{self.camera_id}.json"
             self.vision_results_path = (vision_results_path)  # needed for the service response
         else:
-            #results_folder_path = f"{self.vision_database_path}{self.process_filename.split('.json')[0]}/{self.camera_id}" # default
-            #vision_results_path = f"{results_folder_path}/results_{str(self.crossval_image_name)}.json" # default
+            #default
+            results_folder_path = f"{self.vision_database_path}{self.process_filename.split('.json')[0]}/{self.camera_id}" # default
+            vision_results_path = f"{results_folder_path}/results_{str(self.crossval_image_name)}.json" # default
             """ Braucht Niklas für seine MA """
-            results_folder_path = f"{self.process_library_path}{self.process_filename.split('Chromosom')[0]}"
-            vision_results_path = f"{results_folder_path}/results_{str(self.crossval_image_name)}.json"
+            #results_folder_path = f"{self.process_library_path}{self.process_filename.split('Chromosom')[0]}"
+            #vision_results_path = f"{results_folder_path}/results_{str(self.crossval_image_name)}.json"
             """"""
 
             if not os.path.exists(results_folder_path):
