@@ -1,0 +1,61 @@
+{
+    "vision_process_name": "13_Var3",
+    "process creation": "2024-02-01 17:20:45",
+    "vision_pipeline": [
+        {
+            "ReduceSaturation": {
+                "active": true,
+                "HueMin": 0,
+                "HueMax": 180,
+                "f_reduce_s": 5
+            }
+        },
+        {
+            "CLAHE_on_V_Channel": {
+                "active": true,
+                "tileGridSize_M": 16,
+                "tileGridSize_N": 16,
+                "clipLimit": 3.0000000000000018
+            }
+        },
+        {
+            "BGR2GRAY": {
+                "active": true
+            }
+        },
+        {
+            "EqualizeHist": {
+                "active": true
+            }
+        },
+        {
+            "Blur": {
+                "active": true,
+                "gaus_std": 2,
+                "type": "GaussianBlur",
+                "kernelsize": 9
+            }
+        },
+        {
+            "HoughCircles": {
+                "active": true,
+                "draw_circles": true,
+                "minDist": 1000,
+                "param1": 50,
+                "param2": 26,
+                "method": "HOUGH_GRADIENT",
+                "dp": 1.4000000000000004,
+                "minRadius": 85.0,
+                "maxRadius": 89.0
+            }
+        },
+        {
+            "Save_Image": {
+                "active": true,
+                "with_vision_elements": true,
+                "save_in_cross_val": true,
+                "prefix": ""
+            }
+        }
+    ]
+}

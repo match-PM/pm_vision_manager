@@ -373,7 +373,8 @@ class VisionAssistantApp(QMainWindow):
                     if isinstance(param.min_val, float):
                         double_spinbox.setMinimum(param.min_val)
 
-                    double_spinbox.setSingleStep(1.0)
+                    # double_spinbox.setSingleStep(1.0)
+                    double_spinbox.setSingleStep(0.1) # Able to set in tenth
                     double_spinbox.setDecimals(2)
                     double_spinbox.setValue(param.get_value())
 
