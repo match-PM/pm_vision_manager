@@ -1,1 +1,11 @@
-{"vision_process_name": "process_demo.json", "exec_timestamp": "22_11_2023_18_15_55", "vision_OK": true, "process_UID": "test2", "VisionOK_cross_val": true, "failed_images_cross_val": [], "vision_results": [{"Circle": {"axis_1": -3.0, "axis_2": -112.0, "axis_1_suffix": "x", "axis_2_suffix": "y", "radius": 9.999999747378752e-05, "Unit": "um"}}]}
+{
+    "vision_process_name": "process_demo.json",
+    "exec_timestamp": "19_03_2024_01_55_38",
+    "vision_OK": true,
+    "process_UID": "test",
+    "vision_results": [
+        {
+            "Image saved:": "/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_db/process_demo/testll.png"
+        }
+    ]
+}

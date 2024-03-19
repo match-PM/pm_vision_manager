@@ -84,7 +84,7 @@ class VisionPipeline():
                     # Check for match of function within the internal function libary
                     for lib_fun in self.vison_functions_libary.vision_functions:
                         if lib_fun.vision_function_name == next(iter(function)) and not function_found:
-                            function_to_append = copy.copy(lib_fun)
+                            function_to_append = copy.deepcopy(lib_fun)
                             function_found = True                         
                     
                     if function_found:
@@ -148,9 +148,18 @@ class VisionPipeline():
         return function_names
         
     def move_function_to_indice(self, old_index: int, new_index:int) -> None:
-        function_at_old_index = copy.deepcopy(self.vision_functions[old_index])
-        del self.vision_functions[old_index]
-        self.vision_functions.insert(new_index,function_at_old_index)
+        if ((old_index >= 0) and 
+        (old_index <= len(self.vision_functions)) and 
+        (old_index != new_index) and
+        (new_index >= 0) and 
+        (new_index <= len(self.vision_functions))):
+            element_to_move = self.vision_functions.pop(old_index)
+            self.vision_functions.insert(new_index,element_to_move)
+
+
+        # function_at_old_index = copy.deepcopy(self.vision_functions[old_index])
+        # del self.vision_functions[old_index]
+        # self.vision_functions.insert(new_index,function_at_old_index)
 
     def swap_functions_by_indices(self, index_1: int, index_2:int) -> None:
         """Swaps the functions in the vision pipeline given two indicies. """

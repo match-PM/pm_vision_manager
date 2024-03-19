@@ -18,20 +18,19 @@ class ImageNotBinaryError(Exception):
 
 class ImageProcessingHandler:
     def __init__(self, logger = None):
-        self._initial_image = None
-        self._processing_image = None
-        self._display_frame = None
+        self._initial_image: np.ndarray = None
+        self._processing_image: np.ndarray = None
+        self._display_frame: np.ndarray = None
+        self._final_image: np.ndarray = None
         self.frame_visual_elements = None
         self.frame_buffer = []
-
+        self.logger = logger
         self.visionOK = True
 
-        self.vision_results_dict = {}
-        self.vision_results_list = []
+        self._vision_results_dict = {}
+        self._vision_results_list = []
         
-        self.vision_process_id = None
         self.process_db_path = None
-        self.image_name = None
 
         self.pixelsize = None
         self.magnification = None
@@ -45,7 +44,7 @@ class ImageProcessingHandler:
         self.save_in_cross_val = False
         self.show_input_and_output_image = True
         self.exposure_time_interface_available = False
-
+        self.current_image_name = ""
         self.screen_height = 1080
 
         # Init for camera clients
@@ -80,13 +79,13 @@ class ImageProcessingHandler:
         self.show_input_and_output_image = show_input_and_output_image
 
     def set_initial_image(self, image):
-        self._initial_image = deepcopy(image)
+        self._initial_image = np.copy(image)
 
     def get_initial_image(self):
         return self._initial_image
 
     def get_processing_image(self):
-        return deepcopy(self._processing_image)
+        return np.copy(self._processing_image)
     
     def init_begin(self):
         if (self.pixelsize is None or 
@@ -108,11 +107,11 @@ class ImageProcessingHandler:
         self.img_height = self._initial_image.shape[0]
         self.fov_width  = self.umPROpixel*self.img_width 
         self.fov_height = self.umPROpixel*self.img_height
-        self.roi_used =  False
+        self.roi_used:bool =  False
         self.set_vision_ok(True)
         
         self.frame_buffer.clear()
-        self.vision_results_list.clear()
+        self._vision_results_list.clear()
 
         print("FOV width is " + str(self.fov_width) + "um")
         print("FOV hight is " + str(self.fov_height) + "um")    
@@ -125,9 +124,8 @@ class ImageProcessingHandler:
             cv2.rectangle(self.frame_visual_elements,(0,0),(self.frame_visual_elements.shape[1],self.frame_visual_elements.shape[0]),(0,255,0),3)
         
         # lay vision elements over display frame
-        self._display_frame = self.create_vision_element_overlay(self._display_frame,self.frame_visual_elements)
-
-        self.vision_results_dict["vision_results"] = self.vision_results_list
+        self._display_frame = self.create_vision_element_overlay(self._display_frame,self.frame_visual_elements,self.logger)
+        self._vision_results_dict["vision_results"] = self._vision_results_list
 
         if len(self._initial_image.shape)<3:
             _initial_image = cv2.cvtColor(self._initial_image,cv2.COLOR_GRAY2BGR)
@@ -137,9 +135,13 @@ class ImageProcessingHandler:
         if self.show_input_and_output_image:
             self._display_frame = cv2.vconcat([_initial_image, self._display_frame])
 
+        self._final_image = self.get_display_image()
         # resize display frame
         #self._display_frame=vu.image_resize(self._display_frame, height = (self.screen_height-100))
 
+    def get_results(self)->dict:
+        return self._vision_results_dict
+    
     def get_display_image(self):
         return deepcopy(self._display_frame)
     
@@ -159,23 +161,26 @@ class ImageProcessingHandler:
         else:
             return False
         
-    def set_processing_image(self, processing_image):
-        self._processing_image = processing_image
+    def set_cross_val_running(self, bool_value:bool):
+        self.cross_val_running = bool_value
+
+    def set_processing_image(self, processing_image:np.ndarray):
+        self._processing_image = np.copy(processing_image)
         #self.frame_buffer.append(self._processing_image)
-        self._display_frame=self.adaptImagewithROI(self._display_frame, deepcopy(self._processing_image))
+        self._display_frame=self.adaptImagewithROI(self._display_frame, np.copy(self._processing_image))
 
     def set_camera_exposure_time(self, value):
         """
         This function should be overwritten from in the vision assistant_class
         """
         pass
-
+    
     def get_visual_elements_canvas(self):
         if self.roi_used:
             canvas = self.frame_visual_elements[self.ROI_CS_CV_top_left_y:self.ROI_CS_CV_bottom_right_y, self.ROI_CS_CV_top_left_x:self.ROI_CS_CV_bottom_right_x]
             return canvas
         else:
-            return deepcopy(self.frame_visual_elements)
+            return np.copy(self.frame_visual_elements)
             
     def apply_visual_elements_canvas(self, canvas):
         if self.roi_used:
@@ -205,6 +210,13 @@ class ImageProcessingHandler:
     def get_vision_ok(self)->bool:
         return self.visionOK
     
+    def get_final_image(self):
+        """
+        Returns the final image of the vision process.
+        This image is not deleted when a new run starts.
+        """
+        return np.copy(self._final_image)
+    
     def set_roi_settings(self, top_left_x:int, top_left_y:int, bottom_right_x:int, bottom_right_y:int):
         self.ROI_CS_CV_top_left_x = top_left_x
         self.ROI_CS_CV_top_left_y = top_left_y
@@ -212,10 +224,12 @@ class ImageProcessingHandler:
         self.ROI_CS_CV_bottom_right_y = bottom_right_y
         self.roi_used = True
 
-    def set_image_metatdata(self, vision_process_id:str, process_db_path:str, image_name:str ):
-        self.vision_process_id = vision_process_id
+    def set_image_metatdata(self, process_db_path:str, current_image_name:str):
+        self.current_image_name = current_image_name
         self.process_db_path = process_db_path
-        self.image_name = image_name
+
+    def set_process_db_path(self, process_db_path:str):
+        self.process_db_path = process_db_path
 
     def CS_Conv_ROI_Pix_TO_Img_Pix(self, x_roi, y_roi):
         """
@@ -293,11 +307,19 @@ class ImageProcessingHandler:
 
         return x_cs_camera, y_cs_camera
     
+    def append_to_results(self, result:dict):
+        self._vision_results_list.append(result)
+
     @staticmethod
-    def create_vision_element_overlay(displ_frame, vis_elem_frame):
+    def create_vision_element_overlay(displ_frame, vis_elem_frame, logger = None):
         # Add visual elements to the display frame
         if len(displ_frame.shape) < 3:
             displ_frame = cv2.cvtColor(displ_frame, cv2.COLOR_GRAY2BGR)
+        if displ_frame.shape[:2] != vis_elem_frame.shape[:2]:
+            logger.debug("The visual elements frame has not the same size as the display frame!")
+            logger.debug("Visual elements frame shape: " + str(vis_elem_frame.shape))
+            logger.debug("Display frame shape: " + str(displ_frame.shape))
+
         # Now create a mask of logo and create its inverse mask also
         mask_frame = cv2.cvtColor(vis_elem_frame, cv2.COLOR_BGR2GRAY)
         _, mask = cv2.threshold(mask_frame, 10, 255, cv2.THRESH_BINARY)
@@ -307,8 +329,8 @@ class ImageProcessingHandler:
         # Take only region of logo from logo image.
         img2_fg = cv2.bitwise_and(vis_elem_frame, vis_elem_frame, mask=mask)
         # Put logo in ROI and modify the main image
-        displ_frame = cv2.add(img1_bg, img2_fg)
-        return displ_frame
+        _displ_frame = np.copy(cv2.add(img1_bg, img2_fg))
+        return _displ_frame
     
     @staticmethod
     def CS_Conv_Pixel_Top_Left_TO_Center(img_width, img_height, x_tl, y_tl):

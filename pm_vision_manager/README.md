@@ -48,39 +48,15 @@ Running this service call, the pm_vision_manager will subsribe to the topic spec
 * `process_filename` (str): Filename or relative path to the process_libary of the process file (json)
 * `camera_config_filename` (str): Filename or relative path to the camera config file (yaml)
 * `process_uid` (str): ID of the process (should be random and/or not yet in use)
-* `db_cross_val_only` (bool): If this is set to true, the pm_vision_manager will execute the process pipeline on images in the database only (database_path/process_name/). In this case, every image in the database is evalued once. Then the service call returns. Information from the camera_config_file are still relevant, as they specify technical details of the camera.  
 * `image_display_time` (int): Time the image will be displayed after vision finished
 * `run_cross_validation`: If this is set to true, the vision pipeline will additionally be executed on images in the database (database_path/process_name/). Results of the cross_validation will be saved in  (database_path/process_name/Results/).
 ------------------------
 * `success` (bool): returns true if the vision pipeline exited with no error (on the subscribed image). In case of "db_cross_val_only" the success value refers to the last image evaluated from the database. 
 * `results_dict` (str): String of the vision results dictionary
 * `results_path` (str): Path of the process results json
-```
-StartVisionAssistant
-```
-* `process_filename` (str): Filename/Path of the process file (json)
-* `camera_config_filename` (str): Filename/Path of the camera config file (yaml)
-* `process_uid` (str): (Random) ID of the process (should be random and not yet in use)
-* `db_cross_val_only` (bool): If this is set to true, the pm_vision_manager will execute the process pipeline on images in the database only (database_path/process_name/). If "show_image_on_error" or "step_through_images" are not set to true, the user will get no image.
-* `run_cross_validation`(bool): If this is set to true, the vision pipeline will additionally be executed on images in the database (database_path/process_name/). Results of the cross_validation will be saved in  (database_path/process_name/Results/).
-* `show_image_on_error` (bool): This is only relevant if "run_cross_validation == True". If true, the user can use the space key to show images on which the vision pipeline failed.
-* `step_through_images` (bool): This is only relevant if "run_cross_validation == True". If true, the user can use the space key to cycle through the image database.
-* `open_process_file` (bool): If set to true, the process.json will be opened in vscode (this will be replaced by a startup of the app.py in the future)
-------------------------
-(service return generally not relevant for the usage in assistant mode)
-* `success`: returns true if the vision function on the last image exited without error
-* `results_dict`: string containing the vision results dictionary
-* `results_path`: path of the process results json
-```
-StopVisionAssistant
-```
-* `process_uid` (str): ID of the vision assistant process to be closed 
-------------------------
-* `success`: returns true if the respective vision assistant could be closed; else returns false
 
 ## 5. To Do's
 * Conditions
-* Function yaml descriptions
 
 ## 6. How to add new vision functions to the pm vision manager
 TBD

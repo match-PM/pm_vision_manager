@@ -12,7 +12,6 @@ def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, max
   _Command = "cv2." + type
   _,frame_processed = cv2.threshold(frame_processed,thresh,maxval,exec(_Command))
   image_processing_handler.set_processing_image(frame_processed)
-  print("Theshold executed")
 
 def adaptiveThreshold(image_processing_handler: ImageProcessingHandler, maxValue, adaptiveMethod, thresholdType, blockSize, cValue):
   _Command_adaptiveMethod = "cv2." + adaptiveMethod
@@ -20,22 +19,17 @@ def adaptiveThreshold(image_processing_handler: ImageProcessingHandler, maxValue
   frame_processed  = image_processing_handler.get_processing_image()
   frame_processed = cv2.adaptiveThreshold(frame_processed, maxValue, exec(_Command_adaptiveMethod), exec(_Command_thresholdType), blockSize, cValue)
   image_processing_handler.set_processing_image(frame_processed)
-  print("Adaptive Theshold executed")
 
 def bitwise_not(image_processing_handler: ImageProcessingHandler):
   frame_processed = image_processing_handler.get_processing_image()
   frame_processed = cv2.bitwise_not(frame_processed)
   image_processing_handler.set_processing_image(frame_processed)
-  print("bitwise_not executed")
 
 def bgr2gray(image_processing_handler: ImageProcessingHandler):
   frame_processed = image_processing_handler.get_processing_image()
   if len(frame_processed.shape)==3:
     frame_processed = cv2.cvtColor(frame_processed, cv2.COLOR_BGR2GRAY)
     image_processing_handler.set_processing_image(frame_processed)
-    print("BGR2GRAY executed")
-  else:
-    print("BGR2GRAY ignored! Image is already Grayscale!")
 
 def roi(image_processing_handler: ImageProcessingHandler, ROI_center_x_c: float, ROI_center_y_c:float, ROI_height:float, ROI_width:float):
 
@@ -57,24 +51,20 @@ def roi(image_processing_handler: ImageProcessingHandler, ROI_center_x_c: float,
     ROI_CS_CV_top_left_y>0 and 
     ROI_CS_CV_bottom_right_x <= image_processing_handler.img_width and 
     ROI_CS_CV_bottom_right_y <= image_processing_handler.img_height):
-    frame_processed = frame_processed[ROI_CS_CV_top_left_y:ROI_CS_CV_bottom_right_y, ROI_CS_CV_top_left_x:ROI_CS_CV_bottom_right_x]
+    _frame_processed = frame_processed[ROI_CS_CV_top_left_y:ROI_CS_CV_bottom_right_y, ROI_CS_CV_top_left_x:ROI_CS_CV_bottom_right_x]
     image_processing_handler.set_roi_settings(ROI_CS_CV_top_left_x, ROI_CS_CV_top_left_y, ROI_CS_CV_bottom_right_x, ROI_CS_CV_bottom_right_y)
 
     image_processing_handler.frame_visual_elements = cv2.rectangle(image_processing_handler.frame_visual_elements,(ROI_CS_CV_top_left_x,ROI_CS_CV_top_left_y),(ROI_CS_CV_bottom_right_x,ROI_CS_CV_bottom_right_y),(240,32,160),3)
     
-    image_processing_handler.set_processing_image(frame_processed)
+    image_processing_handler.set_processing_image(_frame_processed)
 
-    print("ROI executed")
   else:
-    print("Not executed!")
     image_processing_handler.set_vision_ok(False)
-    #self.vision_node.get_logger().error('ROI failed! Out of bounds')
 
-def canny(image_processing_handler: ImageProcessingHandler, threshold1, threshold2, aperatureSize, L2gradient:str):
+def canny(image_processing_handler: ImageProcessingHandler, threshold1, threshold2, aperatureSize, L2gradient:str,logger = None):
   frame_processed = image_processing_handler.get_processing_image()
   frame_processed = cv2.Canny(frame_processed, threshold1, threshold2, aperatureSize)
   image_processing_handler.set_processing_image(frame_processed)
-  print("Canny executed")
 
 
 def findContours(image_processing_handler: ImageProcessingHandler, draw_contours:bool, mode:str, method:str, fill:bool):
@@ -133,9 +123,8 @@ def minEnclosingCircle(image_processing_handler: ImageProcessingHandler,draw_cir
     cv2.circle(canvas, (int(x_tl_roi), int(y_tl_roi)), 1, (0, 0, 255), 2)
     image_processing_handler.apply_visual_elements_canvas(canvas)
 
-  image_processing_handler.vision_results_list.append(circle_result_dict)
+  image_processing_handler.append_to_results(circle_result_dict)
   image_processing_handler.set_processing_image(frame_processed)
-  print("minEnclosingCircle executed")
 
 def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, minLineLength,maxLineGap):    
   if not image_processing_handler.is_process_image_grayscale():
@@ -171,14 +160,11 @@ def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, min
       
     image_processing_handler.apply_visual_elements_canvas(canvas)
     HoughLinesP_results_dict={"Lines": HoughLinesP_results_list}
-    image_processing_handler.vision_results_list.append(HoughLinesP_results_dict)
+    image_processing_handler.append_to_results(HoughLinesP_results_dict)
                   
   else:
     image_processing_handler.set_vision_ok(False)
-    print(f"No Line detected!")
 
-  print("HoughLinesP executed")
-  
 
 def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, method: str, max_area, min_area):
   frame_processed = image_processing_handler.get_processing_image()
@@ -202,10 +188,8 @@ def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, metho
   if not area_found:
     image_processing_handler.set_vision_ok(False)
     frame_processed = np.zeros((frame_processed.shape[0], frame_processed.shape[1]), dtype = np.uint8)
-    print("Select Area: No matching area")
   
   image_processing_handler.set_processing_image(frame_processed)  
-  print("select_Area executed")
   
 def morphologyExOpening(image_processing_handler: ImageProcessingHandler,kernelsize:int):
   if not image_processing_handler.is_process_image_binary():
@@ -214,7 +198,6 @@ def morphologyExOpening(image_processing_handler: ImageProcessingHandler,kernels
   kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernelsize, kernelsize))
   frame_processed = cv2.morphologyEx(frame_processed, cv2.MORPH_OPEN, kernel)
   image_processing_handler.set_processing_image(frame_processed)
-  print("Morphology_Ex_Opening executed")
 
 def morphologyExClosing(image_processing_handler: ImageProcessingHandler,kernelsize:int):
   if not image_processing_handler.is_process_image_binary():
@@ -223,7 +206,6 @@ def morphologyExClosing(image_processing_handler: ImageProcessingHandler,kernels
   kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernelsize, kernelsize))
   frame_processed = cv2.morphologyEx(frame_processed, cv2.MORPH_CLOSE, kernel)
   image_processing_handler.set_processing_image(frame_processed)
-  print("Morphology_Ex_Closing executed")
 
 
 def horizontal(image_processing_handler: ImageProcessingHandler, h_kernelsize):
@@ -233,7 +215,6 @@ def horizontal(image_processing_handler: ImageProcessingHandler, h_kernelsize):
   frame_processed = cv2.erode(frame_processed, horizontalStructure)
   frame_processed = cv2.dilate(frame_processed, horizontalStructure)
   image_processing_handler.set_processing_image(frame_processed)
-  print("Horizontal executed")
 
 def vertical(image_processing_handler: ImageProcessingHandler, v_kernelsize):
   frame_processed = image_processing_handler.get_processing_image()
@@ -242,7 +223,6 @@ def vertical(image_processing_handler: ImageProcessingHandler, v_kernelsize):
   frame_processed = cv2.erode(frame_processed, verticalStructure)
   frame_processed = cv2.dilate(frame_processed, verticalStructure)
   image_processing_handler.set_processing_image(frame_processed)
-  print("vertical executed")
 
 
 def blur(image_processing_handler: ImageProcessingHandler, kernelsize: int, blur_type: str, gaus_std: int):
@@ -255,33 +235,27 @@ def blur(image_processing_handler: ImageProcessingHandler, kernelsize: int, blur
   elif blur_type == "medianBlur":
     frame_processed = cv2.medianBlur(frame_processed, kernelsize)
   else:
-    print('Blur type not supported!')
     image_processing_handler.set_vision_ok(False)
 
   image_processing_handler.set_processing_image(frame_processed)
-  print("Blur executed")  
 
 def morphologyExGradient(image_processing_handler: ImageProcessingHandler, kernelsize:int):
   frame_processed = image_processing_handler.get_processing_image()
   kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (kernelsize, kernelsize))
   frame_processed = cv2.morphologyEx(frame_processed, cv2.MORPH_GRADIENT, kernel)
   image_processing_handler.set_processing_image(frame_processed)
-  print("Morphology_Ex_Gradient executed")
 
 def Errosion(image_processing_handler: ImageProcessingHandler, kernelsize:int, iterations:int):
   frame_processed = image_processing_handler.get_processing_image()
   kernel = np.ones((kernelsize, kernelsize), np.uint8)
   frame_processed = cv2.erode(frame_processed, kernel, iterations=iterations)
   image_processing_handler.set_processing_image(frame_processed)
-  print("Errosion executed")
 
 def Dilation(image_processing_handler: ImageProcessingHandler, kernelsize:int, iterations:int):
   frame_processed = image_processing_handler.get_processing_image()
   kernel = np.ones((kernelsize, kernelsize), np.uint8)
   frame_processed = cv2.dilate(frame_processed, kernel, iterations=iterations)
   image_processing_handler.set_processing_image(frame_processed)
-  print("Dilation executed")          
-
 
 def HoughCircles(image_processing_handler: ImageProcessingHandler,
                  draw_circles:bool,
@@ -333,11 +307,9 @@ def HoughCircles(image_processing_handler: ImageProcessingHandler,
         image_processing_handler.apply_visual_elements_canvas(canvas)
 
     HouchCircles_results_dict={"Circles": HoughCircles_reslults_list}
-    image_processing_handler.vision_results_list.append(HouchCircles_results_dict)
+    image_processing_handler.append_to_results(HouchCircles_results_dict)
   else:
     image_processing_handler.set_vision_ok(False)
-    print('No circle detected!')
-  print("Hough Circles executed")
 
 
 def drawCS(image_processing_handler: ImageProcessingHandler):
@@ -373,8 +345,6 @@ def drawCS(image_processing_handler: ImageProcessingHandler):
   crop_img = CS_frame[int(y):int(y+image_processing_handler.img_height), int(x):int(x+image_processing_handler.img_width)]
 
   image_processing_handler.frame_visual_elements = image_processing_handler.create_vision_element_overlay(image_processing_handler.frame_visual_elements,crop_img)
-  print("Draw_CS executed!")
-
 
 def drawGrid(image_processing_handler: ImageProcessingHandler, grid_spacing):
 
@@ -404,40 +374,30 @@ def drawGrid(image_processing_handler: ImageProcessingHandler, grid_spacing):
   crop_img = Grid_frame[int(y):int(y+image_processing_handler.img_height), int(x):int(x+image_processing_handler.img_width)]
   image_processing_handler.frame_visual_elements = image_processing_handler.create_vision_element_overlay(image_processing_handler.frame_visual_elements,crop_img)
   cv2.putText(img=image_processing_handler.frame_visual_elements,text="Grid: "+ str(grid_spacing) + "um", org=(5,30), fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1,color=(255,0,0), thickness=1)
-  print("Grid executed")
-
 
 def saveImage(image_processing_handler: ImageProcessingHandler, 
-              prefix: str, with_vision_elements: bool, save_in_cross_val :bool):
+              prefix: str, with_vision_elements: bool, save_in_cross_val :bool, logger = None):
   
   if not os.path.exists(image_processing_handler.process_db_path):
     os.makedirs(image_processing_handler.process_db_path)
-    print(f"Process DB folder created {image_processing_handler.process_db_path}!")
   
   # image_processing_handler.image_name comes from (image_name = f"{self.vision_process_id}_{image_in_folder}")
   # in "vision_assistant_class.py" line 250. Maybe good to know... --> Don't use "/" in your process_uid
-  image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.image_name}{prefix}"
+  image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}{prefix}.png"
 
-  #image_name=self.process_db_path+"/"+self.vision_process_id+"_"+self.process_start_time+prefix+".png"
-
-  # if not os.path.isfile verstehe ich an dieser Stelle nicht... Test ob es schon ein Bild gibt...?
-  if not os.path.isfile(image_name) and (not image_processing_handler.cross_val_running or save_in_cross_val):
+  #if not os.path.isfile(image_name) and (not image_processing_handler.cross_val_running or save_in_cross_val):
+  if (not image_processing_handler.cross_val_running or save_in_cross_val):
     if with_vision_elements:
-      frame_processed = image_processing_handler.get_processing_image()   
-      image_processing_handler.set_processing_image(frame_processed)
-      
       image_to_save = image_processing_handler.create_vision_element_overlay(image_processing_handler.get_display_image(),
                                                                              image_processing_handler.frame_visual_elements)
+      
     else:
-      image_to_save = image_processing_handler.get_processing_image()   
+      image_to_save = image_processing_handler.get_processing_image()
+
     cv2.imwrite(image_name, image_to_save)
-    print("Image saved!")
-
-  if (not image_processing_handler.cross_val_running or save_in_cross_val):
     Save_image_results_dict={"Image saved:": image_name} # image_processing_handler.
-    image_processing_handler.vision_results_list.append(Save_image_results_dict)
+    image_processing_handler.append_to_results(Save_image_results_dict)
 
-  print("save_image executed")
 
 
 def reduce_saturation(image_processing_handler: ImageProcessingHandler, 
@@ -535,7 +495,7 @@ def example_function(image_processing_handler: ImageProcessingHandler):
   # Create a key for the results
   example_results_dict={"Example_Results_Key(e.a. Point)": example_results}
   # append to results list
-  image_processing_handler.vision_results_list.append(example_results_dict)
+  image_processing_handler.append_to_results(example_results_dict)
   
   # One you have drawn on the canvas, you can apply it to the display frame
   image_processing_handler.apply_visual_elements_canvas(canvas)
@@ -546,7 +506,7 @@ def example_function(image_processing_handler: ImageProcessingHandler):
 
 #################################################################################################################
 
-def process_image(vision_node: Node, image_processing_handler: ImageProcessingHandler, pipeline_dict_list):
+def process_image(vision_node: Node, image_processing_handler: ImageProcessingHandler, pipeline_dict_list:list):
   image_processing_handler.init_begin()
   try:
     for list_item in pipeline_dict_list:
@@ -631,7 +591,8 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
                       threshold1=p_threshold1,
                       threshold2=p_threshold2,
                       aperatureSize=p_aperatureSize,
-                      L2gradient=p_L2gradient)
+                      L2gradient=p_L2gradient,
+                      logger = vision_node.get_logger())
                 
           case "FindContours":
             active = function_parameter['active']
@@ -761,7 +722,8 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
               saveImage(image_processing_handler=image_processing_handler,
                         prefix = p_prefix,
                         with_vision_elements = p_with_vision_elements,
-                        save_in_cross_val = p_save_in_cross_val)
+                        save_in_cross_val = p_save_in_cross_val,
+                        logger = vision_node.get_logger())
                                 
           case "Draw_Grid":
             active = function_parameter['active']
@@ -851,7 +813,7 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
   
   #finally: 
   image_processing_handler.init_results()
-  return image_processing_handler.get_display_image(), image_processing_handler.vision_results_dict
+  return image_processing_handler.get_display_image(), image_processing_handler.get_results()
   
 
 if __name__ == '__main__':

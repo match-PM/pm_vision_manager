@@ -1,1 +1,0 @@
-{"vision_process_name": "simple_process_example.json", "exec_timestamp": "29_09_2023_17_17_12", "vision_OK": true, "process_UID": "df", "VisionOK_cross_val": true, "failed_images_cross_val": [], "vision_results": [{"Circle": {"axis_1": -78.0, "axis_2": -30.0, "axis_1_suffix": "x", "axis_2_suffix": "y", "radius": 9.300638198852539, "Unit": "um"}}]}

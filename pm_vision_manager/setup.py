@@ -2,6 +2,7 @@ from setuptools import setup
 
 package_name = 'pm_vision_manager'
 submodules = 'pm_vision_manager/va_py_modules'
+app_modules = 'pm_vision_manager/va_py_modules/vision_app_modules'
 setup(
     #author='Niklas Terei',
     #author_email='terei@match.uni-hannover.de',
@@ -9,7 +10,7 @@ setup(
     #maintainer_email='terei@match.uni-hannover.de',
     name=package_name,
     version='0.1.0',
-    packages=[package_name, submodules],
+    packages=[package_name, submodules, app_modules],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),

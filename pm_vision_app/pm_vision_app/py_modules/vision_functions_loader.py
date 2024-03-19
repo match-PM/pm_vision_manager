@@ -97,7 +97,7 @@ class VisionFunctionsLoader():
         for function in self.vision_functions:
             if function_name == function.vision_function_name:
                 # early return
-                return copy.copy(function)
+                return copy.deepcopy(function)
         
         # Return False if function not found
         return None
