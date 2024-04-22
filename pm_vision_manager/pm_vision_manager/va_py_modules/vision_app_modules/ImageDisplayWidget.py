@@ -1,5 +1,6 @@
-from PyQt6.QtWidgets import QTextEdit,QWidget,QHBoxLayout, QVBoxLayout, QLabel, QListWidget, QListWidgetItem, QApplication, QSizePolicy, QPushButton, QGridLayout, QTreeWidget, QTreeWidgetItem
-from PyQt6.QtGui import QColor, QTextCursor, QFont, QImage, QPixmap
+from PyQt6.QtWidgets import QTextEdit,QWidget,QHBoxLayout, QVBoxLayout, QLabel, QListWidget, QListWidgetItem, QTreeView, QApplication, QSizePolicy, QPushButton, QGridLayout, QTreeWidget, QTreeWidgetItem
+from PyQt6.QtGui import QColor, QTextCursor, QFont, QImage, QPixmap, QStandardItem, QStandardItemModel
+
 from PyQt6.QtCore import Qt, QByteArray
 from pm_vision_manager.va_py_modules.vision_utils import get_screen_resolution, image_resize
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
@@ -132,10 +133,18 @@ class ImageDisplayWidget(QWidget):
 
         self.properties_layout.addLayout(metadata_layout)
 
-        self.result_dict_tree = QTreeWidget()
+        # Old widget
+        #self.result_dict_tree = QTreeWidget()
         # Set headers
-        self.result_dict_tree.setHeaderLabels(["Key", "Value"])
-        self.properties_layout.addWidget(self.result_dict_tree)
+        #self.result_dict_tree.setHeaderLabels(["Key", "Value"])
+
+        # new widget
+        self.results_dict_tree = QTreeWidget()
+        #self.model = QStandardItemModel()
+        #self.results_dict_tree.setModel(self.model)
+
+        #self.properties_layout.addWidget(self.result_dict_tree)
+        self.properties_layout.addWidget(self.results_dict_tree)
 
     def set_image_source(self, image_name:str):
         self.image_name_widget.setText(image_name)
@@ -148,18 +157,32 @@ class ImageDisplayWidget(QWidget):
         """
         Set the result dictionary
         """
-        self.result_dict_tree.clear()
-        self.populate_tree(self.result_dict_tree, result_dict)
+        #self.result_dict_tree.clear()
+        #self.populate_tree(self.result_dict_tree, result_dict)
+        #self.model.clear()
+        #self.populate_result_dict_widget(result_dict, self.model.invisibleRootItem())
+        #self.update_model(self.model, result_dict)
+        self.results_dict_tree.clear()
+        self.populate_log_widget(result_dict)
+        self.results_dict_tree.expandAll()
+        #self.expand_top_level_items()
         
 
-    def populate_tree(self, tree, dictionary, parent_item=None):
-        for key, value in dictionary.items():
-            item = QTreeWidgetItem(parent_item if parent_item else tree)
-            item.setText(0, str(key))
-            if isinstance(value, dict):
-                self.populate_tree(tree, value, item)
-            else:
-                item.setText(1, str(value))
+    def populate_log_widget(self, data, parent=None):
+        if parent is None:
+            parent = self.results_dict_tree
+
+        if isinstance(data, dict):
+            for key, value in data.items():
+                item = QTreeWidgetItem(parent, [str(key)])
+                self.populate_log_widget(value, item)
+        elif isinstance(data, list):
+            for index, item_data in enumerate(data):
+                item = QTreeWidgetItem(parent, [f"[{index}]"])
+                self.populate_log_widget(item_data, item)
+        else:
+
+            item = QTreeWidgetItem(parent, [str(data)])   
 
     def set_crossval_images(self, images:list):
         """
