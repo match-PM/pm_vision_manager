@@ -1,0 +1,20 @@
+{
+    "vision_process_name": "/process_demo.json",
+    "exec_timestamp": "23_04_2024_13_45_21",
+    "vision_OK": true,
+    "process_UID": "test",
+    "vision_results": [
+        {
+            "Circles": [
+                {
+                    "axis_1": 915.0,
+                    "axis_2": 265.0,
+                    "axis_1_suffix": "x",
+                    "axis_2_suffix": "y",
+                    "radius": 330.0,
+                    "Unit": "um"
+                }
+            ]
+        }
+    ]
+}

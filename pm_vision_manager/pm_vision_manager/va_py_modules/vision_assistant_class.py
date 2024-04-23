@@ -12,6 +12,7 @@ import subprocess
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
 from math import pi
+from rosidl_runtime_py.convert import message_to_ordereddict, get_message_slot_types
 import time
 from pynput import keyboard
 from pathlib import Path
@@ -24,8 +25,11 @@ from pm_vision_manager.va_py_modules.image_processing_handler import ImageProces
 from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoSHistoryPolicy, qos_profile_sensor_data
 import numpy as np
+from collections import OrderedDict
 
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
+
+import pm_vision_interfaces.msg as pvimsg 
 
 
 SUPPORTED_TYPES = [".png", ".jpg", ".jpeg", ".bmp"]
@@ -182,7 +186,6 @@ class VisionProcessClass:
 
         package_share_directory = get_package_share_directory("pm_vision_manager")
         self.path_config_path = f"{package_share_directory}/vision_assistant_path_config.yaml"
-
         if self.launch_as_assistant:
             self.vision_node.get_logger().info("Starting Vision Assistant!")
         else:
@@ -288,7 +291,7 @@ class VisionProcessClass:
         #display_image = process_image(self, received_frame, self.process_pipeline_list)
         display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
         final_image = self.image_processing_handler.get_final_image()
-        _results = self.save_vision_results(self.image_processing_handler.get_results())
+        _results = self.save_vision_results()
         self.results_signal.signal.emit(final_image, _results)
 
         # this only runs in execution mode and when the execution is finished
@@ -296,7 +299,7 @@ class VisionProcessClass:
             if self.run_cross_validation:
                 self.execute_crossvalidation()
                 # reinitilize the results after crossvalidation has been executed
-                _results = self.save_vision_results(self.image_processing_handler.get_results())
+                _results = self.save_vision_results()
                 self.results_signal.signal.emit(final_image, _results)
             self.stop_vision_subscription()
 
@@ -375,7 +378,7 @@ class VisionProcessClass:
             self.image_processing_handler_cross_val.set_initial_image(image)
             display_image, _ = process_image(self.vision_node, self.image_processing_handler_cross_val, self.process_pipeline_list)
             
-            self.save_vision_results(self.image_processing_handler_cross_val.get_results())
+            self.save_vision_results()
 
             if not self.image_processing_handler_cross_val.get_vision_ok():
                 self.cross_validation.visionOK = False
@@ -393,7 +396,7 @@ class VisionProcessClass:
         self.image_processing_handler.set_initial_image(image)
         self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name)
         display_image, _ = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
-        _results = self.save_vision_results(self.image_processing_handler.get_results())
+        _results = self.save_vision_results()
         self.results_signal.signal.emit(self.image_processing_handler.get_final_image(), _results)
     
 
@@ -406,7 +409,8 @@ class VisionProcessClass:
             self.process_library_path = config["process_library_path"]
             self.vision_database_path = config["vision_database_path"]
             self.camera_config_path = config["camera_config_path"]
-            self.vision_assistant_config = config["vision_assistant_config"]
+            package_share_dir = get_package_share_directory("pm_vision_manager")
+            self.vision_assistant_config_path = f"{package_share_dir}/vision_assistant_config.yaml"
             self.process_file_path = self.process_library_path + self.process_filename
             self.vision_node.get_logger().info("Vision assistant path config loaded!")
             return True
@@ -416,7 +420,7 @@ class VisionProcessClass:
 
     def load_assistant_config(self) -> bool:
         try:
-            with open(self.vision_assistant_config, "r") as file:
+            with open(self.vision_assistant_config_path, "r") as file:
                 FileData = yaml.safe_load(file)
 
             config = FileData["vision_assistant_config"]
@@ -425,7 +429,7 @@ class VisionProcessClass:
             self.vision_node.get_logger().info("Vision assistant config loaded!")
             return True
         except Exception as e:
-            self.vision_node.get_logger().error(f"Error opening vision assistant configuration: '{str(self.vision_assistant_config)}'! Error: {str(e)}!")
+            self.vision_node.get_logger().error(f"Error opening vision assistant configuration: '{str(self.vision_assistant_config_path)}'! Error: {str(e)}!")
             return False
 
     def start_vision_app(self):
@@ -447,63 +451,7 @@ class VisionProcessClass:
         except Exception as e:
             self.vision_node.get_logger().error(e)
             self.vision_node.get_logger().error("Process File could not be opened!")
-
-    @staticmethod
-    def check_for_valid_inputs(process_file_name:str, camera_file_name:str, logger = None)->bool:
-        
-        if process_file_name is None or camera_file_name is None:
-            return False
-        
-        package_share_directory = get_package_share_directory("pm_vision_manager")
-        path_config_path = f"{package_share_directory}/vision_assistant_path_config.yaml"
-        try:
-            with open(path_config_path, "r") as file:
-                FileData = yaml.safe_load(file)
-
-            config = FileData["vision_assistant_path_config"]
-            process_library_path = config["process_library_path"]
-            camera_config_path = config["camera_config_path"]
-            process_file_path = process_library_path + process_file_name
-            camera_file_path = camera_config_path + camera_file_name
-            if os.path.exists(process_file_path) and os.path.exists(camera_file_path):
-                return True
-            else:
-                return False
-        except KeyError as e:
-            if logger is not None:  
-                logger.error(f"Error in path config file: {str(e)}")
-            return False
-        except FileNotFoundError as e:
-            if logger is not None:
-                logger.error(f"Error opening path config file: {str(e)}")
-            return False
     
-    @staticmethod
-    def check_for_valid_path_config(logger=None)->bool:
-        package_share_directory = get_package_share_directory("pm_vision_manager")
-        path_config_path = f"{package_share_directory}/vision_assistant_path_config.yaml"
-        try:
-            with open(path_config_path, "r") as file:
-                FileData = yaml.safe_load(file)
-
-            config = FileData["vision_assistant_path_config"]
-            process_library_path = config["process_library_path"]
-            camera_config_path = config["camera_config_path"]
-            vision_database_path = config["vision_database_path"]
-            if os.path.exists(process_library_path) and os.path.exists(camera_config_path) and os.path.exists(vision_database_path):
-                return True
-            else:
-                if logger is not None:
-                    logger.error("Path config file is not valid!")
-                return False
-        except KeyError as e:
-            if logger is not None:
-                logger.error(f"Error in path config file: {str(e)}")
-            return False
-        except FileNotFoundError as e:
-            if logger is not None:
-                logger.error(f"Error opening path config file: {str(e)}")
-
 
     def load_camera_config(self) -> bool:
         try:
@@ -692,7 +640,7 @@ class VisionProcessClass:
                 f"Error opening process file: {str(self.process_file_path)}! Error: {str(e)}"
             )
 
-    def save_vision_results(self, result_dict:dict)->dict:
+    def save_vision_results(self)->dict:
         """
         The function add metadata to the results dict and saves it to a json file
         :param result_dict: The results of the vision process
@@ -700,7 +648,9 @@ class VisionProcessClass:
         :return: The results of the vision process
         :rtype: dict
         """
-        result_dict = self.construct_results_metadata(result_dict)
+        #result_dict = self.construct_results_metadata2(result_dict)
+        result_dict = self.ordered_dict_to_dict(message_to_ordereddict(self.construct_results_metadata(self.image_processing_handler.get_vision_response())))
+
         # Set path for results dict
         if not self.cross_validation.check_cross_val_running():
             vision_results_path = f"{self.process_library_path}{Path(self.process_file_path).stem}_results_{self.camera_id}.json"
@@ -727,30 +677,57 @@ class VisionProcessClass:
 
         return result_dict
 
-    def construct_results_metadata(self, result_dict:dict)->dict:
-        result_meta_dict = {}
+    # def construct_results_metadata2(self, result_dict:dict)->dict:
+    #     result_meta_dict = {}
 
-        result_meta_dict["vision_process_name"] = self.process_filename
-        result_meta_dict["exec_timestamp"] = str(
-            datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
-        )
-        result_meta_dict["vision_OK"] = self.image_processing_handler.get_vision_ok()
-        result_meta_dict["process_UID"] = self.process_UID
+    #     result_meta_dict["vision_process_name"] = self.process_filename
+    #     result_meta_dict["exec_timestamp"] = str(
+    #         datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+    #     )
+    #     result_meta_dict["vision_OK"] = self.image_processing_handler.get_vision_ok()
+    #     result_meta_dict["process_UID"] = self.process_UID
+
+    #     if self.cross_validation.check_cross_val_running():
+    #         result_meta_dict["image_name"] = str(self.cross_validation.current_image_name)
+
+    #     if self.cross_validation.has_been_executed and not self.cross_validation.check_cross_val_running():
+    #         result_meta_dict["VisionOK_cross_val"] = self.cross_validation.visionOK
+    #         result_meta_dict["failed_images_cross_val"] = self.cross_validation.failed_images
+    #         result_meta_dict["total_images_cross_val"] = self.cross_validation.numb_images
+    #         result_meta_dict["failed_images_count"] = self.cross_validation.counter_error
+
+    #     # Insert metadata at the beginning of the dictionary
+    #     result_dict = {**result_meta_dict, **result_dict}
+
+    #     return result_dict
+
+    def construct_results_metadata(self, vision_response: pvimsg.VisionResponse)->pvimsg.VisionResponse:
+
+        vision_response.process_name = self.process_filename
+        vision_response.exec_timestamp = str(datetime.now().strftime("%d_%m_%Y_%H_%M_%S"))
+
+        vision_response.process_uid = self.process_UID
+        vision_response.vision_ok = self.image_processing_handler.get_vision_ok()
 
         if self.cross_validation.check_cross_val_running():
-            result_meta_dict["image_name"] = str(self.cross_validation.current_image_name)
+            vision_response.cross_validation.image_source_name = str(self.cross_validation.current_image_name)
 
         if self.cross_validation.has_been_executed and not self.cross_validation.check_cross_val_running():
-            result_meta_dict["VisionOK_cross_val"] = self.cross_validation.visionOK
-            result_meta_dict["failed_images_cross_val"] = self.cross_validation.failed_images
-            result_meta_dict["total_images_cross_val"] = self.cross_validation.numb_images
-            result_meta_dict["failed_images_count"] = self.cross_validation.counter_error
+            vision_response.cross_validation.vision_ok = self.cross_validation.visionOK
+            vision_response.cross_validation.failed_images = self.cross_validation.failed_images
+            vision_response.cross_validation.numb_images = self.cross_validation.numb_images
+            vision_response.cross_validation.counter_error = self.cross_validation.counter_error
 
-        # Insert metadata at the beginning of the dictionary
-        result_dict = {**result_meta_dict, **result_dict}
-
-        return result_dict
-
+        return vision_response
+    
+    def ordered_dict_to_dict(self, ordered_dict:OrderedDict):
+        if isinstance(ordered_dict, OrderedDict):
+            return dict((key, self.ordered_dict_to_dict(value)) for key, value in ordered_dict.items())
+        elif isinstance(ordered_dict, list):
+            return [self.ordered_dict_to_dict(item) for item in ordered_dict]
+        else:
+            return ordered_dict
+        
 def main(args=None):
     pass
 

@@ -1,28 +1,38 @@
 {
-    "vision_process_name": "process_demo.json",
-    "exec_timestamp": "22_04_2024_16_58_35",
-    "vision_OK": true,
-    "process_UID": "test",
-    "vision_results": [
-        {
-            "Circles": [
-                {
-                    "axis_1": 465.0,
-                    "axis_2": 65.0,
-                    "axis_1_suffix": "x",
-                    "axis_2_suffix": "y",
-                    "radius": 330.0,
-                    "Unit": "um"
+    "vision_ok": true,
+    "process_name": "process_demo.json",
+    "process_uid": "test",
+    "exec_timestamp": "23_04_2024_16_42_34",
+    "cross_validation": {
+        "image_source_name": "",
+        "vision_ok": false,
+        "failed_images": [],
+        "numb_images": 0,
+        "counter_error": 0
+    },
+    "results": {
+        "points": [],
+        "lines": [],
+        "areas": [],
+        "circles": [
+            {
+                "center_point": {
+                    "axis_value_1": 225.0,
+                    "axis_value_2": 80.0,
+                    "axis_suffix_1": "x",
+                    "axis_suffix_2": "y"
                 },
-                {
-                    "axis_1": -535.0,
-                    "axis_2": -335.0,
-                    "axis_1_suffix": "x",
-                    "axis_2_suffix": "y",
-                    "radius": 330.0,
-                    "Unit": "um"
-                }
-            ]
-        }
-    ]
+                "radius": 330.0
+            },
+            {
+                "center_point": {
+                    "axis_value_1": -775.0,
+                    "axis_value_2": 230.0,
+                    "axis_suffix_1": "x",
+                    "axis_suffix_2": "y"
+                },
+                "radius": 330.0
+            }
+        ]
+    }
 }

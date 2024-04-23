@@ -1,0 +1,3 @@
+VisionPoint point_1
+VisionPoint point_2
+VisionPoint point_mid

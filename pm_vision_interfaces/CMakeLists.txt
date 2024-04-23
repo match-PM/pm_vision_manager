@@ -17,6 +17,13 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ExecuteVision.srv"
   "srv/DemoSetExposure.srv"
+  "msg/VisionPoint.msg"
+  "msg/CrossValidation.msg"
+  "msg/VisionResults.msg"
+  "msg/VisionLine.msg"
+  "msg/VisionArea.msg"
+  "msg/VisionCircle.msg"
+  "msg/VisionResponse.msg"
   DEPENDENCIES geometry_msgs # dd packages that above messages depend on, in this case geometry_msgs for Sphere.msg
 )
 

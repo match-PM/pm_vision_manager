@@ -1,10 +1,13 @@
 #from rclpy.logging import logger
 import numpy as np
 import cv2 # OpenCV library
-import pm_vision_manager.va_py_modules.vision_utils as vu
 from math import pi
 import math
 from copy import copy, deepcopy
+from typing import Union
+
+import pm_vision_manager.va_py_modules.vision_utils as vu
+import pm_vision_interfaces.msg as pvimsg 
 
 class ImageNotGrayScaleError(Exception):
     def __init__(self, message="Processing image is not gray scale. Convert to gray scale before calling this function!"):
@@ -55,6 +58,8 @@ class ImageProcessingHandler:
         self.max_val_exposure_time = None
         self.exposure_time_interface_available = False
         self.camera_exposure_time_set_value = None
+        # object that contains all vision results
+        self._vision_response = pvimsg.VisionResponse()
         
     def set_camera_parameter(self, pixelsize: float, 
                              magnification: float, 
@@ -111,10 +116,10 @@ class ImageProcessingHandler:
         self.set_vision_ok(True)
         
         self.frame_buffer.clear()
-        self._vision_results_list.clear()
 
-        print("FOV width is " + str(self.fov_width) + "um")
-        print("FOV hight is " + str(self.fov_height) + "um")    
+        # clear vision results
+        self._vision_results_list.clear()       # delete this in the future
+        self.clear_vision_results()
 
     def init_results(self):
         # add bool boarder to vision elements
@@ -310,6 +315,43 @@ class ImageProcessingHandler:
     def append_to_results(self, result:dict):
         self._vision_results_list.append(result)
 
+    def clear_vision_results(self):
+        self._vision_response = pvimsg.VisionResponse()
+
+    def get_vision_response(self)->pvimsg.VisionResponse:
+        return self._vision_response
+    
+    def append_vision_obj_to_results(self, vision_obj: Union[pvimsg.VisionPoint, 
+                                                             pvimsg.VisionCircle, 
+                                                             pvimsg.VisionArea, 
+                                                             pvimsg.VisionLine]):   
+        """
+        This method appends a vision object to the vision results.
+        
+        """
+        if isinstance(vision_obj, pvimsg.VisionPoint):
+            self._vision_response.results.points.append(vision_obj)
+        elif isinstance(vision_obj, pvimsg.VisionCircle):
+            self._vision_response.results.circles.append(vision_obj)
+        elif isinstance(vision_obj, pvimsg.VisionArea):
+            self._vision_response.results.areas.append(vision_obj)
+        elif isinstance(vision_obj, pvimsg.VisionLine):
+            self._vision_response.results.lines.append(vision_obj)
+        else:
+            raise ValueError("Vision object type not supported!")
+
+    def new_vision_point_result(self)->pvimsg.VisionPoint:
+        return pvimsg.VisionPoint()
+    
+    def new_vision_circle_result(self)->pvimsg.VisionCircle:
+        return pvimsg.VisionCircle()
+    
+    def new_vision_area_result(self)->pvimsg.VisionArea:
+        return pvimsg.VisionArea()
+    
+    def new_vision_line_result(self)->pvimsg.VisionLine:
+        return pvimsg.VisionLine()
+    
     @staticmethod
     def create_vision_element_overlay(displ_frame, vis_elem_frame, logger = None):
         # Add visual elements to the display frame

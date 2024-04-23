@@ -1,6 +1,6 @@
 {
     "vision_process_name": "process_demo",
-    "process creation": "2024-04-22 16:58:11",
+    "process creation": "2024-04-23 16:42:34",
     "vision_pipeline": [
         {
             "Draw_Grid": {
@@ -37,11 +37,11 @@
         },
         {
             "ROI": {
-                "active": false,
-                "ROI_height": 800,
-                "ROI_width": 500,
-                "ROI_center_x": 400.0,
-                "ROI_center_y": 0.0
+                "active": true,
+                "ROI_height": 1000,
+                "ROI_width": 1800,
+                "ROI_center_x": 0.0,
+                "ROI_center_y": 5.0
             }
         },
         {

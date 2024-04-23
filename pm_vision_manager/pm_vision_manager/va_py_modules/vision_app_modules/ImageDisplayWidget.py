@@ -140,6 +140,7 @@ class ImageDisplayWidget(QWidget):
 
         # new widget
         self.results_dict_tree = QTreeWidget()
+        self.results_dict_tree.setHeaderLabels(["Vision results"])
         #self.model = QStandardItemModel()
         #self.results_dict_tree.setModel(self.model)
 

@@ -4,7 +4,7 @@ from rclpy.node import Node  # Handles the creation of nodes
 from sensor_msgs.msg import Image  # Image is the message type
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
 import cv2
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication, QSizePolicy, QFileDialog
 from PyQt6.QtGui import QColor, QTextCursor, QFont, QImage, QPixmap
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
 from threading import Thread, Timer
@@ -26,6 +26,12 @@ from pm_vision_manager.va_py_modules.vision_utils import get_screen_resolution, 
 from pm_vision_manager.va_py_modules.vision_app_modules.VisionAssistantWindow import VisionAssistantWindow
 from pm_vision_manager.va_py_modules.vision_app_modules.ImageDisplayWidget import ImageDisplayWidget
 
+from pm_vision_manager.va_py_modules.manager_configuration import (check_for_valid_path_config, 
+                                                                   set_process_library_path, 
+                                                                   set_camera_config_path, 
+                                                                   set_vision_database_path, 
+                                                                   set_function_library_path,
+                                                                   check_for_valid_inputs)
 class CreateVisionInstanceSignal(QObject):
     signal = pyqtSignal(str, VisionProcessClass)
 
@@ -38,7 +44,7 @@ class NextImageSignal(QObject):
 class DestroyVisionInstanceSignal(QObject):
     signal = pyqtSignal(str)
 
-class CustomError(Exception):
+class AppConfigError(Exception):
     pass
 
 class VisionNode(Node):
@@ -52,9 +58,8 @@ class VisionNode(Node):
         """
         super().__init__("vision_assistant")
 
-        if not VisionProcessClass.check_for_valid_path_config(self.get_logger()):
-            self.get_logger().error("Invalid path configuration!")
-            raise CustomError
+        # Check and set the path configuration for the vision manager
+        self.init_app_config()
         
         self.main_window = VisionAssistantWindow(self)
         self.main_window.show()
@@ -84,7 +89,7 @@ class VisionNode(Node):
 
     def execute_vision(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
 
-        input_valid = VisionProcessClass.check_for_valid_inputs(request.process_filename, request.camera_config_filename, self.get_logger())
+        input_valid = check_for_valid_inputs(request.process_filename, request.camera_config_filename, self.get_logger())
             
         if not input_valid:
             self.get_logger().error("Invalid input for process or camera config file!")
@@ -107,48 +112,52 @@ class VisionNode(Node):
         
         vision_instance.start_vision_subscription()
 
+        # attach the vision instance to the main window
         self.main_window.start_execution_widget_signal.signal.emit(vision_instance,request.image_display_time)
-        #self.main_window.start_vision_execution(vision_instance)
 
+        # Wait for the vision to finish
         while not vision_instance.stop_image_subscription:
             time.sleep(0.5)
 
         response.success = vision_instance.image_processing_handler.get_vision_ok()
-        response.process_uid = request.process_uid
-        response.results_dict = str(vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_results()))
+        response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
         response.results_path = str(vision_instance.vision_results_path)
         del vision_instance
-        
-        point1 = Point()
-        point1.x = 1.5
-        point1.y = 2.5
-        point1.z = 3.5
 
-        point2 = Point()
-        point2.x = 4.5
-        point2.y = 5.5
-        point2.z = 6.5        
-        response.points.append(point1)
-        response.points.append(point2)
-
-        return response    
+        return response
     
-
+    def init_app_config(self):
+        if not check_for_valid_path_config(self.get_logger()):
+            self.get_logger().error("Invalid path configuration!")
+            # Set config for process library path
+            process_folder_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Process Library")
+            if process_folder_path == "":
+                self.get_logger().error("No path selected for process library!")
+                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            set_process_library_path(process_folder_path+"/", self.get_logger())
+            # Set config for camera config path
+            camera_folder_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Camera Config")
+            if camera_folder_path == "":
+                self.get_logger().error("No path selected for camera config!")
+                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            set_camera_config_path(camera_folder_path+"/", self.get_logger())
+            # Set config for vision database path
+            vision_db_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Vision Database")
+            if vision_db_path == "":
+                self.get_logger().error("No path selected for vision database!")
+                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            set_vision_database_path(vision_db_path+"/", self.get_logger())
+            # Set config for function library path
+            folder_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Function Library")
+            if folder_path == "":
+                self.get_logger().error("No path selected for function library!")
+                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            set_function_library_path(folder_path+"/", self.get_logger())
+            
+            if not check_for_valid_path_config(self.get_logger()):
+                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            
 def main(args=None):
-    # # Initialize the rclpy library
-    # rclpy.init(args=args)
-    # # Create the node
-    # vision_node = VisionNode()
-    # executor = MultiThreadedExecutor(num_threads=6)
-    # executor.add_node(vision_node)
-    # # Spin the node so the callback function is called.
-    # executor.spin()
-
-    # executor.shutdown()
-    # vision_node.destroy_node()
-
-    # # Shutdown the ROS client library for Python
-    # rclpy.shutdown()
 
     rclpy.init(args=args)
     executor = MultiThreadedExecutor(num_threads=6) 
@@ -164,7 +173,7 @@ def main(args=None):
 
         sys.exit(app.exec())
 
-    except CustomError as e:
+    except AppConfigError as e:
         app.closeAllWindows()
         executor.shutdown()
         rclpy.shutdown()

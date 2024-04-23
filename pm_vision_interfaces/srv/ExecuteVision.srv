@@ -5,7 +5,5 @@ int64 image_display_time
 bool run_cross_validation
 ---
 bool success
-string results_dict
 string results_path
-geometry_msgs/Point[] points
-string process_uid
+VisionResponse vision_response

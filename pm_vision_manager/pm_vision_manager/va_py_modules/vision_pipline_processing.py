@@ -285,17 +285,26 @@ def HoughCircles(image_processing_handler: ImageProcessingHandler,
 
       x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x,y)
       radius_um=r*image_processing_handler.umPROpixel
-      print(str(image_processing_handler.camera_axis_1)+'-Coordinate:'+ str(x_cs_camera))
-      print(str(image_processing_handler.camera_axis_2)+'-Coordinate:'+ str(y_cs_camera))
-      print('Radius: '+ str(radius_um))
-      HoughCircles_reslults_list.append({
-        'axis_1': x_cs_camera,
-        'axis_2': y_cs_camera,
-        'axis_1_suffix': image_processing_handler.camera_axis_1,
-        'axis_2_suffix': image_processing_handler.camera_axis_2,
-        "radius":radius_um,
-        "Unit": "um"
-        })
+      #print(str(image_processing_handler.camera_axis_1)+'-Coordinate:'+ str(x_cs_camera))
+      #print(str(image_processing_handler.camera_axis_2)+'-Coordinate:'+ str(y_cs_camera))
+      #print('Radius: '+ str(radius_um))
+      circle = image_processing_handler.new_vision_circle_result()
+      circle.radius = radius_um
+      circle.center_point.axis_value_1 = x_cs_camera
+      circle.center_point.axis_value_2 = y_cs_camera
+      circle.center_point.axis_suffix_1 = image_processing_handler.camera_axis_1
+      circle.center_point.axis_suffix_2 = image_processing_handler.camera_axis_2
+
+      image_processing_handler.append_vision_obj_to_results(circle)
+
+      # HoughCircles_reslults_list.append({
+      #   'axis_1': x_cs_camera,
+      #   'axis_2': y_cs_camera,
+      #   'axis_1_suffix': image_processing_handler.camera_axis_1,
+      #   'axis_2_suffix': image_processing_handler.camera_axis_2,
+      #   "radius":radius_um,
+      #   "Unit": "um"
+      #   })
 
       if draw_circles:
         canvas = image_processing_handler.get_visual_elements_canvas()
@@ -306,8 +315,8 @@ def HoughCircles(image_processing_handler: ImageProcessingHandler,
         cv2.circle(canvas, (x, y), 1, (0, 0, 255), 2)
         image_processing_handler.apply_visual_elements_canvas(canvas)
 
-    HouchCircles_results_dict={"Circles": HoughCircles_reslults_list}
-    image_processing_handler.append_to_results(HouchCircles_results_dict)
+    #HouchCircles_results_dict={"Circles": HoughCircles_reslults_list}
+    #image_processing_handler.append_to_results(HouchCircles_results_dict)
   else:
     image_processing_handler.set_vision_ok(False)
 

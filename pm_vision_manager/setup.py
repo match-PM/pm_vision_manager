@@ -1,4 +1,5 @@
 from setuptools import setup
+import os
 
 package_name = 'pm_vision_manager'
 submodules = 'pm_vision_manager/va_py_modules'
@@ -15,7 +16,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name, ['config/vision_assistant_path_config.yaml']),
+        ('share/' + package_name, ['config/vision_assistant_path_config.yaml']),  
+        ('share/' + package_name, ['config/vision_assistant_config.yaml']),
         ('share/' + package_name + '/launch', ['launch/pm_vision.launch.py']),
     ],
     install_requires=['setuptools'],
