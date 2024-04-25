@@ -6,6 +6,7 @@ import os
 from math import pi                              
 from pm_vision_manager.va_py_modules.vision_utils import rotate_image
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError
+from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec import fitLine, cornerDetection
 
 def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, maxval:int, type:str) -> None:
   frame_processed = image_processing_handler.get_processing_image()
@@ -84,7 +85,6 @@ def findContours(image_processing_handler: ImageProcessingHandler, draw_contours
     image_processing_handler.apply_visual_elements_canvas(canvas)
 
   image_processing_handler.set_processing_image(frame_processed)
-  print("findContours executed")
 
 def minEnclosingCircle(image_processing_handler: ImageProcessingHandler,draw_circles:bool, mode:str, method:str):
   if not image_processing_handler.is_process_image_grayscale():
@@ -100,11 +100,8 @@ def minEnclosingCircle(image_processing_handler: ImageProcessingHandler,draw_cir
   radius_um=radius*image_processing_handler.umPROpixel
   if radius <= 0.5: # this is in pixel
     image_processing_handler.set_vision_ok(False)
-    print("No circle detected!")
     return 
-  print(str(image_processing_handler.camera_axis_1)+'-Coordinate:'+ str(x_cs_camera))
-  print(str(image_processing_handler.camera_axis_2)+'-Coordinate:'+ str(y_cs_camera))
-  print('Radius: '+ str(radius_um))
+
   circle_result_dict={"Circle":{
     'axis_1': x_cs_camera,
     'axis_2': y_cs_camera,
@@ -130,7 +127,7 @@ def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, min
   if not image_processing_handler.is_process_image_grayscale():
     raise ImageNotGrayScaleError()
   frame_processed = image_processing_handler.get_processing_image()
-  lines = cv2.HoughLinesP(frame_processed,rho = 1,theta = 1*np.pi/180,threshold = threshold,minLineLength = minLineLength,maxLineGap = maxLineGap)
+  lines = cv2.HoughLinesP(frame_processed,rho = 1,theta = 1*np.pi/180,threshold = threshold, minLineLength = minLineLength, maxLineGap = maxLineGap)
   canvas = image_processing_handler.get_visual_elements_canvas()
   HoughLinesP_results_list=[]
   if lines is not None:
@@ -142,10 +139,16 @@ def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, min
       x1_cs_camera, y1_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x1,y1)
       x2_cs_camera, y2_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x2,y2)
 
-      print('Point 1 - ' + str(image_processing_handler.camera_axis_1)+'-Coordinate:'+ str(x1_cs_camera))
-      print('Point 1 - ' + str(image_processing_handler.camera_axis_2)+'-Coordinate:'+ str(y1_cs_camera))
-      print('Point 2 - ' + str(image_processing_handler.camera_axis_1)+'-Coordinate:'+ str(x2_cs_camera))
-      print('Point 2 - ' + str(image_processing_handler.camera_axis_2)+'-Coordinate:'+ str(y2_cs_camera))
+      line = image_processing_handler.new_vision_line_result()
+      line.point_1.axis_value_1 = x1_cs_camera
+      line.point_1.axis_value_2 = y1_cs_camera
+      line.point_1.axis_suffix_1 = image_processing_handler.camera_axis_1
+      line.point_1.axis_suffix_2 = image_processing_handler.camera_axis_2
+      line.point_2.axis_value_1 = x2_cs_camera
+      line.point_2.axis_value_2 = y2_cs_camera
+      line.point_2.axis_suffix_1 = image_processing_handler.camera_axis_1
+      line.point_2.axis_suffix_2 = image_processing_handler.camera_axis_2
+      image_processing_handler.append_vision_obj_to_results(line)
 
       HoughLinesP_results_list.append({
         'Point_1': {'axis_1': x1_cs_camera,"axis_2":y2_cs_camera},
@@ -165,6 +168,189 @@ def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, min
   else:
     image_processing_handler.set_vision_ok(False)
 
+# def fitLine(image_processing_handler: ImageProcessingHandler, line_selection: str, search_accuracy: str, minLineLength:int, rho:float=None, theta:int =None, threshold:int=None, maxLineGap:int=None, logger = None):
+#   if not image_processing_handler.is_process_image_grayscale():
+#     raise ImageNotBinaryError()
+#   frame_processed = image_processing_handler.get_processing_image()
+
+#   frame_processed = cv2.Canny(frame_processed, 10, 200, 3)
+#   minLineLength_pix = int(image_processing_handler.pixelPROum*minLineLength)
+
+#   threshold_adaptive = int(minLineLength * 0.3)
+#   maxLineGap_adaptive = int(minLineLength * 2.5)
+  
+#   match search_accuracy:
+#     case "coarse":
+#       rho_adaptive = 1
+#       theta_adaptive = 180
+#     case "fine":
+#       rho_adaptive = 0.5
+#       theta_adaptive = 1800
+#     case "finest":
+#       rho_adaptive = 0.5
+#       theta_adaptive = 3600
+
+#   lines = cv2.HoughLinesP(frame_processed,rho = rho_adaptive,theta = np.pi/theta_adaptive, threshold = threshold_adaptive, minLineLength = minLineLength_pix, maxLineGap = maxLineGap_adaptive)
+#   # threshold - how many points can repsent a line
+#   canvas = image_processing_handler.get_visual_elements_canvas()  
+#   # Draw detected lines on the original image
+
+#   if lines is not None:
+
+#     # calculate delas of x1 and x2
+#     deltas_x = [abs(line[0][2] - line[0][0]) for line in lines]
+#     deltas_y = [abs(line[0][3] - line[0][1]) for line in lines]
+
+#     logger.debug(f"{(deltas_x)} are the deltas x!")
+#     logger.debug(f"{(deltas_y)} are the deltas y!")
+
+#     delta_deltas = [delta_x - delta_y for delta_x, delta_y in zip(deltas_x, deltas_y)]
+
+#     logger.debug(f"{(delta_deltas)} are the delta deltas!")
+                 
+#     # vector of inidies of lines that are vertical or horizontal
+#     horizontal_lines_indicies = [idx for idx, value in enumerate(delta_deltas) if value >= 0]
+#     vertical_lines_indicies = [idx for idx, value in enumerate(delta_deltas) if value < 0]
+
+#     if logger:
+#       logger.info(f"{(horizontal_lines_indicies)} are horizontal lines!")
+#       logger.info(f"{(vertical_lines_indicies)} are vertical lines!")
+
+#     # calculate midpoints of horizontal lines
+#     midpoints_horizontal = [((line[0][0] + line[0][2]) / 2, (line[0][1] + line[0][3]) / 2) for idx, line in enumerate(lines) if idx in horizontal_lines_indicies]
+    
+#     # calculate midpoints of vertical lines
+#     midpoints_vertical = [((line[0][0] + line[0][2]) / 2, (line[0][1] + line[0][3]) / 2) for idx, line in enumerate(lines) if idx in vertical_lines_indicies]
+
+#     if logger:
+#       logger.debug(f"{(midpoints_horizontal)} are horizontal midpoints!")
+#       logger.debug(f"{(midpoints_vertical)} are vertical midpoints!")
+
+#     # calculate max differnece between x values in vertical midpoints
+#     if midpoints_vertical:
+#       max_x_mid_vert = max(point[0] for point in midpoints_vertical)
+#       min_x_mid_vert = min(point[0] for point in midpoints_vertical)
+#       abs_x_mid_vert = abs(max_x_mid_vert + min_x_mid_vert)/2
+
+#       if logger:
+#         logger.debug(f"{(max_x_mid_vert)} is max x mid vert!")
+#         logger.debug(f"{(min_x_mid_vert)} is min x mid vert!")
+#         logger.debug(f"{(abs_x_mid_vert)} is abs x mid vert!")
+
+#       left_vert_mid_points = [point for ind, point in enumerate(midpoints_vertical) if point[0] <= abs_x_mid_vert]
+#       right_vert_mid_points = [point for ind, point in enumerate(midpoints_vertical) if point[0] > abs_x_mid_vert]
+
+#       left_vert_mid_ind = [ind for ind, point in enumerate(midpoints_vertical) if point[0] <= abs_x_mid_vert]
+#       right_vert_mid_ind = [ind for ind, point in enumerate(midpoints_vertical) if point[0] > abs_x_mid_vert]
+
+#     # max_y_mid_vert = max(point[1] for point in midpoints_vertical)
+#     # min_y_mid_vert = min(point[1] for point in midpoints_vertical)
+#     # abs_y_mid_vert = abs(max_y_mid_vert - min_y_mid_vert)/2
+
+
+#     # max_x_mid_hor = max(point[0] for point in midpoints_horizontal)
+#     # min_x_mid_hor = min(point[0] for point in midpoints_horizontal)
+#     # abs_x_mid_hor = abs(max_x_mid_hor - min_x_mid_hor)/2
+
+#     if midpoints_horizontal:
+#       max_y_mid_hor = max(point[1] for point in midpoints_horizontal)
+#       min_y_mid_hor = min(point[1] for point in midpoints_horizontal)
+#       abs_y_mid_hor = abs(max_y_mid_hor + min_y_mid_hor)/2
+
+#       if logger:
+#         logger.debug(f"{(max_y_mid_hor)} is max y mid hor!")
+#         logger.debug(f"{(min_y_mid_hor)} is min y mid hor!")
+#         logger.debug(f"{(abs_y_mid_hor)} is abs y mid hor!")
+
+#       top_hor_mid_points = [point for point in midpoints_horizontal if point[1] <= abs_y_mid_hor]
+#       bottom_hor_mid_points = [point for point in midpoints_horizontal if point[1] > abs_y_mid_hor]
+
+#       top_hor_mid_ind = [ind for ind, point in enumerate(midpoints_horizontal) if point[1] <= abs_y_mid_hor]
+#       bottom_hor_mid_ind = [ind for ind, point in enumerate(midpoints_horizontal) if point[1] > abs_y_mid_hor]
+
+#     selected_line = None
+
+#     logger.error(f"{(line_selection)} is the line selection!")
+
+#     match line_selection:
+#       case "left":
+#         if left_vert_mid_ind:
+#           line_ind_left_vertical = vertical_lines_indicies[left_vert_mid_ind[0]]
+#           selected_line = lines[line_ind_left_vertical]
+#           logger.error("Found line according to 'left' selection")
+#           logger.error(f"Found {len(left_vert_mid_ind)} left vertical lines!")
+#       case "right":
+#         logger.error("right")
+#         if right_vert_mid_ind:
+#           line_ind_right_vertical = vertical_lines_indicies[right_vert_mid_ind[0]]
+#           selected_line = lines[line_ind_right_vertical]
+#           logger.error("Found line according to 'right' selection")
+#           logger.error(f"Found {len(right_vert_mid_ind)} right vertical lines!")
+
+#       case "top":
+#         if top_hor_mid_ind:
+#           line_ind_top_horizontal = horizontal_lines_indicies[top_hor_mid_ind[0]]
+#           selected_line = lines[line_ind_top_horizontal]
+#           logger.error("Found line according to 'top' selection")
+#           logger.error(f"Found {len(top_hor_mid_ind)} top horizontal lines!")
+
+#       case "bottom":
+#         if bottom_hor_mid_ind:
+#           line_ind_bottom_horizontal = horizontal_lines_indicies[bottom_hor_mid_ind[0]]
+#           selected_line = lines[line_ind_bottom_horizontal]
+#           logger.error("Found line according to 'bottom' selection")
+#           logger.error(f"Found {len(bottom_hor_mid_ind)} bottom horizontal lines!")
+
+#     if selected_line is not None:
+#       logger.error("Drawing selected line")
+#       x1, y1, x2, y2 = selected_line[0]
+#       cv2.line(canvas,(x1,y1),(x2,y2),(0,255,0),2)
+
+#       x1_conv,y1_conv = image_processing_handler.CS_Conv_ROI_Pix_TO_Img_Pix(x1,y1)
+#       x2_conv,y2_conv = image_processing_handler.CS_Conv_ROI_Pix_TO_Img_Pix(x2,y2)
+#       x1_cs_camera, y1_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x1_conv,y1_conv)
+#       x2_cs_camera, y2_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x2_conv,y2_conv)
+#       line_length_um = np.sqrt((x2_cs_camera - x1_cs_camera)**2 + (y2_cs_camera - y1_cs_camera)**2)
+
+#       if x2_cs_camera - x1_cs_camera == 0:
+#         line_angle = 0
+#       else:
+#         line_angle = np.arctan((y2_cs_camera - y1_cs_camera)/(x2_cs_camera - x1_cs_camera)) * 180/pi
+
+#       line = image_processing_handler.new_vision_line_result()
+#       line.point_1.axis_value_1 = x1_cs_camera
+#       line.point_1.axis_value_2 = y1_cs_camera
+#       line.point_1.axis_suffix_1 = image_processing_handler.camera_axis_1
+#       line.point_1.axis_suffix_2 = image_processing_handler.camera_axis_2
+#       line.point_2.axis_value_1 = x2_cs_camera
+#       line.point_2.axis_value_2 = y2_cs_camera
+#       line.point_2.axis_suffix_1 = image_processing_handler.camera_axis_1
+#       line.point_2.axis_suffix_2 = image_processing_handler.camera_axis_2
+#       line.point_mid.axis_suffix_1 = image_processing_handler.camera_axis_1
+#       line.point_mid.axis_suffix_2 = image_processing_handler.camera_axis_2
+#       line.point_mid.axis_value_1 = (x1_cs_camera + x2_cs_camera) / 2
+#       line.point_mid.axis_value_2 = (y1_cs_camera + y2_cs_camera) / 2
+#       line.length = line_length_um
+#       line.angle = line_angle
+
+#       #image_processing_handler.set_processing_image(frame_processed)
+#       image_processing_handler.apply_visual_elements_canvas(canvas)
+#       image_processing_handler.append_vision_obj_to_results(line)
+#     else:
+#       if logger:
+#         logger.error("No lines detected")
+#       image_processing_handler.set_vision_ok(False)
+
+#     # for line in lines:
+#     #   x1, y1, x2, y2 = line[0]
+#     #   cv2.line(canvas,(x1,y1),(x2,y2),(0,255,0),1)
+#     # image_processing_handler.apply_visual_elements_canvas(canvas)
+
+#   else:
+#     if logger:
+#       logger.error("No lines detected")
+#     image_processing_handler.set_vision_ok(False)
+
 
 def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, method: str, max_area, min_area):
   frame_processed = image_processing_handler.get_processing_image()
@@ -177,7 +363,6 @@ def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, metho
     area= cv2.contourArea(cnt)
     all_areas.append(area)
   contour_frame = np.zeros((frame_processed.shape[0], frame_processed.shape[1]), dtype = np.uint8)
-  image_processing_handler.set_vision_ok(False)
   area_found = False
   for index, area_item in enumerate(all_areas):
         
@@ -188,7 +373,8 @@ def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, metho
   if not area_found:
     image_processing_handler.set_vision_ok(False)
     frame_processed = np.zeros((frame_processed.shape[0], frame_processed.shape[1]), dtype = np.uint8)
-  
+  else:
+    image_processing_handler.set_vision_ok(True)
   image_processing_handler.set_processing_image(frame_processed)  
   
 def morphologyExOpening(image_processing_handler: ImageProcessingHandler,kernelsize:int):
@@ -801,8 +987,36 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
             active = function_parameter.get('active')
             if active:
               EqualizeHist(image_processing_handler=image_processing_handler)
-              
-                
+
+          case "FitLine":
+            active = function_parameter.get('active')
+            p_line_selection = function_parameter.get('line selection')
+            p_search_accuracy= function_parameter.get('search accuracy')
+            p_minLineLength = function_parameter.get('minLineLength')
+            #p_threshold = function_parameter.get('threshold')
+            #p_minLineLength = function_parameter.get('minLineLength')
+            #p_maxLineGap = function_parameter.get('maxLineGap')
+            if active:
+              fitLine(image_processing_handler=image_processing_handler, line_selection=p_line_selection, search_accuracy=p_search_accuracy, minLineLength=p_minLineLength, logger = vision_node.get_logger())
+              #fitLine(image_processing_handler,p_rho,p_theta,p_threshold,p_minLineLength, p_maxLineGap, logger = vision_node.get_logger())              
+
+          case "CornerDetection":
+            active = function_parameter.get('active')
+            p_line_1_selection = function_parameter.get('line_1_selection')
+            p_line_2_selection = function_parameter.get('line_2_selection')
+            p_search_accuracy= function_parameter.get('search_accuracy')
+            p_minLineLength_1 = function_parameter.get('minLineLength_1')
+            p_minLineLength_2 = function_parameter.get('minLineLength_2')
+
+            if active:
+              cornerDetection(image_processing_handler=image_processing_handler,
+                              line_1_selection=p_line_1_selection,
+                              line_2_selection=p_line_2_selection,
+                              search_accuracy=p_search_accuracy,
+                              minLineLength_1=p_minLineLength_1,
+                              minLineLength_2=p_minLineLength_2,
+                              logger = vision_node.get_logger())
+                              
     if image_processing_handler.get_vision_ok():
       vision_node.get_logger().info('Vision process executed cleanly!')
     else:

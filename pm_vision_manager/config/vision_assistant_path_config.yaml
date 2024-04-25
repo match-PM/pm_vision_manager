@@ -1,5 +1,5 @@
 vision_assistant_path_config:
-  process_library_path: "/home/mll/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_processes/"
+  process_library_path: "/home/dmll/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_processes/"
   function_libary_path: "/home/mll/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_functions/"
   vision_database_path: "/home/mll/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_db/"
   camera_config_path: "/home/mll/ros2_ws/src/pm_vision_manager/pm_vision_manager/camera_configs/"

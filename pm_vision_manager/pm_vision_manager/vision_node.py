@@ -59,7 +59,9 @@ class VisionNode(Node):
         super().__init__("vision_assistant")
 
         # Check and set the path configuration for the vision manager
+        self.get_logger().info("Checking path configuration...")
         self.init_app_config()
+        self.get_logger().info("Path configuration successful!")
         
         self.main_window = VisionAssistantWindow(self)
         self.main_window.show()
@@ -86,6 +88,7 @@ class VisionNode(Node):
         self.pub = self.create_publisher(Image, f"VisionManager/test", 10)
         self.get_logger().info("Vision node started!")
         self.image_widgets = {}
+        self.get_logger().info("Vision node started!")
 
     def execute_vision(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
 

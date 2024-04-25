@@ -4,6 +4,7 @@ import os
 package_name = 'pm_vision_manager'
 submodules = 'pm_vision_manager/va_py_modules'
 app_modules = 'pm_vision_manager/va_py_modules/vision_app_modules'
+vision_functions = 'pm_vision_manager/va_py_modules/feature_detect_functions'
 setup(
     #author='Niklas Terei',
     #author_email='terei@match.uni-hannover.de',
@@ -11,7 +12,7 @@ setup(
     #maintainer_email='terei@match.uni-hannover.de',
     name=package_name,
     version='0.1.0',
-    packages=[package_name, submodules, app_modules],
+    packages=[package_name, submodules, app_modules,vision_functions],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),

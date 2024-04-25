@@ -20,11 +20,11 @@ params:
   - param_name: "ROI_height"
     description: "tbd"
     type: "unsigned_int"
-    min_val: 0
+    min_val: 1
     max_val: "inf"
 
   - param_name: "ROI_width"
     description: "tbd"
     type: "unsigned_int"
-    min_val: 0
+    min_val: 1
     max_val: "inf"

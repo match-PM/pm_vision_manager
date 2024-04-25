@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QScrollArea, QMenuBar, QMenu, QDialog, QHBoxLayout, QInputDialog, QTreeWidget, QTreeWidgetItem, QApplication, QGridLayout, QFrame, QMainWindow, QListWidget, QListWidgetItem, QDoubleSpinBox, QWidget, QVBoxLayout, QPushButton, QCheckBox, QLineEdit, QComboBox, QTextEdit,QLabel,QSlider, QSpinBox, QFontDialog, QFileDialog
-
+import os
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QAction
 from ament_index_python.packages import get_package_share_directory
@@ -8,7 +8,7 @@ from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
 from threading import Thread 
 import sys
-from ros_sequential_action_programmer.submodules.action_classes.RecomGenerator import RecomGenerator
+#from ros_sequential_action_programmer.submodules.action_classes.RecomGenerator import RecomGenerator
 from ros_sequential_action_programmer.submodules.RsapApp_submodules.AppTextWidget import AppTextOutput
 import yaml
 from ament_index_python.packages import PackageNotFoundError
@@ -63,6 +63,7 @@ class MainMenuWidget(QWidget):
 
 
     def update_files(self):
+        self.node.get_logger().info("Updating files...")
         package_share_directory = get_package_share_directory('pm_vision_manager')
         path_config_path = package_share_directory + '/vision_assistant_path_config.yaml'
         with open(path_config_path, 'r') as file:
@@ -70,14 +71,18 @@ class MainMenuWidget(QWidget):
             config = FileData["vision_assistant_path_config"]
             self.process_library_path=config["process_library_path"]
             camera_config_path=config["camera_config_path"]
-            vision_processes = RecomGenerator.get_files_in_dir(directory=self.process_library_path,file_end='.json', exclude_str=['results'])
-            vision_cameras = RecomGenerator.get_files_in_dir(directory=camera_config_path,file_end='.yaml', exclude_str=['vision_assistant'])
+            self.node.get_logger().info("Start getting files...")
+            vision_processes = self.get_files_in_dir(directory=self.process_library_path,file_end='.json', exclude_str=['results'])
+            vision_cameras = self.get_files_in_dir(directory=camera_config_path,file_end='.yaml', exclude_str=['vision_assistant'])
+            self.node.get_logger().info("End getting files...")
             self.vision_processes_widget.clear()
             self.camera_configs_widget.clear()
             for process in vision_processes:
                 self.vision_processes_widget.addItem(process)
             for camera in vision_cameras:
                 self.camera_configs_widget.addItem(camera)
+
+        self.node.get_logger().info("Updating files...")
 
     def create_new_process_file(self):
         new_process_file, _ = QFileDialog.getSaveFileName(self, "Save File", self.process_library_path, "JSON Files (*.json)")
@@ -122,6 +127,29 @@ class MainMenuWidget(QWidget):
     def enter_id_dialog(self) -> bool:
         text, ok = QInputDialog.getText(self, 'Input Dialog', 'Enter a unique process Id for new assistant:')
         return text, ok
+    
+    @staticmethod
+    def get_files_in_dir(directory: str, file_end: str, exclude_str: list[str] = []):
+        """
+        This function returns a list of files in the directory with the given file_end.
+        Parameters:
+        param: directory: str
+        file_end: str
+        exclude_str: list[str]
+        """
+        files = []
+        for foldername, subfolders, filenames in os.walk(directory):
+            for filename in filenames:
+                if filename.endswith(file_end):
+                    valid_file = True
+                    for string in exclude_str:
+                        if string in filename:
+                            valid_file = False
+                            break  # No need to continue checking once a match is found
+                    if valid_file:    
+                        files.append(os.path.relpath(os.path.join(foldername, filename), directory))
+        return files
+    
 
 class DummyMain(QMainWindow):
 

@@ -28,13 +28,3 @@ params:
     type: "unsigned_int"
     min_val: 0
     max_val: 1000000
-
-
-  - param_name: "testdddd"
-    description: "tbd"
-    type: "string_list"
-    values: 
-      - "0.0"
-      - "1.0"
-      - "2.0"
-      - "3.0"
