@@ -5,9 +5,15 @@ sys.path.append(os.getcwd())
 import pm_vision_app.py_modules.type_classes as TC
 
 class VisionFunction():
-    def __init__(self,vision_function_name, description) -> None:
+    SUPPORTED_CATEGORYS = ['Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion']
+
+    def __init__(self,vision_function_name, description,category=None) -> None:
         self.vision_function_name = vision_function_name
         self.vision_function_description = description
+        if category in self.SUPPORTED_CATEGORYS:
+            self.category = category
+        else:
+            self.category = 'Not defined'
 
         self.bool_params_list: list[TC.BoolParam] = []
         self.unsigned_int_params_list: list[TC.UnsignedInt] = []
@@ -80,5 +86,8 @@ class VisionFunction():
             if param.param_name == 'active':
                 param.set_value(bool(value))
 
+    def get_category(self)->str:
+        return self.category
+    
 if __name__ == '__main__':
     pass

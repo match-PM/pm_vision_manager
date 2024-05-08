@@ -1,5 +1,6 @@
 function_name: "Bitwise_Not"
 description: "BlaBla"
+function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:
   - param_name: "active"

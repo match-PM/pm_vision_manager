@@ -1,5 +1,7 @@
 function_name: "Select_Area"
 description: "BlaBla"
+function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
 params:
   - param_name: "active"
     description: "Parameter to activate or deactivate this function."

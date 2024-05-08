@@ -25,12 +25,16 @@ class VisionFunctionsLoader():
                 with open(file_path, 'r') as file:
                     try:
                         function_file_content = yaml.load(file, Loader=yaml.FullLoader)
+                        # load category from file
+                        category = function_file_content.get('function_category', None)
                         _vision_function = VisionFunction(vision_function_name=function_file_content['function_name'], 
-                                                          description= function_file_content['description'])
+                                                          description= function_file_content['description'],
+                                                          category=category)
                         
                         for param in function_file_content['params']:
                             match param['type']:
                                 case "bool":
+                                    default_value = param.get('default_val', None)
                                     bool_param = TC.BoolParam(param_name=param['param_name'],
                                                     description=param['description'])
                                     
@@ -40,35 +44,47 @@ class VisionFunctionsLoader():
                                     _vision_function.bool_params_list.append(bool_param)
 
                                 case "unsigned_int":
+                                    default_value = param.get('default_val', None)
                                     _vision_function.unsigned_int_params_list.append(TC.UnsignedInt(param_name=param['param_name'],
                                                                                           description=param['description'],
                                                                                           max_value=param['max_val'],
-                                                                                          min_value=param['min_val']))
+                                                                                          min_value=param['min_val'],
+                                                                                          default_value=default_value))
                                 case "string_list":
+                                    default_value = param.get('default_val', None)
                                     _vision_function.list_param_list.append(TC.ParamList(param_name=param['param_name'],
                                                         description=param['description'],
-                                                        values=list(param['values'])))
+                                                        values=list(param['values']),
+                                                        default_value=default_value))
 
                                 case "kernel":
+                                    default_value = param.get('default_val', None)
                                     _vision_function.kernel_list.append(TC.Kernel(param_name=param['param_name'],
                                                         description=param['description'],
                                                         max_value=param['max_val'],
-                                                        min_value=param['min_val']))
+                                                        min_value=param['min_val'],
+                                                        default_value=default_value))
 
                                 case "float":
+                                    default_value = param.get('default_val', None)
                                     _vision_function.float_list.append(TC.ParamFloat(param_name=param['param_name'],
                                                         description=param['description'],
                                                         max_value=param['max_val'],
-                                                        min_value=param['min_val']))
+                                                        min_value=param['min_val'],
+                                                        default_value=default_value))
                                     
                                 case "int":
+                                    default_value = param.get('default_val', None)
                                     _vision_function.int_list.append(TC.ParamInt(param_name=param['param_name'],
                                                         description=param['description'],
                                                         max_value=param['max_val'],
-                                                        min_value=param['min_val']))
+                                                        min_value=param['min_val'],
+                                                        default_value=default_value))
                                 case "string":
+                                    default_value = param.get('default_val', None)
                                     _vision_function.string_list.append(TC.StringParam(param_name=param['param_name'],
-                                                        description=param['description']))
+                                                        description=param['description'],
+                                                        default_value=default_value))
                                     
                         self.vision_functions.append(_vision_function)
                         self.init_output.append(f"Function from file {filename} loaded successfully!")
@@ -102,8 +118,20 @@ class VisionFunctionsLoader():
         # Return False if function not found
         return None
 
+    def create_vision_libary(self):
+        self.vision_libary = []
+        for category in VisionFunction.SUPPORTED_CATEGORYS:
+            self.vision_libary.append({category: []})
+        for function in self.vision_functions:
+            # match function.category:
+            for category in self.vision_libary:
+                if function.category == list(category.keys())[0]:
+                    category[function.category].append(function.vision_function_name)
 
-
+    def return_vision_libary(self):
+        self.create_vision_libary()
+        return self.vision_libary
+    
 if __name__ == '__main__':
     # functions_libary = VisionFunctionsLoader("/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_functions")
     # functions_libary.list_all_vision_functions()

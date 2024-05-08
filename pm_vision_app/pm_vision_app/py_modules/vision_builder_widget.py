@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import (
     QSpinBox,
     QFontDialog,
     QFileDialog,
+    QMenu,
 )
 import os
 from ament_index_python.packages import get_package_share_directory
@@ -62,6 +63,7 @@ class VisionBuilderWidget(QWidget):
         self.initUI()
         self.save_as = False  # This is a helper bool used for saving files
         self.print_available_functions()
+        self.vision_libary = self.current_vision_pipeline.vison_functions_libary.return_vision_libary()
 
         # Load an initial file if given in startup.
         if initial_pipeline_file is not None:
@@ -78,14 +80,19 @@ class VisionBuilderWidget(QWidget):
         layout.addWidget(self.pipeline_name_widget, 0, 0, 1, 2)
 
         # Add vision functions combo box
-        self.vision_functions_combo_box = QComboBox()
-        self.vision_functions_combo_box.addItems(
-            self.current_vision_pipeline.vison_functions_libary.names
-        )
-        self.vision_functions_combo_box.activated.connect(
-            self.add_function_to_pipeline
-        )  # Connect the activated signal to addItem
-        layout.addWidget(self.vision_functions_combo_box, 1, 0)
+        # self.vision_functions_combo_box = QComboBox()
+        # self.vision_functions_combo_box.addItems(
+        #     self.current_vision_pipeline.vison_functions_libary.names
+        # )
+
+        # self.vision_functions_combo_box.activated.connect(
+        #     self.add_function_to_pipeline
+        # )  # Connect the activated signal to addItem
+        # layout.addWidget(self.vision_functions_combo_box, 1, 0)
+        
+        open_action_menu_button = QPushButton('Add \n Action')
+        open_action_menu_button.clicked.connect(self.show_vision_action_menu)
+        layout.addWidget(open_action_menu_button, 1, 0)
 
         # Add combobox for vision pipline building
         self.checkbox_list = ReorderableCheckBoxListWidget()
@@ -113,6 +120,29 @@ class VisionBuilderWidget(QWidget):
 
         self.setLayout(layout)
         self.setGeometry(100, 100, 600, 800)
+
+    def show_vision_action_menu(self):
+        self.contextMenu = QMenu()
+        self.create_menu_from_data(self.contextMenu, self.vision_libary)
+        self.contextMenu.exec(self.cursor().pos())
+
+    def create_menu_from_dict(self, menu, menu_dict):
+        for key, value in menu_dict.items():
+            if isinstance(value, dict):
+                submenu = menu.addMenu(key)
+                self.create_menu_from_dict(submenu, value)
+            elif isinstance(value, list):
+                for item in value:
+                    menu.addAction(item)
+
+    def create_menu_from_data(self, menu, menu_data):
+        for menu_dict in menu_data:
+            for menu_title, submenu_items in menu_dict.items():
+                menu_cat = menu.addMenu(menu_title)
+                for submenu_item in submenu_items:
+                    action = QAction(submenu_item, self)
+                    action.triggered.connect(partial(self.add_function_to_pipeline, submenu_item))
+                    menu_cat.addAction(action)
 
     def set_widget_pipeline_name(self, text):
         self.pipeline_name_widget.setText("Process name: " + text)
@@ -220,8 +250,29 @@ class VisionBuilderWidget(QWidget):
             self.text_output.append("Error while opening file. Please report the bug!")
             self.text_output.append(e)
 
-    def add_function_to_pipeline(self):
+    def add_function_to_pipeline_dep(self):
         selected_function = self.vision_functions_combo_box.currentText()
+
+        if selected_function:
+            if self.current_vision_pipeline.vison_functions_libary.return_by_name(
+                selected_function
+            ):
+                # Add function to the vision pipeline
+                self.current_vision_pipeline.append_vision_funciton_by_name(
+                    selected_function
+                )
+
+                self.set_vision_ui_from_pipeline()
+                # print
+                self.text_output.append(f"Inserted function: {selected_function}")
+                # Save JSON
+                self.current_vision_pipeline.process_to_JSON()
+                # self.text_output.append("Saving...")
+            else:
+                self.text_output.append("ERROR appending function to internal list!")
+
+    def add_function_to_pipeline(self,function_name:str):
+        selected_function = function_name
 
         if selected_function:
             if self.current_vision_pipeline.vison_functions_libary.return_by_name(

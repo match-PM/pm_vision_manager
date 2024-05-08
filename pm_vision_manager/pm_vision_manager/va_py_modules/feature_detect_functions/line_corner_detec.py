@@ -271,7 +271,7 @@ def cornerDetection(image_processing_handler: ImageProcessingHandler,
   
   logger.error(f"Intersection point: {x}, {y}")
   cv2.drawMarker(canvas, (int(x), int(y)), (0, 0, 255), markerType=cv2.MARKER_CROSS, markerSize=50, thickness=2)
-
+  
   x_conv,y_conv = image_processing_handler.CS_Conv_ROI_Pix_TO_Img_Pix(x,y)
   x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x_conv,y_conv)
   point = image_processing_handler.new_vision_point_result()

@@ -1,5 +1,6 @@
 function_name: "BGR2GRAY"
 description: "BlaBla"
+function_category: "Image Conversion"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:
   - param_name: "active"
