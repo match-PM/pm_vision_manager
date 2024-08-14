@@ -585,6 +585,37 @@ class VisionProcessClass:
         """
         return self.cross_validation.current_image_index, self.cross_validation.get_total_number_images()
     
+    @staticmethod
+    def get_process_database_path(logger=None)->str:
+        config_file_path = f"{get_package_share_directory('pm_vision_manager')}/vision_assistant_path_config.yaml"
+        process_library_path = None
+        with open(str(config_file_path), "r") as file:
+            FileData = yaml.safe_load(file)
+            config = FileData["vision_assistant_path_config"]
+            process_library_path = config["process_library_path"]
+
+        if logger is not None:
+            logger.debug(f"Process library path: {process_library_path}")
+        return process_library_path
+
+    @staticmethod
+    def create_process_folder(process_folder:str,logger=None):
+        try:
+            process_library_path = VisionProcessClass.get_process_database_path(logger)
+            process_folder_path = f"{process_library_path}{process_folder}"
+            if logger is not None:
+                logger.info(f"Process folder '{process_folder_path}' created!")
+
+            if not os.path.exists(process_folder_path):
+                os.makedirs(process_folder_path)
+                if logger is not None:
+                    logger.info(f"Process folder '{process_folder}' created!")
+
+        except Exception as e:
+            if logger is not None:
+                logger.error(f"Error creating process folder '{process_folder}'! Error: {str(e)}")
+            pass
+
     def create_process_file(self):
         try:
             default_process_file_metadata_dict = self.create_default_process_dict(self.process_filename)
@@ -609,6 +640,29 @@ class VisionProcessClass:
         default_process_file_metadata_dict["vision_pipeline"] = []
         return default_process_file_metadata_dict
     
+    @staticmethod
+    def create_process_file(directory:str, process_name:str, logger =None):
+        try:
+            default_process_file_metadata_dict = VisionProcessClass.create_default_process_dict(process_name)
+            process_lib_dir = VisionProcessClass.get_process_database_path(logger)
+            file_dir = f"{process_lib_dir}{directory}"
+            process_file_path = f"{file_dir}/{process_name}.json"
+            # Create folders if not existend
+            if logger is not None:
+                logger.debug(f"Process folder '{file_dir}' created!")
+
+            if not os.path.exists(file_dir):
+                Path(file_dir).mkdir(parents=True, exist_ok=True)
+                with open(process_file_path, "w+") as outputfile:
+                    json.dump(default_process_file_metadata_dict, outputfile,indent=4)
+
+                if logger is not None:
+                    logger.info(f"Process file '{process_file_path}' created!")
+
+        except Exception as e:
+            if logger is not None:
+                logger.error(f"Error creating process file: {str(e)}")
+
     def load_process_file_metadata(self) -> bool:
         try:
             with open(self.process_file_path, "r") as file:

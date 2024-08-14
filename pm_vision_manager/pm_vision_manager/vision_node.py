@@ -59,9 +59,7 @@ class VisionNode(Node):
         super().__init__("vision_assistant")
 
         # Check and set the path configuration for the vision manager
-        self.get_logger().info("Checking path configuration...")
         self.init_app_config()
-        self.get_logger().info("Path configuration successful!")
         
         self.main_window = VisionAssistantWindow(self)
         self.main_window.show()
@@ -84,11 +82,12 @@ class VisionNode(Node):
         self.screen_height = int(self.screen_resolution["height"].decode("UTF-8"))
         self.screen_width = int(self.screen_resolution["width"].decode("UTF-8"))
         self.get_logger().info(f"Screen resolution: {str(self.screen_width)}x{str(self.screen_height)}")
-
+        
         self.pub = self.create_publisher(Image, f"VisionManager/test", 10)
         self.get_logger().info("Vision node started!")
         self.image_widgets = {}
-        self.get_logger().info("Vision node started!")
+        VisionProcessClass.create_process_folder("Assembly_Manager",logger=self.get_logger())
+        VisionProcessClass.create_process_folder("PM_Robot_Calibration",logger=self.get_logger())
 
     def execute_vision(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
 
@@ -125,6 +124,7 @@ class VisionNode(Node):
         response.success = vision_instance.image_processing_handler.get_vision_ok()
         response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
         response.results_path = str(vision_instance.vision_results_path)
+        
         del vision_instance
 
         return response
