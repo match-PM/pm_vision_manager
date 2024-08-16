@@ -87,7 +87,7 @@ def findContours(image_processing_handler: ImageProcessingHandler, draw_contours
 
   image_processing_handler.set_processing_image(frame_processed)
 
-def minEnclosingCircle(image_processing_handler: ImageProcessingHandler,draw_circles:bool, mode:str, method:str):
+def minEnclosingCircle(image_processing_handler: ImageProcessingHandler, draw_circles:bool, mode:str, method:str,line_size:int):
   if not image_processing_handler.is_process_image_grayscale():
     raise ImageNotGrayScaleError()
   
@@ -103,25 +103,34 @@ def minEnclosingCircle(image_processing_handler: ImageProcessingHandler,draw_cir
     image_processing_handler.set_vision_ok(False)
     return 
 
-  circle_result_dict={"Circle":{
-    'axis_1': x_cs_camera,
-    'axis_2': y_cs_camera,
-    'axis_1_suffix': image_processing_handler.camera_axis_1,
-    'axis_2_suffix': image_processing_handler.camera_axis_2,
-    "radius":radius_um,
-    "Unit": "um"
-    }}
+  circle = image_processing_handler.new_vision_circle_result()
+  circle.radius = radius_um
+  circle.center_point.axis_value_1 = x_cs_camera
+  circle.center_point.axis_value_2 = y_cs_camera
+  circle.center_point.axis_suffix_1 = image_processing_handler.camera_axis_1
+  circle.center_point.axis_suffix_2 = image_processing_handler.camera_axis_2
+
+  image_processing_handler.append_vision_obj_to_results(circle)
+    
+  # circle_result_dict={"Circle":{
+  #   'axis_1': x_cs_camera,
+  #   'axis_2': y_cs_camera,
+  #   'axis_1_suffix': image_processing_handler.camera_axis_1,
+  #   'axis_2_suffix': image_processing_handler.camera_axis_2,
+  #   "radius":radius_um,
+  #   "Unit": "um"
+  #   }}
   
   if draw_circles:
     canvas = image_processing_handler.get_visual_elements_canvas()
     #x_tl,y_tl = self.CS_Conv_ROI_Pix_TO_Img_Pix(int(round(x_tl_roi)),int(round(y_tl_roi)))
     # Draw the circumference of the circle.
-    cv2.circle(canvas, (int(x_tl_roi), int(y_tl_roi)), int(round(radius)), (0, 255, 0), 2)
+    cv2.circle(canvas, (int(x_tl_roi), int(y_tl_roi)), int(round(radius)), (0, 255, 0), line_size)
     # Draw a small circle (of radius 1) to show the center.
-    cv2.circle(canvas, (int(x_tl_roi), int(y_tl_roi)), 1, (0, 0, 255), 2)
+    cv2.circle(canvas, (int(x_tl_roi), int(y_tl_roi)), 1, (0, 0, 255), line_size)
     image_processing_handler.apply_visual_elements_canvas(canvas)
 
-  image_processing_handler.append_to_results(circle_result_dict)
+  #image_processing_handler.append_to_results(circle_result_dict)
   image_processing_handler.set_processing_image(frame_processed)
 
 def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, minLineLength,maxLineGap):    
@@ -667,11 +676,13 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
             p_draw_circles = function_parameter['draw_circles']
             p_mode = function_parameter['mode']
             p_method = function_parameter['method']
+            line_size = function_parameter['line_size']
             if active:
               minEnclosingCircle(image_processing_handler=image_processing_handler,
                                   draw_circles=p_draw_circles,
                                   mode=p_mode,
-                                  method=p_method)   
+                                  method=p_method,
+                                  line_size=line_size)   
                     
           case "HoughLinesP":
             active = function_parameter['active']

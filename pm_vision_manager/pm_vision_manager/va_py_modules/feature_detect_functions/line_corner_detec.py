@@ -28,6 +28,10 @@ def fitLine_pre(image_processing_handler: ImageProcessingHandler, line_selection
     case "finest":
       rho_adaptive = 0.5
       theta_adaptive = 3600
+    case "max_limit":
+      rho_adaptive = 0.5
+      theta_adaptive = 16400
+      # theta_adaptive = int(60800*rho_adaptive)
 
   lines = cv2.HoughLinesP(frame_processed,rho = rho_adaptive,theta = np.pi/theta_adaptive, threshold = threshold_adaptive, minLineLength = minLineLength_pix, maxLineGap = maxLineGap_adaptive)
   # threshold - how many points can repsent a line

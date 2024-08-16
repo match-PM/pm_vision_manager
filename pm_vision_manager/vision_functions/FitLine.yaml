@@ -23,6 +23,7 @@ params:
       - "coarse"
       - "fine"
       - "finest"
+      - "max_limit"
 
   - param_name: "minLineLength"
     description: "in microns"

@@ -51,6 +51,7 @@ params:
       - "coarse"
       - "fine"
       - "finest"
+      - "max_limit"
 
 
 

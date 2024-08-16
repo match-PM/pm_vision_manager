@@ -11,6 +11,13 @@ params:
     description: "tbd"
     type: "bool"
 
+  - param_name: "line_size"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 1
+    max_val: 100
+    default_val: 5
+    
   - param_name: "mode"
     description: "tbd"
     type: "string_list"
@@ -22,3 +29,4 @@ params:
     type: "string_list"
     values: 
       - "CHAIN_APPROX_SIMPLE"
+
