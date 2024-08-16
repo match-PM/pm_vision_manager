@@ -1,0 +1,15 @@
+function_name: "SetCoAxLight"
+description: "This function sets the Coaxial light of the camera if the interface is available."
+function_category: "Camera Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+
+  - param_name: "value"
+    description: "Value of the coaxial light to be set in percent."
+    type: "float"
+    min_val: 0.0
+    max_val: 100.0

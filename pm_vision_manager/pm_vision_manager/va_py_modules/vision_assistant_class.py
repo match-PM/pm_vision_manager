@@ -30,23 +30,9 @@ from collections import OrderedDict
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
 
 import pm_vision_interfaces.msg as pvimsg 
-
+from pm_vision_manager.va_py_modules.camera_ros_interfaces import CameraRosInterfaces
 
 SUPPORTED_TYPES = [".png", ".jpg", ".jpeg", ".bmp"]
-
-class CameraExposureTimeError(Exception):
-    def __init__(self, message="Camera exposure time service is not available!"):
-        self.message = message
-        super().__init__(self.message)
-
-def percentage_to_value(percentage, min_value, max_value):
-    # Ensure that the percentage is within the valid range (0% to 100%)
-    percentage = max(0, min(percentage, 100))
-    
-    # Convert the percentage to the original value
-    value = (percentage / 100) * (max_value - min_value) + min_value
-    
-    return value
 
 class VisionCrossvalidation:
     def __init__(self, images_path):
@@ -180,6 +166,7 @@ class VisionProcessClass:
         self.topic_available = False
 
         self.br = CvBridge()
+        self.ros_camera_interfaces = CameraRosInterfaces(self.vision_node)
         self.image_processing_handler = ImageProcessingHandler(self.vision_node.get_logger())
         self.image_processing_handler_cross_val = ImageProcessingHandler(self.vision_node.get_logger())
         self.image_processing_handler_cross_val.set_cross_val_running(True)
@@ -225,7 +212,6 @@ class VisionProcessClass:
             self.init_success = False
             return
 
-        self.stop_image_subscription = False
         self.subscription_active = False
         self.delete_this_object = False     # This is only used in assist mode
         self.vision_results_path = "None"
@@ -242,7 +228,7 @@ class VisionProcessClass:
         # if in execute mode
         elif not self.launch_as_assistant:
             self.vision_node.get_logger().error("Timed out! Image topic not available! Exiting...")
-            self.stop_image_subscription = True
+            self.image_processing_handler.stop_image_subscription = True
             self.delete_this_object = True
             # This is needed for the response(success) of the service call
             self.image_processing_handler.set_vision_ok(False)
@@ -273,7 +259,7 @@ class VisionProcessClass:
     def topic_cbk(self, data):
         self.subscription_active = True
         self.topic_available = True
-        self.stop_image_subscription = True
+        self.image_processing_handler.stop_image_subscription = True
         self.load_process_file()
 
         self.vision_node.get_logger().info("Receiving video frame")
@@ -295,7 +281,7 @@ class VisionProcessClass:
         self.results_signal.signal.emit(final_image, _results)
 
         # this only runs in execution mode and when the execution is finished
-        if not self.launch_as_assistant and self.stop_image_subscription:   # self.stop_image_subscription may be overwritten in process_image function
+        if not self.launch_as_assistant and self.image_processing_handler.stop_image_subscription:   # self.stop_image_subscription may be overwritten in process_image function
             if self.run_cross_validation:
                 self.execute_crossvalidation()
                 # reinitilize the results after crossvalidation has been executed
@@ -476,87 +462,28 @@ class VisionProcessClass:
                                                                 camera_axis_1_angle=config["camera_axis_1_angle"],
                                                                 camera_axis_2_angle=config["camera_axis_2_angle"])
 
-            self.init_camera_exposure_time(config=config["exposure_time"])
+            self.ros_camera_interfaces.exposure_time_interface.init(config=config.get('exposure_time', {}))
+            self.image_processing_handler.set_camera_exposure_time = self.ros_camera_interfaces.exposure_time_interface.set_camera_exposure_time
+
+            self.ros_camera_interfaces.set_coax_light_bool_interface.init(config=config.get('set_coax_light_bool', {}))
+            self.image_processing_handler.set_camera_coax_light_bool = self.ros_camera_interfaces.set_coax_light_bool_interface.set_coax_light
+
+            self.ros_camera_interfaces.set_coax_light_interface.init(config=config.get('set_coax_light', {}))
+            
+            #if self.ros_camera_interfaces.set_coax_light_interface.available:
+            self.image_processing_handler.set_camera_coax_light = self.ros_camera_interfaces.set_coax_light_interface.set_coax_light
+
+            self.ros_camera_interfaces.set_ring_light_interfaces.init(config=config.get('ring_light', {}))
+            
+            #if self.ros_camera_interfaces.set_ring_light_interfaces.available:
+            self.image_processing_handler.set_ring_light = self.ros_camera_interfaces.set_ring_light_interfaces.set_ring_light
+
             self.vision_node.get_logger().info("Camera config loaded!")
             return True
         except Exception as e:
             self.vision_node.get_logger().error(f"Error opening or error in camera config file: {str(self.camera_config_path + self.camera_config_filename)}! Error: {str(e)}")
             return False
-        
-    def init_camera_exposure_time(self, config:dict):
-        # Instanciating Exposure Time interface from yaml
-        try:
-            self.image_processing_handler.srv_client_exposure_time = config["srv_client_name"]
-            self.image_processing_handler.srv_type_exposure_time = config["srv_type"]
-            self.image_processing_handler.min_val_exposure_time = config["min_val"]
-            self.image_processing_handler.max_val_exposure_time = config["max_val"]
-
-            service_metaclass = get_service(self.image_processing_handler.srv_type_exposure_time)
-
-            self.image_processing_handler.client_exposure_time = self.vision_node.create_client(service_metaclass, self.image_processing_handler.srv_client_exposure_time)
-
-            if not self.image_processing_handler.client_exposure_time.wait_for_service(timeout_sec=1.0):
-                self.vision_node.get_logger().warn("Exposure time client not online!")
-                raise CameraExposureTimeError
-
-            self.image_processing_handler.exposure_time_interface_available = True
-            self.image_processing_handler.set_camera_exposure_time = self.set_camera_exposure_time
-
-        except KeyError as e:
-            self.vision_node.get_logger().warn(f"Error in camera exposure_time config or not defined!")
-
-        except ValueError as e:
-            self.vision_node.get_logger().warn(f"Service interface '{self.image_processing_handler.srv_type_exposure_time}' not installed!")
-
-        except CameraExposureTimeError as e:
-            self.vision_node.get_logger().warn(str(e))
-        
-        except Exception as e:
-            self.vision_node.get_logger().error(str(type(e).__name__))
-            self.vision_node.get_logger().error(str(e))
-
-        finally:
-            if not self.image_processing_handler.exposure_time_interface_available:
-                self.vision_node.get_logger().warn("Camera exposure time interface not available!")
-            else:
-                self.vision_node.get_logger().info("Camera exposure time interface is available!")
-
-    def set_camera_exposure_time(self, exposure_value_percent):
-        if self.image_processing_handler.exposure_time_interface_available:
-            # Convert the percentage to a actual exposue time value
-            exposure_time = percentage_to_value(exposure_value_percent,
-                                    self.image_processing_handler.min_val_exposure_time,
-                                    self.image_processing_handler.max_val_exposure_time)
-            
-            # Only if is an valid value (This should normaly be the case, but I the config is wrong it might not)
-            if (exposure_time <= self.image_processing_handler.max_val_exposure_time) and (
-                exposure_time >= self.image_processing_handler.min_val_exposure_time):
                 
-                if self.image_processing_handler.camera_exposure_time_set_value != exposure_value_percent:
-                    service_request = get_service(self.image_processing_handler.srv_type_exposure_time).Request()
-                    value_key = None
-                    for _key, _value in service_request.get_fields_and_field_types().items():
-                        if _value == 'double' or _value == 'float':
-                            value_key = _key
-                    if value_key is None:
-                        self.vision_node.get_logger().error(f"No field of type 'double' found in service request of type '{self.image_processing_handler.srv_type_exposure_time}'.")
-                        return False
-                    setattr(service_request, value_key, exposure_time)
-                    if not self.image_processing_handler.client_exposure_time.wait_for_service(timeout_sec=1.0):
-                        self.vision_node.get_logger().error("Camera exposure service not available!")
-                    response = self.image_processing_handler.client_exposure_time.call(service_request)
-
-                    self.image_processing_handler.camera_exposure_time_set_value = exposure_value_percent
-                    self.vision_node.get_logger().info(f"Camera exposure time set to '{exposure_time}'!")
-                    # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
-                    self.stop_image_subscription = False
-                    return True
-            else:
-                self.vision_node.get_logger().error("Camera exposure time not set! Invalid bounds!")
-        else:
-            self.vision_node.get_logger().warn("Camera exposure time not available!")
-            return False
-        
     def check_process_file_existence(self):
         if os.path.exists(self.process_file_path) == False:
             self.vision_node.get_logger().warning("Given Process File does not exist!")

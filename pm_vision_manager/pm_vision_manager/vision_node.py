@@ -18,6 +18,8 @@ from sensor_msgs.msg import Image  # Image is the message type
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
 from geometry_msgs.msg import Point
 from functools import partial
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
+
 
 from pm_vision_interfaces.srv import ExecuteVision
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
@@ -151,11 +153,15 @@ class VisionNode(Node):
                 raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
             set_vision_database_path(vision_db_path+"/", self.get_logger())
             # Set config for function library path
-            folder_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Function Library")
-            if folder_path == "":
-                self.get_logger().error("No path selected for function library!")
-                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
-            set_function_library_path(folder_path+"/", self.get_logger())
+
+            function_library_path = f"{get_package_share_directory('pm_vision_manager')}/vision_functions"
+
+            # function_library_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Function Library")
+            # if function_library_path == "":
+            #     self.get_logger().error("No path selected for function library!")
+            #     raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            
+            set_function_library_path(function_library_path+"/", self.get_logger())
             
             if not check_for_valid_path_config(self.get_logger()):
                 raise AppConfigError("Vision Mangager not configured correctly! Exiting...")

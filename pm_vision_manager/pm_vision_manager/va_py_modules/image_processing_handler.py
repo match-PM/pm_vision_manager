@@ -50,6 +50,8 @@ class ImageProcessingHandler:
         self.current_image_name = ""
         self.screen_height = 1080
 
+        self.stop_image_subscription = False
+
         # Init for camera clients
         self.client_exposure_time = None
         self.srv_client_exposure_time = None
@@ -179,7 +181,25 @@ class ImageProcessingHandler:
         This function should be overwritten from in the vision assistant_class
         """
         pass
+
+    def set_camera_coax_light_bool(self, set_state):
+        """
+        This function should be overwritten from in the vision assistant_class
+        """
+        pass
     
+    def set_camera_coax_light(self, value):
+        """
+        This function should be overwritten from in the vision assistant_class
+        """
+        pass
+
+    def set_ring_light(self, bool_list, rgb_list):
+        """
+        This function should be overwritten from in the vision assistant_class
+        """
+        pass
+
     def get_visual_elements_canvas(self):
         if self.roi_used:
             canvas = self.frame_visual_elements[self.ROI_CS_CV_top_left_y:self.ROI_CS_CV_bottom_right_y, self.ROI_CS_CV_top_left_x:self.ROI_CS_CV_bottom_right_x]

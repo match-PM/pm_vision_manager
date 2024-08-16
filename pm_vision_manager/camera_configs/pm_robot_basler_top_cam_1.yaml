@@ -13,3 +13,11 @@ camera_params:
     srv_type: 'pm_vision_interfaces/srv/DemoSetExposure'
     min_val: 4.0
     max_val: 35000.0
+    
+  set_coax_light_bool:
+    srv_client_name: '/pm_lights_controller/CoaxLight/SetState'
+    srv_type: 'pm_msgs/srv/CoaxLightSetState'
+
+  ring_light:
+    srv_client_name: '/pm_lights_controller/RingLight/SetState'
+    srv_type: 'pm_msgs/srv/RingLightSetState'

@@ -18,4 +18,9 @@ camera_params:
     srv_type: 'pm_vision_interfaces/srv/DemoSetExposure'
     min_val: 0.0
     max_val: 35000.0    
-   
+  
+  set_coax_light:
+    srv_client_name: '/pm_lights_controller/Cam2Light/SetState'
+    srv_type: 'pm_msgs/srv/Cam2LightSetState'    
+    min_val: 0
+    max_val: 255  
