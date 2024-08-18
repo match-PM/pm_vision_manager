@@ -1,6 +1,6 @@
 {
     "vision_process_name": "process_demo",
-    "process creation": "2024-08-14 19:41:57",
+    "process creation": "2024-08-18 12:53:42",
     "vision_pipeline": [
         {
             "Draw_Grid": {
@@ -14,16 +14,42 @@
             }
         },
         {
+            "BGR2GRAY": {
+                "active": true
+            }
+        },
+        {
+            "ROI": {
+                "active": true,
+                "ROI_center_x": 0.0,
+                "ROI_center_y": 0.0,
+                "ROI_height": 50.0,
+                "ROI_width": 50.0
+            }
+        },
+        {
+            "Threshold": {
+                "active": true,
+                "thresh": 150,
+                "maxval": 255,
+                "type": "THRESH_BINARY"
+            }
+        },
+        {
+            "Select_Area": {
+                "active": false,
+                "mode": "RETR_TREE",
+                "method": "CHAIN_APPROX_SIMPLE",
+                "max_area": 100.0,
+                "min_area": 0.0
+            }
+        },
+        {
             "Blur": {
                 "active": false,
                 "gaus_std": 1,
                 "type": "GaussianBlur",
                 "kernelsize": 3
-            }
-        },
-        {
-            "BGR2GRAY": {
-                "active": false
             }
         },
         {
@@ -33,23 +59,6 @@
                 "aperatureSize": 5,
                 "threshold1": 100.0,
                 "threshold2": 200.0
-            }
-        },
-        {
-            "ROI": {
-                "active": true,
-                "ROI_height": 1000,
-                "ROI_width": 1800,
-                "ROI_center_x": 0.0,
-                "ROI_center_y": 5.0
-            }
-        },
-        {
-            "Threshold": {
-                "active": false,
-                "thresh": 150,
-                "maxval": 255,
-                "type": "THRESH_BINARY"
             }
         },
         {
@@ -67,7 +76,7 @@
         },
         {
             "Canny": {
-                "active": true,
+                "active": false,
                 "L2gradient": "nothing",
                 "aperatureSize": 5,
                 "threshold1": 100.0,
@@ -84,7 +93,7 @@
         },
         {
             "HoughCircles": {
-                "active": true,
+                "active": false,
                 "draw_circles": true,
                 "minDist": 1000,
                 "param1": 150,

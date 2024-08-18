@@ -34,30 +34,48 @@ def bgr2gray(image_processing_handler: ImageProcessingHandler):
     image_processing_handler.set_processing_image(frame_processed)
 
 def roi(image_processing_handler: ImageProcessingHandler, ROI_center_x_c: float, ROI_center_y_c:float, ROI_height:float, ROI_width:float):
+  # Input values in percent of the image
+  frame_processed = image_processing_handler.get_processing_image()
 
-  ROI_center_x_i, ROI_center_y_i = image_processing_handler.CS_Camera_TO_Image(ROI_center_x_c, ROI_center_y_c)
-  ROI_center_x_pix, ROI_center_y_pix = image_processing_handler.CS_Image_TO_Pixel(ROI_center_x_i, ROI_center_y_i)
-  ROI_half_height_pix = int(round(image_processing_handler.pixelPROum*ROI_height/2))
-  ROI_half_width_pix = int(round(image_processing_handler.pixelPROum*ROI_width/2))
+  #ROI_center_x_i, ROI_center_y_i = image_processing_handler.CS_Camera_TO_Image(ROI_center_x_c, ROI_center_y_c)
+  #ROI_center_x_pix, ROI_center_y_pix = image_processing_handler.CS_Image_TO_Pixel(ROI_center_x_i, ROI_center_y_i)
+
+  ROI_center_x_i, ROI_center_y_i = frame_processed.shape[1]*ROI_center_x_c/100/2, frame_processed.shape[0]*ROI_center_y_c/100/2
+  ROI_center_x_pix, ROI_center_y_pix = int(ROI_center_x_i), int(ROI_center_y_i)
+
+  #ROI_half_height_pix = int(round(image_processing_handler.pixelPROum*ROI_height/2))
+  #ROI_half_width_pix = int(round(image_processing_handler.pixelPROum*ROI_width/2))
+
+  ROI_half_height_pix = int(frame_processed.shape[0]*ROI_height/100/2)
+  ROI_half_width_pix = int(frame_processed.shape[1]*ROI_width/100/2)
+
   ROI_top_left_x_pix = ROI_center_x_pix - ROI_half_width_pix
   ROI_bottom_right_x_pix = ROI_center_x_pix + ROI_half_width_pix
   ROI_top_left_y_pix = ROI_center_y_pix + ROI_half_height_pix
   ROI_bottom_right_y_pix = ROI_center_y_pix - ROI_half_height_pix
 
-  frame_processed = image_processing_handler.get_processing_image()
-
   ROI_CS_CV_top_left_x, ROI_CS_CV_top_left_y = image_processing_handler.CS_Conv_Pixel_Center_TO_Top_Left(frame_processed.shape[1], frame_processed.shape[0], ROI_top_left_x_pix, ROI_top_left_y_pix)
   ROI_CS_CV_bottom_right_x, ROI_CS_CV_bottom_right_y = image_processing_handler.CS_Conv_Pixel_Center_TO_Top_Left(frame_processed.shape[1], frame_processed.shape[0], ROI_bottom_right_x_pix, ROI_bottom_right_y_pix)
   
-  if (ROI_CS_CV_top_left_x>0 and 
-    ROI_CS_CV_top_left_y>0 and 
+  if (ROI_CS_CV_top_left_x>=0 and 
+    ROI_CS_CV_top_left_y>=0 and 
     ROI_CS_CV_bottom_right_x <= image_processing_handler.img_width and 
     ROI_CS_CV_bottom_right_y <= image_processing_handler.img_height):
+
     _frame_processed = frame_processed[ROI_CS_CV_top_left_y:ROI_CS_CV_bottom_right_y, ROI_CS_CV_top_left_x:ROI_CS_CV_bottom_right_x]
     image_processing_handler.set_roi_settings(ROI_CS_CV_top_left_x, ROI_CS_CV_top_left_y, ROI_CS_CV_bottom_right_x, ROI_CS_CV_bottom_right_y)
 
     image_processing_handler.frame_visual_elements = cv2.rectangle(image_processing_handler.frame_visual_elements,(ROI_CS_CV_top_left_x,ROI_CS_CV_top_left_y),(ROI_CS_CV_bottom_right_x,ROI_CS_CV_bottom_right_y),(240,32,160),3)
     
+    # write text with field of view
+    cv2.putText(img=image_processing_handler.frame_visual_elements,
+                text=f"FOV: {str(ROI_half_width_pix*2*image_processing_handler.pixelPROum)} um x {str(ROI_half_height_pix*2*image_processing_handler.pixelPROum)} um", 
+                org=(5,60), 
+                fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                fontScale=1,
+                color=(240,32,160), 
+                thickness=1)
+
     image_processing_handler.set_processing_image(_frame_processed)
 
   else:
@@ -179,21 +197,55 @@ def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, min
     image_processing_handler.set_vision_ok(False)
 
 
-def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, method: str, max_area, min_area):
+def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, method: str, max_area:float, min_area:float):
+  if max_area < min_area:
+    raise ValueError("max_area must be greater than min_area")
+  
+  if method == "CHAIN_APPROX_SIMPLE":
+    method_val = cv2.CHAIN_APPROX_SIMPLE
+  elif method == "CHAIN_APPROX_NONE":
+    method_val = cv2.CHAIN_APPROX_NONE
+  elif method == "CHAIN_APPROX_TC89_L1":
+    method_val = cv2.CHAIN_APPROX_TC89_L1
+  elif method == "CHAIN_APPROX_TC89_KCOS":
+    method_val = cv2.CHAIN_APPROX_TC89_KCOS
+  else:
+    raise ValueError("Invalid method: " + method)
+
+  if mode == "RETR_EXTERNAL":
+    mode_val = cv2.RETR_EXTERNAL
+  elif mode == "RETR_LIST":
+    mode_val = cv2.RETR_LIST
+  elif mode == "RETR_CCOMP":
+    mode_val = cv2.RETR_CCOMP
+  elif mode == "RETR_TREE":
+    mode_val = cv2.RETR_TREE
+  else:
+    raise ValueError("Invalid mode: " + mode)
+  
   frame_processed = image_processing_handler.get_processing_image()
   _Command_mode = "cv2." + mode
   _Command_method = "cv2." + method
   #contours, hierarchy  = cv2.findContours(frame_processed, exec(_Command_mode), exec(_Command_method))  # Keine Ahnung warum das nicht funktioniert!!!
-  contours, hierarchy  = cv2.findContours(frame_processed, exec(_Command_mode), cv2.CHAIN_APPROX_SIMPLE)
+  contours, hierarchy  = cv2.findContours(frame_processed, mode_val, method_val)
   all_areas= []
   for cnt in contours:
     area= cv2.contourArea(cnt)
     all_areas.append(area)
   contour_frame = np.zeros((frame_processed.shape[0], frame_processed.shape[1]), dtype = np.uint8)
   area_found = False
+
+  #print(all_areas)
+  image_area = frame_processed.shape[0]*frame_processed.shape[1]
+  #print(image_area)
+  max_area = max_area*image_area/100
+  min_area = min_area*image_area/100
+  #print(max_area)
+  #print(min_area)
+
   for index, area_item in enumerate(all_areas):
-        
-    if area_item<max_area and area_item>min_area:
+    
+    if area_item<=max_area and area_item>=min_area:
       frame_processed = cv2.drawContours(contour_frame, contours, index, color=(255,255,255), thickness=cv2.FILLED)
       area_found = True
                       

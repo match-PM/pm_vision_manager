@@ -49,7 +49,8 @@ class ImageProcessingHandler:
         self.exposure_time_interface_available = False
         self.current_image_name = ""
         self.screen_height = 1080
-
+        text_scale = 5 # scale of written text in the images
+        line_scale = 2 # scale of lines in the images
         self.stop_image_subscription = False
 
         # Init for camera clients

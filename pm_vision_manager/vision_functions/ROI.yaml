@@ -8,25 +8,29 @@ params:
     type: "bool"
 
   - param_name: "ROI_center_x"
-    description: "tbd"
+    description: "In percent of the image width."
     type: "float"
-    min_val: "-inf"
-    max_val: "inf"
-
+    min_val: -100.0
+    max_val: 100.0
+    default_val: 0.0
+    
   - param_name: "ROI_center_y"
     description: "tbd"
     type: "float"
-    min_val: "-inf"
-    max_val: "inf"
+    min_val: -100.0
+    max_val: 100.0
+    default_val: 0.0
 
   - param_name: "ROI_height"
-    description: "tbd"
-    type: "unsigned_int"
-    min_val: 1
-    max_val: "inf"
+    description: "In percent of the image height."
+    type: "float"
+    min_val: 1.0
+    max_val: 100.0
+    default_val: 50.0
 
   - param_name: "ROI_width"
-    description: "tbd"
-    type: "unsigned_int"
-    min_val: 1
-    max_val: "inf"
+    description: "In percent of the image width."
+    type: "float"
+    min_val: 1.0
+    max_val: 100.0
+    default_val: 50.0

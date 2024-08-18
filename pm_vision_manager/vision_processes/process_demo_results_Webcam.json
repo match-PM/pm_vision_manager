@@ -1,8 +1,8 @@
 {
     "vision_ok": true,
     "process_name": "process_demo.json",
-    "process_uid": "Calibration_Qube",
-    "exec_timestamp": "21_06_2024_13_47_31",
+    "process_uid": "bla",
+    "exec_timestamp": "18_08_2024_12_53_42",
     "cross_validation": {
         "image_source_name": "",
         "vision_ok": false,
@@ -14,16 +14,6 @@
         "points": [],
         "lines": [],
         "areas": [],
-        "circles": [
-            {
-                "center_point": {
-                    "axis_value_1": 725.0,
-                    "axis_value_2": -320.0,
-                    "axis_suffix_1": "x",
-                    "axis_suffix_2": "y"
-                },
-                "radius": 330.0
-            }
-        ]
+        "circles": []
     }
 }

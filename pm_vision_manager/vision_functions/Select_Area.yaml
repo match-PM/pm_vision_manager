@@ -12,21 +12,30 @@ params:
     type: "string_list"
     values: 
       - "RETR_LIST"
+      - "RETR_EXTERNAL"
+      - "RETR_CCOMP"
+      - "RETR_TREE"
+      
 
   - param_name: "method"
     description: "tbd"
     type: "string_list"
     values: 
       - "CHAIN_APPROX_SIMPLE"
+      - "CHAIN_APPROX_NONE"
+      - "CHAIN_APPROX_TC89_L1"
+      - "CHAIN_APPROX_TC89_KCOS"
 
   - param_name: "max_area"
-    description: "tbd"
-    type: "unsigned_int"
-    min_val: 0
-    max_val: 1000000
+    description: "In percent of the image area."
+    type: "float"
+    min_val: 0.0
+    max_val: 100.0
+    default_val: 100.0
     
   - param_name: "min_area"
-    description: "tbd"
-    type: "unsigned_int"
-    min_val: 0
-    max_val: 10000000
+    description: "In percent of the image area."
+    type: "float"
+    min_val: 0.0
+    max_val: 100.0
+    default_val: 0.0
