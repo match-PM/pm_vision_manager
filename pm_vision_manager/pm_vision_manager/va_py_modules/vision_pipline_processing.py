@@ -596,8 +596,9 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
             active = function_parameter['active']
             value = function_parameter['value']
             if active and not image_processing_handler.cross_val_running:
-              image_processing_handler.set_camera_exposure_time(value)  
-              image_processing_handler.stop_image_subscription = False    
+              has_been_set = image_processing_handler.set_camera_exposure_time(value)  
+              if has_been_set:
+                image_processing_handler.stop_image_subscription = False
               # Break the for loop
               break
           
@@ -606,8 +607,9 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
             set_state = function_parameter['set_state']
             #if active and not image_processing_handler.cross_val_running:
             if active:
-              image_processing_handler.set_camera_coax_light_bool(set_state)
-              image_processing_handler.stop_image_subscription = False
+              has_been_set = image_processing_handler.set_camera_coax_light_bool(set_state)
+              if has_been_set:
+                image_processing_handler.stop_image_subscription = False
               # Break the for loop
               break
           
@@ -616,8 +618,9 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
             value = function_parameter['value']
             #if active and not image_processing_handler.cross_val_running:
             if active:
-              image_processing_handler.set_camera_coax_light(value)  
-              image_processing_handler.stop_image_subscription = False
+              has_been_set = image_processing_handler.set_camera_coax_light(value)  
+              if has_been_set:
+                image_processing_handler.stop_image_subscription = False
               # Break the for loop
               break
 
@@ -635,8 +638,9 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
                   
             #if active and not image_processing_handler.cross_val_running:
             if active:
-              image_processing_handler.set_ring_light(bool_list, rgb_list)  
-              image_processing_handler.stop_image_subscription = False
+              has_been_set = image_processing_handler.set_ring_light(bool_list, rgb_list)  
+              if has_been_set:
+                image_processing_handler.stop_image_subscription = False
               # Break the for loop
               break
 

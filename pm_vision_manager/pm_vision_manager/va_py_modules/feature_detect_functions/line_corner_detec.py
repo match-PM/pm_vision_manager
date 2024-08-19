@@ -178,10 +178,9 @@ def fitLine(image_processing_handler: ImageProcessingHandler, line_selection: st
 
   cv2.line(canvas,(x1,y1),(x2,y2),(0,255,0),2)
 
-  x1_conv,y1_conv = image_processing_handler.CS_Conv_ROI_Pix_TO_Img_Pix(x1,y1)
-  x2_conv,y2_conv = image_processing_handler.CS_Conv_ROI_Pix_TO_Img_Pix(x2,y2)
-  x1_cs_camera, y1_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x1_conv,y1_conv)
-  x2_cs_camera, y2_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x2_conv,y2_conv)
+  x1_cs_camera, y1_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x1,y1)
+  x2_cs_camera, y2_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x2,y2)
+
   line_length_um = np.sqrt((x2_cs_camera - x1_cs_camera)**2 + (y2_cs_camera - y1_cs_camera)**2)
 
   if x2_cs_camera - x1_cs_camera == 0:
@@ -276,14 +275,12 @@ def cornerDetection(image_processing_handler: ImageProcessingHandler,
   logger.error(f"Intersection point: {x}, {y}")
   cv2.drawMarker(canvas, (int(x), int(y)), (0, 0, 255), markerType=cv2.MARKER_CROSS, markerSize=50, thickness=2)
   
-  x_conv,y_conv = image_processing_handler.CS_Conv_ROI_Pix_TO_Img_Pix(x,y)
-  x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x_conv,y_conv)
+  x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x,y)
   point = image_processing_handler.new_vision_point_result()
   point.axis_value_1 = x_cs_camera
   point.axis_value_2 = y_cs_camera
   point.axis_suffix_1 = image_processing_handler.camera_axis_1
   point.axis_suffix_2 = image_processing_handler.camera_axis_2
-
   image_processing_handler.append_vision_obj_to_results(point)
   image_processing_handler.apply_visual_elements_canvas(canvas)
   image_processing_handler.set_vision_ok(True)

@@ -177,25 +177,25 @@ class ImageProcessingHandler:
         #self.frame_buffer.append(self._processing_image)
         self._display_frame=self.adaptImagewithROI(self._display_frame, np.copy(self._processing_image))
 
-    def set_camera_exposure_time(self, value):
+    def set_camera_exposure_time(self, value)->bool:
         """
         This function should be overwritten from in the vision assistant_class
         """
         pass
 
-    def set_camera_coax_light_bool(self, set_state):
+    def set_camera_coax_light_bool(self, set_state)->bool:
         """
         This function should be overwritten from in the vision assistant_class
         """
         pass
     
-    def set_camera_coax_light(self, value):
+    def set_camera_coax_light(self, value)->bool:
         """
         This function should be overwritten from in the vision assistant_class
         """
         pass
 
-    def set_ring_light(self, bool_list, rgb_list):
+    def set_ring_light(self, bool_list, rgb_list)->bool:
         """
         This function should be overwritten from in the vision assistant_class
         """

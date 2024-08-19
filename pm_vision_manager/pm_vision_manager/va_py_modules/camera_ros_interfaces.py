@@ -75,7 +75,7 @@ class CameraExposureTimeInterface:
             else:
                 self.node.get_logger().info("Camera exposure time interface is available!")
 
-    def set_camera_exposure_time(self, exposure_value_percent):
+    def set_camera_exposure_time(self, exposure_value_percent)->bool:
         if self.available:
             # Convert the percentage to a actual exposue time value
             exposure_time = percentage_to_value(exposure_value_percent,
@@ -105,8 +105,10 @@ class CameraExposureTimeInterface:
                     time.sleep(1)
                     # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
                     return True
+            
             else:
                 self.node.get_logger().error("Camera exposure time not set! Invalid bounds!")
+                return False
         else:
             self.node.get_logger().warn("Camera exposure time not available!")
             return False
@@ -158,7 +160,7 @@ class CameraSetCoaxLightBoolInterface:
             else:
                 self.node.get_logger().info("Camera set coax light bool interface is available!")
 
-    def set_coax_light(self, set_value):
+    def set_coax_light(self, set_value)->bool:
         if self.available:
                 
             if self.coax_light_state != set_value:
@@ -181,7 +183,8 @@ class CameraSetCoaxLightBoolInterface:
                 self.coax_light_state = set_value
                 self.node.get_logger().info(f"Camera coax light state set to '{set_value}'!")
                 time.sleep(1)
-            return True
+                return True
+            return False
         
         else:
             self.node.get_logger().warn("Camera exposure time not available!")
@@ -239,7 +242,7 @@ class CameraSetCoaxLightInterface:
             else:
                 self.node.get_logger().info("Camera set coax interface is available!")
 
-    def set_coax_light(self, value_percent: int):
+    def set_coax_light(self, value_percent: int)->bool:
         if self.available:
             # Convert the percentage to a actual exposue time value
             value = percentage_to_value(value_percent,
@@ -280,12 +283,13 @@ class CameraSetCoaxLightInterface:
                     self.node.get_logger().info(f"Camera set coax light to '{value}'!")
                     # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
                     time.sleep(1)
+                    return True
+                return False
                                         
             else:
                 self.node.get_logger().error("Camera coax light value not set! Invalid bounds!")
                 return False
-            
-            return True
+    
         else:
             self.node.get_logger().warn("Camera set coax light int not available!")
             return False
@@ -374,12 +378,12 @@ class CameraRingLightInterface:
                 self.node.get_logger().info(f"Camera ring light set to '{bool_list}' with intensity of {rgb_list}!")
                 # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
                 time.sleep(1)
-            return True
+                return True
+            return False
         else:
             self.node.get_logger().warn("Camera ring light int not available!")
             return False
 
-        
 class CameraRosInterfaces:
     def __init__(self,node:Node):
         self.node = node
