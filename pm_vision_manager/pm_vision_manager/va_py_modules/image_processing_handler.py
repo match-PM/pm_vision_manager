@@ -111,8 +111,8 @@ class ImageProcessingHandler:
         self._display_frame = deepcopy(self._processing_image)
         self.frame_visual_elements = np.zeros((self._initial_image.shape[0], self._initial_image.shape[1], 3), dtype = np.uint8)
 
-        self.img_width  = self._initial_image.shape[1]
-        self.img_height = self._initial_image.shape[0]
+        self.img_width  = self._initial_image.shape[1] # width of the image in pixel
+        self.img_height = self._initial_image.shape[0]  # height of the image in pixel
         self.fov_width  = self.umPROpixel*self.img_width 
         self.fov_height = self.umPROpixel*self.img_height
         self.roi_used:bool =  False

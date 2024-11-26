@@ -36,7 +36,8 @@ class VisionFunctionsLoader():
                                 case "bool":
                                     default_value = param.get('default_val', None)
                                     bool_param = TC.BoolParam(param_name=param['param_name'],
-                                                    description=param['description'])
+                                                    description=param['description'],
+                                                    default_value=default_value)
                                     
                                     # By default bool parameters will be initialized with a False value, however we dont want that for the 'active' parameter
                                     if bool_param.param_name == 'active':

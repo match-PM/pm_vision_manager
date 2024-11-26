@@ -64,4 +64,7 @@ TBD
 VS CODE gnome-terminal Issue
 unset GTK_PATH
 
+## 7. Installation
+`pip3 install circle-fit`
 
+`pip3 install pyqt-6`

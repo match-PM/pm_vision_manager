@@ -7,6 +7,7 @@ from math import pi
 from pm_vision_manager.va_py_modules.vision_utils import rotate_image
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError
 from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec import fitLine, cornerDetection
+from pm_vision_manager.va_py_modules.feature_detect_functions.circle_detect import circleDetection
 import time
 
 def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, maxval:int, type:str) -> None:
@@ -739,7 +740,21 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
                                   mode=p_mode,
                                   method=p_method,
                                   line_size=line_size)   
-                    
+          
+          case "CircleDetection":
+            active = function_parameter['active']
+            mode = function_parameter['mode']
+            minRadius = function_parameter['minRadius']
+            maxRadius = function_parameter['maxRadius']
+            p_draw_circles = function_parameter['draw_circles']
+            if active:
+              circleDetection(image_processing_handler=image_processing_handler,
+                              max_radius=maxRadius,
+                              min_radius=minRadius,
+                              mode=mode,
+                              draw_circles=p_draw_circles,
+                              logger=vision_node.get_logger())
+
           case "HoughLinesP":
             active = function_parameter['active']
             p_threshold = function_parameter['threshold']

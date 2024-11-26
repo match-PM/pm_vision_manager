@@ -1,0 +1,40 @@
+function_name: "CircleDetection"
+description: "This function detects circles in an image. Input to the function must be a binary image. It then detects the contours and fits a best fit circle through the contorus. It is based of the Circle-Fit libary by AlliedToasters. "
+
+function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    default: true
+    type: "bool"
+
+  - param_name: "mode"
+    description: "Select the method to be used for the fitting algorithm."
+    type: "string_list"
+    values: 
+      - "standardLSQ"
+      - "hyperLSQ"
+      - "riemannSWFLa"
+      #- "lm"
+      - "prattSVD"
+      - "taubinSVD"
+      - "hyperSVD"
+      - "kmh"
+
+  - param_name: "minRadius"
+    description: "Minimum radius of the circle to be detected [um]."
+    type: "float"
+    min_val: 0.0
+    max_val: "inf"
+
+  - param_name: "maxRadius"
+    description: "Maximum radius of the circle to be detected [um]."
+    type: "float"
+    min_val: 0.001
+    max_val: "inf"
+
+  - param_name: "draw_circles"
+    description: "Draw the detected circles on the image. This has no effect on the output of the function."
+    type: "bool"
+    default_val: true

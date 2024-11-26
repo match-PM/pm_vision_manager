@@ -80,6 +80,13 @@ class VisionNode(Node):
             callback_group=self.callback_group,
         )
 
+        # self.execute_vision_srv = self.create_service(
+        #     ExecuteVision,
+        #     f"{self.get_name()}/StartVisionAssistant",
+        #     self.start_vision_assistant,
+        #     callback_group=self.callback_group,
+        # )
+
         self.screen_resolution = get_screen_resolution()
         self.screen_height = int(self.screen_resolution["height"].decode("UTF-8"))
         self.screen_width = int(self.screen_resolution["width"].decode("UTF-8"))
@@ -130,7 +137,48 @@ class VisionNode(Node):
         del vision_instance
 
         return response
-    
+
+    def start_vision_assistant(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
+
+        input_valid = check_for_valid_inputs(request.process_filename, request.camera_config_filename, self.get_logger())
+            
+        if not input_valid:
+            self.get_logger().error("Invalid input for process or camera config file!")
+            response.success = False
+            return response
+        
+        vision_instance = VisionProcessClass(
+            self,
+            launch_as_assistant=False,
+            process_filename=request.process_filename,
+            camera_config_filename=request.camera_config_filename,
+            process_UID=request.process_uid,
+            run_cross_validation=request.run_cross_validation
+        )
+
+        if not vision_instance.init_success:
+            self.get_logger().error("Error initializing service request. Service aboarted!")
+            response.success = False
+            return response
+        
+        vision_instance.start_vision_subscription()
+
+        # attach the vision instance to the main window
+        self.main_window.start_execution_widget_signal.signal.emit(vision_instance,request.image_display_time)
+
+        # Wait for the vision to finish
+        while not vision_instance.image_processing_handler.stop_image_subscription:
+            time.sleep(0.5)
+
+        response.success = vision_instance.image_processing_handler.get_vision_ok()
+        response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
+        response.results_path = str(vision_instance.vision_results_path)
+        
+        del vision_instance
+
+        return response
+
+
     def init_app_config(self):
         if not check_for_valid_path_config(self.get_logger()):
             self.get_logger().error("Invalid path configuration!")

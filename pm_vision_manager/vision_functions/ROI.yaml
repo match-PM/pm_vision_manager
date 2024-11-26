@@ -8,14 +8,14 @@ params:
     type: "bool"
 
   - param_name: "ROI_center_x"
-    description: "In percent of the image width."
+    description: "Distance of the center of the ROI to the center of the camera image in percent of the image width/2"
     type: "float"
     min_val: -100.0
     max_val: 100.0
     default_val: 0.0
     
   - param_name: "ROI_center_y"
-    description: "tbd"
+    description: "Distance of the center of the ROI to the center of the camera image in percent of the image hight/2."
     type: "float"
     min_val: -100.0
     max_val: 100.0
