@@ -26,6 +26,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallb
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoSHistoryPolicy, qos_profile_sensor_data
 import numpy as np
 from collections import OrderedDict
+from rclpy.impl.rcutils_logger import RcutilsLogger
 
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
 
@@ -265,6 +266,9 @@ class VisionProcessClass:
         self.vision_node.get_logger().info("Receiving video frame")
         # Convert ROS Image message to OpenCV image
         received_frame = self.br.imgmsg_to_cv2(data)
+        
+        if received_frame.shape[2] == 4: # Check if it has an alpha channel - This is for unity
+            received_frame = cv2.cvtColor(received_frame, cv2.COLOR_RGBA2BGR)
 
         if self.launch_as_assistant:
             image_name = f"{self.process_UID}"
@@ -568,21 +572,24 @@ class VisionProcessClass:
         return default_process_file_metadata_dict
     
     @staticmethod
-    def create_process_file(directory:str, process_name:str, logger =None):
+    def create_process_file(directory: str, process_name: str, logger: RcutilsLogger = None):
         try:
+            # Generate default metadata and determine file paths
             default_process_file_metadata_dict = VisionProcessClass.create_default_process_dict(process_name)
             process_lib_dir = VisionProcessClass.get_process_database_path(logger)
-            file_dir = f"{process_lib_dir}{directory}"
-            process_file_path = f"{file_dir}/{process_name}.json"
-            # Create folders if not existend
-            if logger is not None:
-                logger.debug(f"Process folder '{file_dir}' created!")
+            file_dir = os.path.join(process_lib_dir, directory)
+            process_file_path = os.path.join(file_dir, f"{process_name}.json")
 
+            # Create folder if it doesn't exist
             if not os.path.exists(file_dir):
                 Path(file_dir).mkdir(parents=True, exist_ok=True)
-                with open(process_file_path, "w+") as outputfile:
-                    json.dump(default_process_file_metadata_dict, outputfile,indent=4)
+                if logger is not None:
+                    logger.info(f"Process folder '{file_dir}' created!")
 
+            # Create JSON file only if it doesn't exist
+            if not os.path.exists(process_file_path):
+                with open(process_file_path, "w") as outputfile:
+                    json.dump(default_process_file_metadata_dict, outputfile, indent=4)
                 if logger is not None:
                     logger.info(f"Process file '{process_file_path}' created!")
 

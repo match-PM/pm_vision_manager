@@ -106,7 +106,7 @@ class ImageProcessingHandler:
         
         self.pixelPROum = self.magnification / self.pixelsize
         self.umPROpixel = self.pixelsize / self.magnification
-
+        
         self._processing_image = deepcopy(self._initial_image)
         self._display_frame = deepcopy(self._processing_image)
         self.frame_visual_elements = np.zeros((self._initial_image.shape[0], self._initial_image.shape[1], 3), dtype = np.uint8)
@@ -125,27 +125,49 @@ class ImageProcessingHandler:
         self.clear_vision_results()
 
     def init_results(self):
-        # add bool boarder to vision elements
-        if not self.get_vision_ok():
-            cv2.rectangle(self.frame_visual_elements,(0,0),(self.frame_visual_elements.shape[1],self.frame_visual_elements.shape[0]),(0,0,255),3)
-        else:
-            cv2.rectangle(self.frame_visual_elements,(0,0),(self.frame_visual_elements.shape[1],self.frame_visual_elements.shape[0]),(0,255,0),3)
+        # Add border to vision elements based on `get_vision_ok()`
+        color = (0, 255, 0) if self.get_vision_ok() else (0, 0, 255)
+        cv2.rectangle(self.frame_visual_elements, (0, 0), 
+                    (self.frame_visual_elements.shape[1], self.frame_visual_elements.shape[0]), 
+                    color, 3)
         
-        # lay vision elements over display frame
-        self._display_frame = self.create_vision_element_overlay(self._display_frame,self.frame_visual_elements,self.logger)
+
+        # Overlay vision elements on display frame
+        self._display_frame = self.create_vision_element_overlay(self._display_frame, 
+                                                                self.frame_visual_elements, 
+                                                                self.logger)
         self._vision_results_dict["vision_results"] = self._vision_results_list
 
-        if len(self._initial_image.shape)<3:
-            _initial_image = cv2.cvtColor(self._initial_image,cv2.COLOR_GRAY2BGR)
+        # Handle `_initial_image` grayscale case
+        if len(self._initial_image.shape) < 3:
+            _initial_image = cv2.cvtColor(self._initial_image, cv2.COLOR_GRAY2BGR)
         else:
             _initial_image = self._initial_image
 
+        # Ensure `_display_frame` is initialized
+        if self._display_frame is None:
+            self._display_frame = _initial_image.copy()
+            return
+
+        # Ensure `_display_frame` is also 3-channel BGR
+        if len(self._display_frame.shape) < 3:
+            self._display_frame = cv2.cvtColor(self._display_frame, cv2.COLOR_GRAY2BGR)
+
+        # Ensure same width before vconcat
+        if _initial_image.shape[1] != self._display_frame.shape[1]:
+            self.logger.warning("Resizing images to match width.")
+
+        # Ensure same data type
+        if _initial_image.dtype != self._display_frame.dtype:
+            self._display_frame = self._display_frame.astype(_initial_image.dtype)
+
+        # Concatenate safely
         if self.show_input_and_output_image:
             self._display_frame = cv2.vconcat([_initial_image, self._display_frame])
 
         self._final_image = self.get_display_image()
-        # resize display frame
-        #self._display_frame=vu.image_resize(self._display_frame, height = (self.screen_height-100))
+            # resize display frame
+            #self._display_frame=vu.image_resize(self._display_frame, height = (self.screen_height-100))
 
     def get_results(self)->dict:
         return self._vision_results_dict

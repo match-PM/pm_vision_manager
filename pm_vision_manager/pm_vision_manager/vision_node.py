@@ -128,10 +128,11 @@ class VisionNode(Node):
 
         # Wait for the vision to finish
         while not vision_instance.image_processing_handler.stop_image_subscription:
-            time.sleep(0.5)
+            time.sleep(2.5)
 
         response.success = vision_instance.image_processing_handler.get_vision_ok()
         response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
+        self.get_logger().warn(f"HEEERREEE Vision response: {response.vision_response}")
         response.results_path = str(vision_instance.vision_results_path)
         
         del vision_instance
@@ -172,8 +173,9 @@ class VisionNode(Node):
 
         response.success = vision_instance.image_processing_handler.get_vision_ok()
         response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
+        self.get_logger().warn(f"HEEERREEE Vision response: {response.vision_response}")
         response.results_path = str(vision_instance.vision_results_path)
-        
+        #response.vision_response.results = vision_instance.image_processing_handler.get_vision_response()
         del vision_instance
 
         return response
