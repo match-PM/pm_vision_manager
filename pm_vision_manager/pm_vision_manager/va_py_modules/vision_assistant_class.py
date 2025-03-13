@@ -292,6 +292,7 @@ class VisionProcessClass:
                 _results = self.save_vision_results()
                 self.results_signal.signal.emit(final_image, _results)
             self.stop_vision_subscription()
+            self.image_processing_handler.vision_routine_done = True
 
     def vision_assistant_loop(self):
         _current_source = self.processing_source

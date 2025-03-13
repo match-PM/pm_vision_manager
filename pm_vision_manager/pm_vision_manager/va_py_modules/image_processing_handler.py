@@ -52,6 +52,7 @@ class ImageProcessingHandler:
         text_scale = 5 # scale of written text in the images
         line_scale = 2 # scale of lines in the images
         self.stop_image_subscription = False
+        self.vision_routine_done = False
 
         # Init for camera clients
         self.client_exposure_time = None

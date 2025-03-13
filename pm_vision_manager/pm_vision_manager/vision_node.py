@@ -127,8 +127,8 @@ class VisionNode(Node):
         self.main_window.start_execution_widget_signal.signal.emit(vision_instance,request.image_display_time)
 
         # Wait for the vision to finish
-        while not vision_instance.image_processing_handler.stop_image_subscription:
-            time.sleep(2.5)
+        while not vision_instance.image_processing_handler.vision_routine_done:
+            time.sleep(0.5)
 
         response.success = vision_instance.image_processing_handler.get_vision_ok()
         response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
