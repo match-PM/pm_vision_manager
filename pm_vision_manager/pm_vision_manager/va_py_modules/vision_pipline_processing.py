@@ -8,6 +8,7 @@ from pm_vision_manager.va_py_modules.vision_utils import rotate_image
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError
 from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec import fitLine, cornerDetection
 from pm_vision_manager.va_py_modules.feature_detect_functions.circle_detect import circleDetection
+from pm_vision_manager.va_py_modules.image_modification_functions.extraction_functions import extract_color_areas
 import time
 
 def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, maxval:int, type:str) -> None:
@@ -581,7 +582,9 @@ def example_function(image_processing_handler: ImageProcessingHandler):
 
 #################################################################################################################
 
-def process_image(vision_node: Node, image_processing_handler: ImageProcessingHandler, pipeline_dict_list:list):
+def process_image(vision_node: Node, 
+                  image_processing_handler: ImageProcessingHandler, 
+                  pipeline_dict_list:list[dict]):
   image_processing_handler.init_begin()
   try:
     for list_item in pipeline_dict_list:
@@ -929,6 +932,24 @@ def process_image(vision_node: Node, image_processing_handler: ImageProcessingHa
             if active:
               EqualizeHist(image_processing_handler=image_processing_handler)
 
+          case "Extract_Color_Areas":
+            active = function_parameter.get('active')
+            p_lower_hue = function_parameter.get('lower_hue')
+            p_lower_saturation = function_parameter.get('lower_saturation')
+            p_lower_value = function_parameter.get('lower_value')
+            p_upper_hue = function_parameter.get('upper_hue')
+            p_upper_saturation = function_parameter.get('upper_saturation')
+            p_upper_value = function_parameter.get('upper_value')
+            if active:
+              extract_color_areas(image_processing_handler=image_processing_handler,
+                                  lower_hue=p_lower_hue,
+                                  lower_saturation=p_lower_saturation,
+                                  lower_value=p_lower_value,
+                                  upper_hue=p_upper_hue,
+                                  upper_saturation=p_upper_saturation,
+                                  upper_value=p_upper_value,
+                                  logger = vision_node.get_logger())
+              
           case "FitLine":
             active = function_parameter.get('active')
             p_line_selection = function_parameter.get('line selection')

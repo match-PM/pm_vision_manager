@@ -5,7 +5,7 @@ package_name = 'pm_vision_manager'
 submodules = 'pm_vision_manager/va_py_modules'
 app_modules = 'pm_vision_manager/va_py_modules/vision_app_modules'
 vision_functions = 'pm_vision_manager/va_py_modules/feature_detect_functions'
-
+vision_mod_functions = 'pm_vision_manager/va_py_modules/image_modification_functions'
 
 data_files=   [    
     ('share/ament_index/resource_index/packages',
@@ -49,7 +49,7 @@ setup(
     #maintainer_email='terei@match.uni-hannover.de',
     name=package_name,
     version='0.1.0',
-    packages=[package_name, submodules, app_modules,vision_functions],
+    packages=[package_name, submodules, app_modules,vision_functions, vision_mod_functions],
     data_files=package_files(data_files,['vision_functions/']),
     install_requires=['setuptools'],
     zip_safe=True,
