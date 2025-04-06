@@ -119,7 +119,7 @@ class CameraSetCoaxLightBoolInterface:
         self.node = node
         self.srv_client__set_coax_light = None
         self.srv_type_set_coax_light = None
-        self.coax_light_state = False
+        self.coax_light_state = None
 
     def init(self, config:dict):
         if config == {}:
@@ -182,7 +182,7 @@ class CameraSetCoaxLightBoolInterface:
 
                 self.coax_light_state = set_value
                 self.node.get_logger().info(f"Camera coax light state set to '{set_value}'!")
-                time.sleep(1)
+                time.sleep(2)
                 return True
             return False
         

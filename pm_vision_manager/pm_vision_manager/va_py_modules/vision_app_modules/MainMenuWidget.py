@@ -24,12 +24,14 @@ class MainMenuWidget(QWidget):
         self.node = node
         self.initUI()
         self.update_files()
-
+    
     def initUI(self):
         # Grid layout
         self.main_layout = QGridLayout()
         #self.running_assistans_widget = QListWidget()
-        self.vision_processes_widget = QListWidget()
+        #self.vision_processes_widget = QListWidget()
+        self.vision_processes_widget = QTreeWidget()
+        self.vision_processes_widget.setHeaderHidden(True)
         self.camera_configs_widget = QListWidget()
         # add button
         #self.stop_assistant_button = QPushButton("Stop Vision Assistant")
@@ -77,13 +79,38 @@ class MainMenuWidget(QWidget):
             self.node.get_logger().info("End getting files...")
             self.vision_processes_widget.clear()
             self.camera_configs_widget.clear()
-            for process in vision_processes:
-                self.vision_processes_widget.addItem(process)
+            self.populate_tree(vision_processes)
+            
+            # for process in vision_processes:
+            #     self.vision_processes_widget.addItem(process)
+            # # Add sub-items or attributes if needed
+            
             for camera in vision_cameras:
                 self.camera_configs_widget.addItem(camera)
 
         self.node.get_logger().info("Updating files...")
 
+    def populate_tree(self, paths):
+        root_items = {}
+
+        for path in paths:
+            parts = os.path.normpath(path).split(os.sep)
+            current_items = root_items
+
+            for i, part in enumerate(parts):
+                if part not in current_items:
+                    item = QTreeWidgetItem([part])
+                    current_items[part] = {"item": item, "children": {}}
+
+                    if i == 0:
+                        self.vision_processes_widget.addTopLevelItem(item)
+                    else:
+                        parent_item = current_items_parent["item"]
+                        parent_item.addChild(item)
+
+                current_items_parent = current_items[part]
+                current_items = current_items_parent["children"]
+    
     def create_new_process_file(self):
         new_process_file, _ = QFileDialog.getSaveFileName(self, "Save File", self.process_library_path, "JSON Files (*.json)")
         if new_process_file:
@@ -96,13 +123,23 @@ class MainMenuWidget(QWidget):
                 
             self.update_files()
 
+    # def get_selected_process(self):
+    #     selected_process = self.vision_processes_widget.currentItem()
+    #     if selected_process:
+    #         return selected_process.text()
+    #     else:
+    #         return None
+        
     def get_selected_process(self):
-        selected_process = self.vision_processes_widget.currentItem()
-        if selected_process:
-            return selected_process.text()
+        item = self.vision_processes_widget.currentItem()
+        if item and item.text(0).endswith('.json'):
+            full_path = []
+            while item:
+                full_path.insert(0, item.text(0))
+                item = item.parent()
+            return os.path.join(*full_path)
         else:
             return None
-    
     def get_selected_camera(self):
         selected_camera = self.camera_configs_widget.currentItem()
         if selected_camera:
@@ -111,7 +148,8 @@ class MainMenuWidget(QWidget):
             return None
         
     def start_vision_assistant(self):
-        selected_process = self.vision_processes_widget.currentItem()
+        selected_process = self.get_selected_process()
+        self.node.get_logger().error("Selected process: " + str(selected_process))
         selected_camera = self.camera_configs_widget.currentItem()
         if selected_process and selected_camera:
             new_id, dialog_ok = self.enter_id_dialog()
