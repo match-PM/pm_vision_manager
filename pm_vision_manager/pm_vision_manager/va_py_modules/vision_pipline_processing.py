@@ -459,7 +459,21 @@ def saveImage(image_processing_handler: ImageProcessingHandler,
   
   # image_processing_handler.image_name comes from (image_name = f"{self.vision_process_id}_{image_in_folder}")
   # in "vision_assistant_class.py" line 250. Maybe good to know... --> Don't use "/" in your process_uid
-  image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}{prefix}.png"
+  # get time_stamp
+  time_stamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+  
+  if prefix != "":
+    prefix = "_" + prefix
+
+  if image_processing_handler.get_mode() == ImageProcessingHandler.MODE_EXECUTE:
+    image_name=f"{image_processing_handler.process_db_path}/{time_stamp}{prefix}.png"
+
+  elif image_processing_handler.get_mode() == ImageProcessingHandler.MODE_LOOP:
+    image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}_{prefix}.png"
+
+  # it must be in Crossvalidation
+  else:
+    image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}_{prefix}.png"
 
   #if not os.path.isfile(image_name) and (not image_processing_handler.cross_val_running or save_in_cross_val):
   if (not image_processing_handler.cross_val_running or save_in_cross_val):

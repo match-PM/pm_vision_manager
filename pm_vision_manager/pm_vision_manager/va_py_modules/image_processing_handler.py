@@ -20,6 +20,11 @@ class ImageNotBinaryError(Exception):
         super().__init__(self.message)
 
 class ImageProcessingHandler:
+
+    MODE_EXECUTE = 0
+    MODE_LOOP = 1
+    MODE_CROSSVAL = 2
+
     def __init__(self, logger = None):
         self._initial_image: np.ndarray = None
         self._processing_image: np.ndarray = None
@@ -64,7 +69,25 @@ class ImageProcessingHandler:
         self.camera_exposure_time_set_value = None
         # object that contains all vision results
         self._vision_response = pvimsg.VisionResponse()
-        
+        self._mode = self.MODE_EXECUTE
+    
+    def set_mode(self, mode:int):
+        """
+        Set the mode of the image processing handler.
+        """
+        if mode == self.MODE_EXECUTE:
+            self._mode = self.MODE_EXECUTE
+        elif mode == self.MODE_LOOP:
+            self._mode = self.MODE_LOOP
+        else:
+            self._mode = self.MODE_EXECUTE
+
+    def get_mode(self)->int:
+        """
+        Get the mode of the image processing handler.
+        """
+        return self._mode    
+    
     def set_camera_parameter(self, pixelsize: float, 
                              magnification: float, 
                              camera_axis_1:str, 

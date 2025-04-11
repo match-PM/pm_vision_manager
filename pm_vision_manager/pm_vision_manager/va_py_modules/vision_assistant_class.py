@@ -171,13 +171,17 @@ class VisionProcessClass:
         self.image_processing_handler = ImageProcessingHandler(self.vision_node.get_logger())
         self.image_processing_handler_cross_val = ImageProcessingHandler(self.vision_node.get_logger())
         self.image_processing_handler_cross_val.set_cross_val_running(True)
+        self.image_processing_handler_cross_val.set_mode(ImageProcessingHandler.MODE_CROSSVAL)
 
         package_share_directory = get_package_share_directory("pm_vision_manager")
         self.path_config_path = f"{package_share_directory}/vision_assistant_path_config.yaml"
+
         if self.launch_as_assistant:
             self.vision_node.get_logger().info("Starting Vision Assistant!")
+            self.image_processing_handler.set_mode(ImageProcessingHandler.MODE_LOOP)
         else:
             self.vision_node.get_logger().info("Execute Vision!")
+            self.image_processing_handler.set_mode(ImageProcessingHandler.MODE_EXECUTE)
 
 
         self.vision_node.get_logger().info(f"Current vision process: {self.process_filename}")
@@ -281,6 +285,7 @@ class VisionProcessClass:
         #display_image = process_image(self, received_frame, self.process_pipeline_list)
         display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
         final_image = self.image_processing_handler.get_final_image()
+        # save to json file
         _results = self.save_vision_results()
         self.results_signal.signal.emit(final_image, _results)
 
@@ -653,16 +658,18 @@ class VisionProcessClass:
             #vision_results_path = f"{results_folder_path}/results_{str(self.crossval_image_name)}.json"
             """"""
 
-            if not os.path.exists(results_folder_path):
-                os.makedirs(results_folder_path)
-                print("Results folder crossval created!")
+        ## Maybe we need this anymore
 
-        try:
-            with open(vision_results_path, "w") as outputfile:
-                json.dump(result_dict, outputfile,indent=4)
-        except:
-            self.vision_node.get_logger().warn(f"Vision_results_path: {vision_results_path}")
-            self.vision_node.get_logger().error("Error saving vision results!")
+        #     if not os.path.exists(results_folder_path):
+        #         os.makedirs(results_folder_path)
+        #         print("Results folder crossval created!")
+
+        # try:
+        #     with open(vision_results_path, "w") as outputfile:
+        #         json.dump(result_dict, outputfile,indent=4)
+        # except:
+        #     self.vision_node.get_logger().warn(f"Vision_results_path: {vision_results_path}")
+        #     self.vision_node.get_logger().error("Error saving vision results!")
 
         return result_dict
 
