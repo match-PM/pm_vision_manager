@@ -19,7 +19,7 @@ from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Imag
 from geometry_msgs.msg import Point
 from functools import partial
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
-
+from PyQt6.QtGui import QIcon
 
 from pm_vision_interfaces.srv import ExecuteVision
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
@@ -132,9 +132,10 @@ class VisionNode(Node):
 
         response.success = vision_instance.image_processing_handler.get_vision_ok()
         response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
-        self.get_logger().warn(f"HEEERREEE Vision response: {response.vision_response}")
+        #self.get_logger().warn(f"HEEERREEE Vision response: {response.vision_response}")
         response.results_path = str(vision_instance.vision_results_path)
         
+        vision_instance.terminate_vision_class()
         del vision_instance
 
         return response
@@ -222,6 +223,7 @@ def main(args=None):
     executor = MultiThreadedExecutor(num_threads=6) 
     try:
         app = QApplication(sys.argv)
+        app.setWindowIcon(QIcon(f"{get_package_share_directory('pm_vision_manager')}/app_icon.png"))
 
         vision_node = VisionNode()
 

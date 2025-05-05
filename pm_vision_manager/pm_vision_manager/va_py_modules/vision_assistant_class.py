@@ -27,6 +27,7 @@ from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoS
 import numpy as np
 from collections import OrderedDict
 from rclpy.impl.rcutils_logger import RcutilsLogger
+import gc
 
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
 
@@ -260,6 +261,30 @@ class VisionProcessClass:
                 self.topic_timer.cancel()
             self.subscription_active = False
             return True
+    
+    def terminate_vision_class(self):
+        """
+        Stops subscriptions, deletes signals, and ensures threads and memory are cleaned.
+        """
+        self.stop_vision_subscription()
+
+        # Stop running threads or loops if any
+        self.delete_this_object = True
+
+        # Break signal references
+        self.results_signal.signal.disconnect()
+        self.set_crossval_results_signal.signal.disconnect()
+        del self.results_signal
+        del self.set_crossval_results_signal
+
+        # Clean up any cross references
+        del self.image_processing_handler
+        del self.image_processing_handler_cross_val
+        del self.cross_validation
+        del self.ros_camera_interfaces
+
+        # Optional: help GC
+        gc.collect()
 
     def topic_cbk(self, data):
         self.subscription_active = True
@@ -428,14 +453,14 @@ class VisionProcessClass:
             self.vision_node.get_logger().error(f"Error opening vision assistant configuration: '{str(self.vision_assistant_config_path)}'! Error: {str(e)}!")
             return False
 
-    def start_vision_app(self):
-        try:
-            app_thread = threading.Thread(target=self.open_process_file_in_app)
-            app_thread.start()
+    # def start_vision_app(self):
+    #     try:
+    #         self.app_thread = threading.Thread(target=self.open_process_file_in_app)
+    #         self.app_thread.start()
             
-        except Exception as e:
-            self.vision_node.get_logger().error(e)
-            self.vision_node.get_logger().error("Process File could not be opened!")
+    #     except Exception as e:
+    #         self.vision_node.get_logger().error(e)
+    #         self.vision_node.get_logger().error("Process File could not be opened!")
 
     def open_process_file_in_app(self):
         try:
