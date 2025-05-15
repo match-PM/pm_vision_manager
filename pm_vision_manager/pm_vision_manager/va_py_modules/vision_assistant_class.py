@@ -250,6 +250,7 @@ class VisionProcessClass:
             qos_profile=qos_profile_sensor_data,
             callback_group=self.callback_group)
         self.subscription
+        self.vision_node.get_logger().warn("Test")
         if not self.launch_as_assistant:
             self.vision_node.get_logger().info("Starting watchdog for image topic with timeout of 10s...")
             self.topic_timer = self.vision_node.create_timer(10, self.image_topic_watchdog, callback_group=self.callback_group_timer)
@@ -295,9 +296,14 @@ class VisionProcessClass:
         self.vision_node.get_logger().info("Receiving video frame")
         # Convert ROS Image message to OpenCV image
         received_frame = self.br.imgmsg_to_cv2(data)
+
+        #self.vision_node.get_logger().warn(f"{len(received_frame.shape)}")
         
-        if received_frame.shape[2] == 4: # Check if it has an alpha channel - This is for unity
-            received_frame = cv2.cvtColor(received_frame, cv2.COLOR_RGBA2BGR)
+        # if image is not a greyscale image
+        if not len(received_frame.shape) == 2:
+
+            if received_frame.shape[2] == 4: # Check if it has an alpha channel - This is for unity
+                received_frame = cv2.cvtColor(received_frame, cv2.COLOR_RGBA2BGR)
 
         if self.launch_as_assistant:
             image_name = f"{self.process_UID}"

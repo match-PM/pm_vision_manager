@@ -276,6 +276,8 @@ class CameraSetCoaxLightInterface:
 
                     if not self.client.wait_for_service(timeout_sec=1.0):
                         self.node.get_logger().error("Camera set coax light service not available!")
+
+                    self.node.get_logger().error(f"{str(service_request)}")
                     response = self.client.call(service_request)
 
                     self.set_value = value
@@ -370,6 +372,8 @@ class CameraRingLightInterface:
 
                 if not self.client.wait_for_service(timeout_sec=1.0):
                     self.node.get_logger().error("Camera ring service not available!")
+
+                self.node.get_logger().error(f"{str(service_request)}")
                 response = self.client.call(service_request)
 
                 self.set_value_bools = bool_list
