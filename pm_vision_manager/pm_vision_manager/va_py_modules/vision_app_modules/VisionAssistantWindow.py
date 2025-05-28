@@ -60,7 +60,6 @@ class VisionAssistantWindow(QMainWindow):
             self.ros_logger.error("Camera or Process file not selected")
             return
         
-        
         _new_vision_process = VisionProcessClass(self.ros_node, 
                                                  launch_as_assistant=True,
                                                  process_filename=_process_file,

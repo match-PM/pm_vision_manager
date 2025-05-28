@@ -28,6 +28,7 @@ import numpy as np
 from collections import OrderedDict
 from rclpy.impl.rcutils_logger import RcutilsLogger
 import gc
+import copy
 
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
 
@@ -166,10 +167,13 @@ class VisionProcessClass:
 
         self.processing_source = None
         self.topic_available = False
+        self.current_frame = None
 
         self.br = CvBridge()
         self.ros_camera_interfaces = CameraRosInterfaces(self.vision_node)
         self.image_processing_handler = ImageProcessingHandler(self.vision_node.get_logger())
+
+        # create the image processing handler for cross validation
         self.image_processing_handler_cross_val = ImageProcessingHandler(self.vision_node.get_logger())
         self.image_processing_handler_cross_val.set_cross_val_running(True)
         self.image_processing_handler_cross_val.set_mode(ImageProcessingHandler.MODE_CROSSVAL)
@@ -184,39 +188,30 @@ class VisionProcessClass:
             self.vision_node.get_logger().info("Execute Vision!")
             self.image_processing_handler.set_mode(ImageProcessingHandler.MODE_EXECUTE)
 
-
         self.vision_node.get_logger().info(f"Current vision process: {self.process_filename}")
         
-        self.process_start_time = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
-        self.process_start_time_ms = self.vision_node.get_clock().now()
+        #self.process_start_time = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
+        #self.process_start_time_ms = self.vision_node.get_clock().now()
 
         path_load_success = self.load_path_config()
         load_config_success = self.load_assistant_config()
         load_meta_success = self.load_process_file_metadata()
         load_camera_success = self.load_camera_config()
 
-        if (
-            path_load_success
-            and load_config_success
-            and load_meta_success
-            and load_camera_success
-        ):
-            self.init_success = True
+        if not path_load_success:
+            raise ValueError(f"Path configuration file '{self.path_config_path}' could not be loaded!")
+        if not load_config_success:
+            raise ValueError(f"Vision assistant configuration file '{self.vision_assistant_config_path}' could not be loaded!")
+        if not load_meta_success:
+            raise ValueError(f"Process file '{self.process_file_path}' could not be loaded!")
+        if not load_camera_success:
+            raise ValueError(f"Camera configuration file '{self.camera_config_path + self.camera_config_filename}' could not be loaded!")
 
-        else:
-            self.vision_node.get_logger().error(f"Initialization of '{self.process_UID} failed!")
-            self.init_success = False
-            return
-        
+        # set the signals        
         self.results_signal = VisionResultsSignal()
         self.set_crossval_results_signal = SetCrossValResultsSignal()
 
-        try:
-            self.cross_validation = VisionCrossvalidation(self.process_db_path)
-        except Exception as e:
-            self.vision_node.get_logger().error(f"Error initializing crossvalidation: {str(e)}")
-            self.init_success = False
-            return
+        self.cross_validation = VisionCrossvalidation(self.process_db_path)
 
         self.subscription_active = False
         self.delete_this_object = False     # This is only used in assist mode
@@ -250,10 +245,11 @@ class VisionProcessClass:
             qos_profile=qos_profile_sensor_data,
             callback_group=self.callback_group)
         self.subscription
+
         self.vision_node.get_logger().warn("Test")
-        if not self.launch_as_assistant:
-            self.vision_node.get_logger().info("Starting watchdog for image topic with timeout of 10s...")
-            self.topic_timer = self.vision_node.create_timer(10, self.image_topic_watchdog, callback_group=self.callback_group_timer)
+        
+        self.vision_node.get_logger().info("Starting watchdog for image topic with timeout of 10s...")
+        self.topic_timer = self.vision_node.create_timer(10, self.image_topic_watchdog, callback_group=self.callback_group_timer)
 
     def stop_vision_subscription(self) -> bool:
         if self.subscription_active:
@@ -263,6 +259,17 @@ class VisionProcessClass:
             self.subscription_active = False
             return True
     
+    def start_vision_assistant(self):
+        self.start_vision_subscription()
+        pass
+    
+    def stop_vision_assistant(self):
+        pass
+
+    def execute_vision(self):
+        self.start_vision_subscription()
+        pass
+
     def terminate_vision_class(self):
         """
         Stops subscriptions, deletes signals, and ensures threads and memory are cleaned.
@@ -288,47 +295,74 @@ class VisionProcessClass:
         gc.collect()
 
     def topic_cbk(self, data):
-        self.subscription_active = True
-        self.topic_available = True
-        self.image_processing_handler.stop_image_subscription = True
-        self.load_process_file()
 
         self.vision_node.get_logger().info("Receiving video frame")
         # Convert ROS Image message to OpenCV image
         received_frame = self.br.imgmsg_to_cv2(data)
-
-        #self.vision_node.get_logger().warn(f"{len(received_frame.shape)}")
         
         # if image is not a greyscale image
         if not len(received_frame.shape) == 2:
-
             if received_frame.shape[2] == 4: # Check if it has an alpha channel - This is for unity
                 received_frame = cv2.cvtColor(received_frame, cv2.COLOR_RGBA2BGR)
 
-        if self.launch_as_assistant:
-            image_name = f"{self.process_UID}"
+        self.current_frame = received_frame
+    
+    def get_current_camera_image(self) -> np.ndarray:
+        """
+        Returns the current camera image as a numpy array.
+        :return: The current camera image.
+        :rtype: np.ndarray
+        """
+        if self.current_frame is not None:
+            return (self.current_frame)
         else:
-            image_name = f"{self.process_UID}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
+            self.vision_node.get_logger().error("No current frame available!")
+            return None
 
-        self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
-        self.image_processing_handler.set_initial_image(received_frame)
 
-        #display_image = process_image(self, received_frame, self.process_pipeline_list)
-        display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
-        final_image = self.image_processing_handler.get_final_image()
-        # save to json file
-        _results = self.save_vision_results()
-        self.results_signal.signal.emit(final_image, _results)
 
-        # this only runs in execution mode and when the execution is finished
-        if not self.launch_as_assistant and self.image_processing_handler.stop_image_subscription:   # self.stop_image_subscription may be overwritten in process_image function
-            if self.run_cross_validation:
-                self.execute_crossvalidation()
-                # reinitilize the results after crossvalidation has been executed
-                _results = self.save_vision_results()
-                self.results_signal.signal.emit(final_image, _results)
-            self.stop_vision_subscription()
-            self.image_processing_handler.vision_routine_done = True
+    # def topic_cbk(self, data):
+    #     self.subscription_active = True
+    #     self.topic_available = True
+    #     self.image_processing_handler.stop_image_subscription = True
+    #     self.load_process_file()
+
+    #     self.vision_node.get_logger().info("Receiving video frame")
+    #     # Convert ROS Image message to OpenCV image
+    #     received_frame = self.br.imgmsg_to_cv2(data)
+
+    #     #self.vision_node.get_logger().warn(f"{len(received_frame.shape)}")
+        
+    #     # if image is not a greyscale image
+    #     if not len(received_frame.shape) == 2:
+
+    #         if received_frame.shape[2] == 4: # Check if it has an alpha channel - This is for unity
+    #             received_frame = cv2.cvtColor(received_frame, cv2.COLOR_RGBA2BGR)
+
+    #     if self.launch_as_assistant:
+    #         image_name = f"{self.process_UID}"
+    #     else:
+    #         image_name = f"{self.process_UID}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
+
+    #     self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
+    #     self.image_processing_handler.set_initial_image(received_frame)
+
+    #     #display_image = process_image(self, received_frame, self.process_pipeline_list)
+    #     display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
+    #     final_image = self.image_processing_handler.get_final_image()
+    #     # save to json file
+    #     _results = self.save_vision_results()
+    #     self.results_signal.signal.emit(final_image, _results)
+
+    #     # this only runs in execution mode and when the execution is finished
+    #     if not self.launch_as_assistant and self.image_processing_handler.stop_image_subscription:   # self.stop_image_subscription may be overwritten in process_image function
+    #         if self.run_cross_validation:
+    #             self.execute_crossvalidation()
+    #             # reinitilize the results after crossvalidation has been executed
+    #             _results = self.save_vision_results()
+    #             self.results_signal.signal.emit(final_image, _results)
+    #         self.stop_vision_subscription()
+    #         self.image_processing_handler.vision_routine_done = True
 
     def vision_assistant_loop(self):
         _current_source = self.processing_source
@@ -441,6 +475,7 @@ class VisionProcessClass:
             self.process_file_path = self.process_library_path + self.process_filename
             self.vision_node.get_logger().info("Vision assistant path config loaded!")
             return True
+        
         except Exception as e:
             self.vision_node.get_logger().error(f"Error opening vision assistant path configuration: '{str(self.path_config_path)}'! Error: {str(e)}")
             return False
@@ -469,6 +504,10 @@ class VisionProcessClass:
     #         self.vision_node.get_logger().error("Process File could not be opened!")
 
     def open_process_file_in_app(self):
+        """
+        THIS IS NOT USED ANYMORE!
+        """
+
         try:
             arguments = [f"pipeline_file_path:{self.process_file_path}"]
             python_file_path = f"{get_package_prefix('pm_vision_app')}/lib/python3.10/site-packages/pm_vision_app/vision_assistant_app.py"
@@ -525,25 +564,25 @@ class VisionProcessClass:
             self.vision_node.get_logger().error(f"Error opening or error in camera config file: {str(self.camera_config_path + self.camera_config_filename)}! Error: {str(e)}")
             return False
                 
-    def check_process_file_existence(self):
-        if os.path.exists(self.process_file_path) == False:
-            self.vision_node.get_logger().warning("Given Process File does not exist!")
-            if self.launch_as_assistant:
-                print(f"Should {self.process_file_path} be created?")
-                print("Enter y/n to continue")
-                while True:
-                    a = input()
-                    if a == "y":
-                        self.create_process_file()
-                        break
-                    elif a == "n":
-                        print("Process File will not be created!")
-                        break
-                    elif a == "exit":
-                        print("Process File will not be created!")
-                        break
-                    else:
-                        print("Enter either yes/no")
+    # def check_process_file_existence(self):
+    #     if os.path.exists(self.process_file_path) == False:
+    #         self.vision_node.get_logger().warning("Given Process File does not exist!")
+    #         if self.launch_as_assistant:
+    #             print(f"Should {self.process_file_path} be created?")
+    #             print("Enter y/n to continue")
+    #             while True:
+    #                 a = input()
+    #                 if a == "y":
+    #                     self.create_process_file()
+    #                     break
+    #                 elif a == "n":
+    #                     print("Process File will not be created!")
+    #                     break
+    #                 elif a == "exit":
+    #                     print("Process File will not be created!")
+    #                     break
+    #                 else:
+    #                     print("Enter either yes/no")
                             
     def get_crossval_image_info(self)->tuple[int, int]:
         """
@@ -583,19 +622,19 @@ class VisionProcessClass:
             if logger is not None:
                 logger.error(f"Error creating process folder '{process_folder}'! Error: {str(e)}")
             pass
-
-    def create_process_file(self):
-        try:
-            default_process_file_metadata_dict = self.create_default_process_dict(self.process_filename)
-            # Create folders if not existend
-            Path(os.path.dirname(self.process_file_path)).mkdir(
-                parents=True, exist_ok=True
-            )
-            with open(self.process_file_path, "w+") as outputfile:
-                json.dump(default_process_file_metadata_dict, outputfile,indent=4)
-        except Exception as e:
-            print(e)
-            self.vision_node.get_logger().error("Error creating process file")
+    
+    # def create_process_file(self):
+    #     try:
+    #         default_process_file_metadata_dict = self.create_default_process_dict(self.process_filename)
+    #         # Create folders if not existend
+    #         Path(os.path.dirname(self.process_file_path)).mkdir(
+    #             parents=True, exist_ok=True
+    #         )
+    #         with open(self.process_file_path, "w+") as outputfile:
+    #             json.dump(default_process_file_metadata_dict, outputfile,indent=4)
+    #     except Exception as e:
+    #         print(e)
+    #         self.vision_node.get_logger().error("Error creating process file")
     
     @staticmethod
     def create_default_process_dict(process_name):

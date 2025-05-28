@@ -107,20 +107,22 @@ class VisionNode(Node):
             response.success = False
             return response
         
-        vision_instance = VisionProcessClass(
-            self,
-            launch_as_assistant=False,
-            process_filename=request.process_filename,
-            camera_config_filename=request.camera_config_filename,
-            process_UID=request.process_uid,
-            run_cross_validation=request.run_cross_validation
-        )
+        try:
+            vision_instance = VisionProcessClass(
+                self,
+                launch_as_assistant=False,
+                process_filename=request.process_filename,
+                camera_config_filename=request.camera_config_filename,
+                process_UID=request.process_uid,
+                run_cross_validation=request.run_cross_validation
+            )
 
-        if not vision_instance.init_success:
-            self.get_logger().error("Error initializing service request. Service aboarted!")
+        except ValueError as e:
+            self.get_logger().error(f"Error initializing vision instance: {str(e)}")
             response.success = False
             return response
-        
+
+
         vision_instance.start_vision_subscription()
 
         # attach the vision instance to the main window
@@ -149,19 +151,20 @@ class VisionNode(Node):
             response.success = False
             return response
         
-        vision_instance = VisionProcessClass(
-            self,
-            launch_as_assistant=False,
-            process_filename=request.process_filename,
-            camera_config_filename=request.camera_config_filename,
-            process_UID=request.process_uid,
-            run_cross_validation=request.run_cross_validation
-        )
+        try:
+            vision_instance = VisionProcessClass(
+                self,
+                launch_as_assistant=False,
+                process_filename=request.process_filename,
+                camera_config_filename=request.camera_config_filename,
+                process_UID=request.process_uid,
+                run_cross_validation=request.run_cross_validation)
 
-        if not vision_instance.init_success:
-            self.get_logger().error("Error initializing service request. Service aboarted!")
+        except ValueError as e:
+            self.get_logger().error(f"Error initializing vision instance: {str(e)}")
             response.success = False
             return response
+
         
         vision_instance.start_vision_subscription()
 
