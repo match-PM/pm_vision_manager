@@ -56,7 +56,7 @@ class ImageProcessingHandler:
         self.screen_height = 1080
         text_scale = 5 # scale of written text in the images
         line_scale = 2 # scale of lines in the images
-        self.stop_image_subscription = False
+        self.stop_vision_execution = False
         self.vision_routine_done = False
 
         # Init for camera clients

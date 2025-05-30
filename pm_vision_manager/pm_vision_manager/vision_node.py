@@ -122,67 +122,66 @@ class VisionNode(Node):
             response.success = False
             return response
 
-
-        vision_instance.start_vision_subscription()
-
         # attach the vision instance to the main window
         self.main_window.start_execution_widget_signal.signal.emit(vision_instance,request.image_display_time)
-
-        # Wait for the vision to finish
-        while not vision_instance.image_processing_handler.vision_routine_done:
-            time.sleep(0.5)
+        
+        vision_instance.execute_vision()
 
         response.success = vision_instance.image_processing_handler.get_vision_ok()
         response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
-        #self.get_logger().warn(f"HEEERREEE Vision response: {response.vision_response}")
         response.results_path = str(vision_instance.vision_results_path)
         
         vision_instance.terminate_vision_class()
         del vision_instance
-
+        
+        if not response.success:
+            self.get_logger().error("Vision execution failed! An instance of the vision assistant will be opened")
+            self.main_window.start_vision_assistant_wiget_signal.signal.emit(request.camera_config_filename, 
+                                                                            request.process_filename)
+        
         return response
 
-    def start_vision_assistant(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
+    # def start_vision_assistant(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
 
-        input_valid = check_for_valid_inputs(request.process_filename, request.camera_config_filename, self.get_logger())
+    #     input_valid = check_for_valid_inputs(request.process_filename, request.camera_config_filename, self.get_logger())
             
-        if not input_valid:
-            self.get_logger().error("Invalid input for process or camera config file!")
-            response.success = False
-            return response
+    #     if not input_valid:
+    #         self.get_logger().error("Invalid input for process or camera config file!")
+    #         response.success = False
+    #         return response
         
-        try:
-            vision_instance = VisionProcessClass(
-                self,
-                launch_as_assistant=False,
-                process_filename=request.process_filename,
-                camera_config_filename=request.camera_config_filename,
-                process_UID=request.process_uid,
-                run_cross_validation=request.run_cross_validation)
+    #     try:
+    #         vision_instance = VisionProcessClass(
+    #             self,
+    #             launch_as_assistant=False,
+    #             process_filename=request.process_filename,
+    #             camera_config_filename=request.camera_config_filename,
+    #             process_UID=request.process_uid,
+    #             run_cross_validation=request.run_cross_validation)
 
-        except ValueError as e:
-            self.get_logger().error(f"Error initializing vision instance: {str(e)}")
-            response.success = False
-            return response
+    #     except ValueError as e:
+    #         self.get_logger().error(f"Error initializing vision instance: {str(e)}")
+    #         response.success = False
+    #         return response
 
         
-        vision_instance.start_vision_subscription()
+    #     vision_instance.start_vision_subscription()
 
-        # attach the vision instance to the main window
-        self.main_window.start_execution_widget_signal.signal.emit(vision_instance,request.image_display_time)
+    #     # attach the vision instance to the main window
+    #     self.main_window.start_execution_widget_signal.signal.emit(vision_instance,request.image_display_time)
 
-        # Wait for the vision to finish
-        while not vision_instance.image_processing_handler.stop_image_subscription:
-            time.sleep(0.5)
+    #     # Wait for the vision to finish
+    #     while not vision_instance.image_processing_handler.stop_vision_execution:
+    #         time.sleep(0.5)
 
-        response.success = vision_instance.image_processing_handler.get_vision_ok()
-        response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
-        self.get_logger().warn(f"HEEERREEE Vision response: {response.vision_response}")
-        response.results_path = str(vision_instance.vision_results_path)
-        #response.vision_response.results = vision_instance.image_processing_handler.get_vision_response()
-        del vision_instance
+    #     response.success = vision_instance.image_processing_handler.get_vision_ok()
+    #     response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
+    #     self.get_logger().warn(f"HEEERREEE Vision response: {response.vision_response}")
+    #     response.results_path = str(vision_instance.vision_results_path)
+    #     #response.vision_response.results = vision_instance.image_processing_handler.get_vision_response()
+    #     del vision_instance
 
-        return response
+    #     return response
 
 
     def init_app_config(self):

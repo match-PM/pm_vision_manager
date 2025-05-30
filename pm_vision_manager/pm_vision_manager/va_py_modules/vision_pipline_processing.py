@@ -616,7 +616,7 @@ def process_image(vision_node: Node,
             if active and not image_processing_handler.cross_val_running:
               has_been_set = image_processing_handler.set_camera_exposure_time(value)  
               if has_been_set:
-                image_processing_handler.stop_image_subscription = False
+                image_processing_handler.stop_vision_execution = False
               # Break the for loop
               break
           
@@ -627,7 +627,7 @@ def process_image(vision_node: Node,
             if active:
               has_been_set = image_processing_handler.set_camera_coax_light_bool(set_state)
               if has_been_set:
-                image_processing_handler.stop_image_subscription = False
+                image_processing_handler.stop_vision_execution = False
               # Break the for loop
               break
           
@@ -638,7 +638,7 @@ def process_image(vision_node: Node,
             if active:
               has_been_set = image_processing_handler.set_camera_coax_light(value)  
               if has_been_set:
-                image_processing_handler.stop_image_subscription = False
+                image_processing_handler.stop_vision_execution = False
               # Break the for loop
               break
 
@@ -658,7 +658,7 @@ def process_image(vision_node: Node,
             if active:
               has_been_set = image_processing_handler.set_ring_light(bool_list, rgb_list)  
               if has_been_set:
-                image_processing_handler.stop_image_subscription = False
+                image_processing_handler.stop_vision_execution = False
               # Break the for loop
               break
 
