@@ -283,6 +283,8 @@ class CameraSetCoaxLightInterface:
                     self.set_value = value
 
                     self.node.get_logger().info(f"Camera set coax light to '{value}'!")
+                    #self.node.get_logger().error(f"Result: '{}'!")
+
                     # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
                     time.sleep(1)
                     return True
