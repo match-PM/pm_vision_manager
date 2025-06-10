@@ -316,6 +316,7 @@ class VisionProcessClass:
         self.image_processing_handler.vision_routine_done = True
 
     def close_vision_assistant(self):
+        self.image_processing_handler.disable_all_lights()
         self._delete_this_object = True
         
     def terminate_vision_class(self):
@@ -581,7 +582,7 @@ class VisionProcessClass:
 
             self.ros_camera_interfaces.exposure_time_interface.init(config=config.get('exposure_time', {}))
             self.image_processing_handler.set_camera_exposure_time = self.ros_camera_interfaces.exposure_time_interface.set_camera_exposure_time
-
+            
             self.ros_camera_interfaces.set_coax_light_bool_interface.init(config=config.get('set_coax_light_bool', {}))
             self.image_processing_handler.set_camera_coax_light_bool = self.ros_camera_interfaces.set_coax_light_bool_interface.set_coax_light
 

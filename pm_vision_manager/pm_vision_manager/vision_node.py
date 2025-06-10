@@ -131,6 +131,8 @@ class VisionNode(Node):
         response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
         response.results_path = str(vision_instance.vision_results_path)
         
+        vision_instance.image_processing_handler.disable_all_lights()
+        
         vision_instance.terminate_vision_class()
         del vision_instance
         

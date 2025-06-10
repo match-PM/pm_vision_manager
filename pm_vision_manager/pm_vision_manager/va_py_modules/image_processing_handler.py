@@ -6,6 +6,9 @@ import math
 from copy import copy, deepcopy
 from typing import Union
 
+from geometry_msgs.msg import Point
+
+
 import pm_vision_manager.va_py_modules.vision_utils as vu
 import pm_vision_interfaces.msg as pvimsg 
 
@@ -190,6 +193,9 @@ class ImageProcessingHandler:
             self._display_frame = cv2.vconcat([_initial_image, self._display_frame])
 
         self._final_image = self.get_display_image()
+        
+        # Sort results if there are any
+        self._sort_results()
             # resize display frame
             #self._display_frame=vu.image_resize(self._display_frame, height = (self.screen_height-100))
 
@@ -246,6 +252,18 @@ class ImageProcessingHandler:
         This function should be overwritten from in the vision assistant_class
         """
         pass
+    
+    def disable_all_lights(self)->bool:
+        """
+        This function should be overwritten from in the vision assistant_class
+        """
+        self.set_camera_coax_light_bool(False)
+                
+        self.set_ring_light([False, False, False, False],
+                            [0, 0, 0, 0])
+        
+        self.set_camera_coax_light(0)
+        return True
 
     def get_visual_elements_canvas(self):
         if self.roi_used:
@@ -419,6 +437,105 @@ class ImageProcessingHandler:
     def new_vision_line_result(self)->pvimsg.VisionLine:
         return pvimsg.VisionLine()
     
+    def _sort_results(self):
+        """
+        This method sorts the vision results based on the type of the vision object.
+        """
+        #self._vision_response.results.points.sort(key=lambda x: x.axis_value_1)
+        # Sort the circles according to their potential field value
+        
+        self._sort_result_circles()
+        self._sort_result_points()
+
+    def _sort_result_circles(self):
+        if len(self._vision_response.results.circles) == 0:
+            return
+        
+        potential_values = self._create_potential_field(self._vision_response.results.circles)
+        # Create a list of tuples (circle, potential_value)
+        circles_with_potential = list(zip(self._vision_response.results.circles, potential_values))
+        # Sort the list by potential_value
+        circles_with_potential.sort(key=lambda x: x[1])
+        # Unzip the sorted list back into two lists
+        sorted_circles, sorted_potentials = zip(*circles_with_potential)
+        # Update the vision response with sorted circles
+        self._vision_response.results.circles = list(sorted_circles)
+        
+    def _sort_result_points(self):
+        if len(self._vision_response.results.points) == 0:
+            return
+        potential_values = self._create_potential_field(self._vision_response.results.points)
+        # Create a list of tuples (point, potential_value)
+        points_with_potential = list(zip(self._vision_response.results.points, potential_values))
+        # Sort the list by potential_value
+        points_with_potential.sort(key=lambda x: x[1])
+        # Unzip the sorted list back into two lists
+        sorted_points, sorted_potentials = zip(*points_with_potential)
+        # Update the vision response with sorted points
+        self._vision_response.results.points = list(sorted_points)
+        
+        
+    def _create_potential_field(self, list_of_elements: Union[list[pvimsg.VisionPoint], 
+                                                              list[pvimsg.VisionCircle], 
+                                                              ])->list:
+        """
+        This method creates a potential field based on the given elements.
+        The potential field is a list of floats.
+        """
+        list_of_points:list[Point] = []
+        if not isinstance(list_of_elements, list):
+            raise TypeError("list_of_elements must be a list of VisionPoint or VisionCircle objects.")
+        
+        if len(list_of_elements) == 0:
+            return []
+        
+        if isinstance(list_of_elements[0], pvimsg.VisionPoint):
+            for elem in list_of_elements:
+                elem: pvimsg.VisionPoint
+                point = Point()
+                point.x = elem.axis_value_1 + (self.fov_width+self.fov_height)
+                point.y = elem.axis_value_2 + (self.fov_width+self.fov_height)
+                list_of_points.append(point)
+        
+        if isinstance(list_of_elements[0], pvimsg.VisionCircle):
+            for elem2 in list_of_elements:
+                elem2: pvimsg.VisionCircle
+                point = Point()
+                point.x = elem2.center_point.axis_value_1 + (self.fov_width+self.fov_height)
+                point.y = elem2.center_point.axis_value_2 + (self.fov_width+self.fov_height)
+                list_of_points.append(point)
+        
+        potential = self._create_potential_for_points(list_of_points)
+        return potential
+    
+    def _create_potential_for_points(self, points: list[Point]) -> list[float]:
+        
+        if len(points) == 0:
+            return []
+        
+        potential = []
+        distances = []
+        angles = []
+
+        for point in points:
+            dist = math.sqrt(point.x**2 + point.y**2)
+            angle = math.atan2(point.y, point.x)
+            distances.append(dist)
+            angles.append(angle)
+
+        distances = np.array(distances)
+        angles = np.array(angles)
+
+        # Normalize
+        normalized_distances = distances / np.max(distances) if np.max(distances) > 0 else distances
+        normalized_angles = (angles + math.pi) / math.tau  # Normalize to [0, 1]
+
+        for dist, angle in zip(normalized_distances, angles):
+            pot = 0.5 * (dist + angle) * (dist + angle + 1) + angle
+            potential.append(pot)
+
+        return potential
+    
     @staticmethod
     def create_vision_element_overlay(displ_frame, vis_elem_frame, logger = None):
         # Add visual elements to the display frame
@@ -458,3 +575,18 @@ class ImageProcessingHandler:
         x_tl = int(round(img_width / 2) + x_center)
         y_tl = int(round(img_height / 2) - y_center)
         return x_tl, y_tl
+
+# def plot_grid_heatmap(grid, potential, rows, cols):
+#     import matplotlib.pyplot as plt
+#     # Convert flat potential list to 2D array for heatmap
+#     potential_grid = np.array(potential).reshape((rows, cols))
+
+#     plt.imshow(potential_grid, origin='lower', cmap='viridis', interpolation='nearest')
+#     plt.colorbar(label='Potential')
+#     plt.xlabel('X Coordinate')
+#     plt.ylabel('Y Coordinate')
+#     plt.title('Grid Potential Heat Map')
+#     plt.show()
+
+if __name__ == "__main__":
+   pass
