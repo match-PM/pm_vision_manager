@@ -318,6 +318,7 @@ class VisionProcessClass:
     def close_vision_assistant(self):
         self.image_processing_handler.disable_all_lights()
         self._delete_this_object = True
+        self.image_processing_handler.disable_all_lights
         
     def terminate_vision_class(self):
         """

@@ -260,7 +260,7 @@ class ImageProcessingHandler:
         self.set_camera_coax_light_bool(False)
                 
         self.set_ring_light([False, False, False, False],
-                            [0, 0, 0, 0])
+                            [0, 0, 0])
         
         self.set_camera_coax_light(0)
         return True
