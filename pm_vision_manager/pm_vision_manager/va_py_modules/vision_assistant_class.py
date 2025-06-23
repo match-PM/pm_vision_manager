@@ -18,7 +18,7 @@ from pynput import keyboard
 from pathlib import Path
 import threading
 from rosidl_runtime_py.utilities import get_service #, get_interface, get_message
-from pm_vision_manager.va_py_modules.vision_pipline_processing import process_image
+from pm_vision_manager.va_py_modules.vision_pipline_processing import process_image, set_camera_parameters
 from threading import Thread
 from rclpy.node import Node
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler
@@ -236,7 +236,6 @@ class VisionProcessClass:
     def _image_topic_watchdog(self):
         
         self.vision_node.get_logger().error("Timed out! Image topic not available! Exiting...")
-        self.image_processing_handler.stop_vision_execution = True
         self._delete_this_object = True
         # This is needed for the response(success) of the service call
         self.image_processing_handler.set_vision_ok(False)
@@ -281,30 +280,44 @@ class VisionProcessClass:
         time.sleep(0.5)
         
         image_name = f"{self.process_UID}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
-            
-        while (not self.image_processing_handler.stop_vision_execution and self.timer_active):
+
+        self._load_process_file()
+
+        set_parameter_success = set_camera_parameters(self.vision_node, 
+                                                      self.image_processing_handler,
+                                                      self.process_pipeline_list)
+        
+        if not set_parameter_success:
+            self.image_processing_handler.vision_routine_done = True
+            self.image_processing_handler.visionOK = False
+            return
+
+
+        image = self._get_current_camera_image()
+
+        while (self.timer_active and image is None):
             
             image = self._get_current_camera_image()
-            
-            if image is None:
-                self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
-                time.sleep(0.5)
-                continue
-            
-            self.image_processing_handler.stop_vision_execution = True
-            
-            self._load_process_file()
-        
-            self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
-            self.image_processing_handler.set_initial_image(image)
+            self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
+            time.sleep(0.5)
+            continue
 
-            #display_image = process_image(self, image, self.process_pipeline_list)
-            display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
-            final_image = self.image_processing_handler.get_final_image()
-            
-            # save to json file
-            _results = self.save_vision_results()
-            self.results_signal.signal.emit(final_image, _results)
+            # if image is None:
+            #     self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
+            #     time.sleep(0.5)
+            #     continue
+                        
+    
+        self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
+        self.image_processing_handler.set_initial_image(image)
+
+        #display_image = process_image(self, image, self.process_pipeline_list)
+        display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
+        final_image = self.image_processing_handler.get_final_image()
+        
+        # save to json file
+        _results = self.save_vision_results()
+        self.results_signal.signal.emit(final_image, _results)
 
         # run this when the execution is finished     
         if self.run_cross_validation:
@@ -316,9 +329,7 @@ class VisionProcessClass:
         self.image_processing_handler.vision_routine_done = True
 
     def close_vision_assistant(self):
-        self.image_processing_handler.disable_all_lights()
         self._delete_this_object = True
-        self.image_processing_handler.disable_all_lights
         
     def terminate_vision_class(self):
         """
@@ -353,7 +364,7 @@ class VisionProcessClass:
 
     def topic_cbk(self, data):
 
-        self.vision_node.get_logger().info("Receiving video frame")
+        #self.vision_node.get_logger().info("Receiving video frame")
         # Convert ROS Image message to OpenCV image
         received_frame = self.br.imgmsg_to_cv2(data)
         
@@ -423,13 +434,21 @@ class VisionProcessClass:
     def vision_assistant_loop(self):
 
         while not self._delete_this_object:
-
+            
             if self.processing_source is None:
                 self.vision_node.get_logger().error("No image source selected!")
                 time.sleep(0.5)
                 continue
+
+            if (self.processing_source == self.camera_subscription_topic):
+                set_camera_parameter_success = set_camera_parameters(self.vision_node,
+                                                        self.image_processing_handler,
+                                                        self.process_pipeline_list)
             
-            elif (self.processing_source == self.camera_subscription_topic):
+                if not set_camera_parameter_success:
+                    self.vision_node.get_logger().error(f"Error occured. Camera parameter could not be set!")
+                    continue
+
                 image = self._get_current_camera_image()
 
             else:
@@ -444,8 +463,9 @@ class VisionProcessClass:
             
             #time.sleep(0.5)
             #self.vision_node.get_logger().error("Looped!")
-            
+
         self.vision_node.get_logger().error("Vision assistant loop terminated!")   
+        self.image_processing_handler.disable_all_lights()
         self.terminate_vision_class()
 
     def execute_crossvalidation(self):
@@ -661,7 +681,7 @@ class VisionProcessClass:
                 FileData = json.load(file)
             self.process_pipeline_list.clear()
             self.process_pipeline_list = FileData["vision_pipeline"]
-            self.vision_node.get_logger().info("Process pipeline loaded!")
+            #self.vision_node.get_logger().info("Process pipeline loaded!")
         except Exception as e:
             self.vision_node.get_logger().error(
                 f"Error opening process file: {str(self.process_file_path)}! Error: {str(e)}"

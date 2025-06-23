@@ -66,6 +66,7 @@ class CameraExposureTimeInterface:
             self.node.get_logger().warn(str(e))
         
         except Exception as e:
+            self.node.get_logger().error("Exception occured")
             self.node.get_logger().error(str(type(e).__name__))
             self.node.get_logger().error(str(e))
 
@@ -102,9 +103,9 @@ class CameraExposureTimeInterface:
 
                     self.camera_exposure_time_set_value = exposure_value_percent
                     self.node.get_logger().info(f"Camera exposure time set to '{exposure_time}'!")
-                    time.sleep(1)
+                    time.sleep(2)
                     # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
-                    return True
+                return True
             
             else:
                 self.node.get_logger().error("Camera exposure time not set! Invalid bounds!")
@@ -151,6 +152,7 @@ class CameraSetCoaxLightBoolInterface:
             self.node.get_logger().warn(str(e))
         
         except Exception as e:
+            self.node.get_logger().error("Exception occured")
             self.node.get_logger().error(str(type(e).__name__))
             self.node.get_logger().error(str(e))
 
@@ -167,9 +169,9 @@ class CameraSetCoaxLightBoolInterface:
                 service_request = get_service(self.srv_type_set_coax_light).Request()
                 value_key = None
                 for _key, _value in service_request.get_fields_and_field_types().items():
-                    self.node.get_logger().error(f"{_value}")
-                    self.node.get_logger().error(f"{_key}")
-                    self.node.get_logger().error(f"")
+                    #self.node.get_logger().error(f"{_value}")
+                    #self.node.get_logger().error(f"{_key}")
+                    #self.node.get_logger().error(f"")
                     if _value == 'boolean':
                         value_key = _key
                 if value_key is None:
@@ -183,11 +185,10 @@ class CameraSetCoaxLightBoolInterface:
                 self.coax_light_state = set_value
                 self.node.get_logger().info(f"Camera coax light state set to '{set_value}'!")
                 time.sleep(2)
-                return True
-            return False
+            return True
         
         else:
-            self.node.get_logger().warn("Camera exposure time not available!")
+            self.node.get_logger().warn("Camera set coaxlight bool not available!")
             return False
         
 
@@ -212,7 +213,7 @@ class CameraSetCoaxLightInterface:
             self.srv_type = config["srv_type"]
             self.min_val = config["min_val"]
             self.max_val = config["max_val"]
-            self.set_value = 0
+            self.set_value = -10    # this is not a realistic number, it enforces the initial setting.  
 
             service_metaclass = get_service(self.srv_type)
             self.client = self.node.create_client(service_metaclass, self.srv_client)
@@ -233,6 +234,7 @@ class CameraSetCoaxLightInterface:
             self.node.get_logger().warn(str(e))
         
         except Exception as e:
+            self.node.get_logger().error("Exception occured")
             self.node.get_logger().error(str(type(e).__name__))
             self.node.get_logger().error(str(e))
 
@@ -286,9 +288,8 @@ class CameraSetCoaxLightInterface:
                     #self.node.get_logger().error(f"Result: '{}'!")
 
                     # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
-                    time.sleep(1)
-                    return True
-                return False
+                    time.sleep(2.5)
+                return True
                                         
             else:
                 self.node.get_logger().error("Camera coax light value not set! Invalid bounds!")
@@ -375,7 +376,7 @@ class CameraRingLightInterface:
                 if not self.client.wait_for_service(timeout_sec=1.0):
                     self.node.get_logger().error("Camera ring service not available!")
 
-                self.node.get_logger().error(f"{str(service_request)}")
+                #self.node.get_logger().error(f"{str(service_request)}")
                 response = self.client.call(service_request)
 
                 self.set_value_bools = bool_list
@@ -383,9 +384,9 @@ class CameraRingLightInterface:
 
                 self.node.get_logger().info(f"Camera ring light set to '{bool_list}' with intensity of {rgb_list}!")
                 # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
-                time.sleep(1)
-                return True
-            return False
+                time.sleep(2)
+
+            return True
         else:
             self.node.get_logger().warn("Camera ring light int not available!")
             return False
@@ -397,3 +398,5 @@ class CameraRosInterfaces:
         self.set_coax_light_bool_interface = CameraSetCoaxLightBoolInterface(self.node)
         self.set_coax_light_interface = CameraSetCoaxLightInterface(self.node)
         self.set_ring_light_interfaces = CameraRingLightInterface(self.node)
+
+        

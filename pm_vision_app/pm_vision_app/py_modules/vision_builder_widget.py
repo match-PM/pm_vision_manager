@@ -405,7 +405,7 @@ class VisionBuilderWidget(QWidget):
 
                     # double_spinbox.setSingleStep(1.0)
                     double_spinbox.setSingleStep(0.1) # Able to set in tenth
-                    double_spinbox.setDecimals(2)
+                    double_spinbox.setDecimals(3)
                     double_spinbox.setValue(param.get_value())
 
                     double_spinbox.valueChanged.connect(

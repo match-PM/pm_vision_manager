@@ -35,7 +35,12 @@ def bgr2gray(image_processing_handler: ImageProcessingHandler):
     frame_processed = cv2.cvtColor(frame_processed, cv2.COLOR_BGR2GRAY)
     image_processing_handler.set_processing_image(frame_processed)
 
-def roi(image_processing_handler: ImageProcessingHandler, ROI_center_x_c: float, ROI_center_y_c:float, ROI_height:float, ROI_width:float):
+def roi(image_processing_handler: ImageProcessingHandler, 
+        ROI_center_x_c: float, 
+        ROI_center_y_c:float, 
+        ROI_height:float, 
+        ROI_width:float):
+  
   # Input values in percent of the image
   frame_processed = image_processing_handler.get_processing_image()
 
@@ -596,9 +601,80 @@ def example_function(image_processing_handler: ImageProcessingHandler):
 
 #################################################################################################################
 
+def set_camera_parameters(vision_node:Node, 
+                  image_processing_handler: ImageProcessingHandler, 
+                  pipeline_dict_list:list[dict]) -> bool:
+  
+  #vision_node.get_logger().error("Starting setting parameters")
+
+  for list_item in pipeline_dict_list:
+
+    for key, function_parameter in list_item.items():
+      #vision_node.get_logger().error(f"{key}")
+      match key:
+
+        case "Set_Camera_Exposure_Time":
+          active = function_parameter['active']
+          value = function_parameter['value']
+          #if active and not image_processing_handler.cross_val_running:
+          #ision_node.get_logger().error(f"{active}, {value}")
+          if active:
+            has_been_set = image_processing_handler.set_camera_exposure_time(value)  
+            #vision_node.get_logger().error("Test0")
+
+            if not has_been_set:
+              return False
+            # Break the for loop
+        
+        case "SetCoAxLightBool":
+          active = function_parameter['active']
+          set_state = function_parameter['set_state']
+          #if active and not image_processing_handler.cross_val_running:
+          if active:
+            has_been_set = image_processing_handler.set_camera_coax_light_bool(set_state)
+            #vision_node.get_logger().error("Test1")
+
+            if not has_been_set:
+              return False
+        
+        case "SetCoAxLight":
+          active = function_parameter['active']
+          value = function_parameter['value']
+          #if active and not image_processing_handler.cross_val_running:
+          if active:
+            has_been_set = image_processing_handler.set_camera_coax_light(value)  
+            #vision_node.get_logger().error("Test2")
+
+            if not has_been_set:
+              return False
+
+        case "SetRingLight":
+          active = function_parameter['active']
+
+          bool_list = [function_parameter['enable_Q1'],
+                        function_parameter['enable_Q2'],
+                        function_parameter['enable_Q3'],
+                        function_parameter['enable_Q4']]
+
+          rgb_list =  [function_parameter['r_value'],
+                        function_parameter['g_value'],
+                        function_parameter['b_value']] 
+                
+          #if active and not image_processing_handler.cross_val_running:
+          if active:
+            has_been_set = image_processing_handler.set_ring_light(bool_list, rgb_list)  
+            #vision_node.get_logger().error("Test3")
+            if not has_been_set:
+              return False
+            
+  #vision_node.get_logger().error("Ending setting parameters")
+
+  return True
+  
 def process_image(vision_node: Node, 
                   image_processing_handler: ImageProcessingHandler, 
                   pipeline_dict_list:list[dict]):
+  
   image_processing_handler.init_begin()
   try:
     for list_item in pipeline_dict_list:
@@ -610,57 +686,58 @@ def process_image(vision_node: Node,
 
       for key, function_parameter in list_item.items():
         match key:
-          case "Set_Camera_Exposure_Time":
-            active = function_parameter['active']
-            value = function_parameter['value']
-            if active and not image_processing_handler.cross_val_running:
-              has_been_set = image_processing_handler.set_camera_exposure_time(value)  
-              if has_been_set:
-                image_processing_handler.stop_vision_execution = False
-              # Break the for loop
-              break
+
+          # case "Set_Camera_Exposure_Time":
+          #   active = function_parameter['active']
+          #   value = function_parameter['value']
+          #   if active and not image_processing_handler.cross_val_running:
+          #     has_been_set = image_processing_handler.set_camera_exposure_time(value)  
+          #     if has_been_set:
+          #       image_processing_handler.stop_vision_execution = False
+          #     # Break the for loop
+          #     break
           
-          case "SetCoAxLightBool":
-            active = function_parameter['active']
-            set_state = function_parameter['set_state']
-            #if active and not image_processing_handler.cross_val_running:
-            if active:
-              has_been_set = image_processing_handler.set_camera_coax_light_bool(set_state)
-              if has_been_set:
-                image_processing_handler.stop_vision_execution = False
-              # Break the for loop
-              break
+          # case "SetCoAxLightBool":
+          #   active = function_parameter['active']
+          #   set_state = function_parameter['set_state']
+          #   #if active and not image_processing_handler.cross_val_running:
+          #   if active:
+          #     has_been_set = image_processing_handler.set_camera_coax_light_bool(set_state)
+          #     if has_been_set:
+          #       image_processing_handler.stop_vision_execution = False
+          #     # Break the for loop
+          #     break
           
-          case "SetCoAxLight":
-            active = function_parameter['active']
-            value = function_parameter['value']
-            #if active and not image_processing_handler.cross_val_running:
-            if active:
-              has_been_set = image_processing_handler.set_camera_coax_light(value)  
-              if has_been_set:
-                image_processing_handler.stop_vision_execution = False
-              # Break the for loop
-              break
+          # case "SetCoAxLight":
+          #   active = function_parameter['active']
+          #   value = function_parameter['value']
+          #   #if active and not image_processing_handler.cross_val_running:
+          #   if active:
+          #     has_been_set = image_processing_handler.set_camera_coax_light(value)  
+          #     if has_been_set:
+          #       image_processing_handler.stop_vision_execution = False
+          #     # Break the for loop
+          #     break
 
-          case "SetRingLight":
-            active = function_parameter['active']
+          # case "SetRingLight":
+          #   active = function_parameter['active']
 
-            bool_list = [function_parameter['enable_Q1'],
-                         function_parameter['enable_Q2'],
-                         function_parameter['enable_Q3'],
-                         function_parameter['enable_Q4']]
+          #   bool_list = [function_parameter['enable_Q1'],
+          #                function_parameter['enable_Q2'],
+          #                function_parameter['enable_Q3'],
+          #                function_parameter['enable_Q4']]
 
-            rgb_list =  [function_parameter['r_value'],
-                         function_parameter['g_value'],
-                         function_parameter['b_value']] 
+          #   rgb_list =  [function_parameter['r_value'],
+          #                function_parameter['g_value'],
+          #                function_parameter['b_value']] 
                   
-            #if active and not image_processing_handler.cross_val_running:
-            if active:
-              has_been_set = image_processing_handler.set_ring_light(bool_list, rgb_list)  
-              if has_been_set:
-                image_processing_handler.stop_vision_execution = False
-              # Break the for loop
-              break
+          #   #if active and not image_processing_handler.cross_val_running:
+          #   if active:
+          #     has_been_set = image_processing_handler.set_ring_light(bool_list, rgb_list)  
+          #     if has_been_set:
+          #       image_processing_handler.stop_vision_execution = False
+          #     # Break the for loop
+          #     break
 
 
           case "Threshold":

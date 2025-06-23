@@ -27,16 +27,16 @@ params:
     description: "tbd"
     type: "unsigned_int"
     min_val: 0
-    max_val: 255
+    max_val: 100
 
   - param_name: "g_value"
     description: "tbd"
     type: "unsigned_int"
     min_val: 0
-    max_val: 255
+    max_val: 100
 
   - param_name: "b_value"
     description: "tbd"
     type: "unsigned_int"
     min_val: 0
-    max_val: 255
+    max_val: 100

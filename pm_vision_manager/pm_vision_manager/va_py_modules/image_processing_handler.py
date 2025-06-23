@@ -59,7 +59,6 @@ class ImageProcessingHandler:
         self.screen_height = 1080
         text_scale = 5 # scale of written text in the images
         line_scale = 2 # scale of lines in the images
-        self.stop_vision_execution = False
         self.vision_routine_done = False
 
         # Init for camera clients
@@ -282,6 +281,9 @@ class ImageProcessingHandler:
 
         if len(prcs_frame.shape) == 2 or (len(prcs_frame.shape) == 3 and prcs_frame.shape[2] == 1):
             prcs_frame = cv2.cvtColor(prcs_frame, cv2.COLOR_GRAY2BGR)
+
+        if len(disp_frame.shape) == 2 or (len(disp_frame.shape) == 3 and disp_frame.shape[2] == 1):
+            disp_frame = cv2.cvtColor(disp_frame, cv2.COLOR_GRAY2BGR)
 
         if self.roi_used:
             x_offset = self.ROI_CS_CV_top_left_x
