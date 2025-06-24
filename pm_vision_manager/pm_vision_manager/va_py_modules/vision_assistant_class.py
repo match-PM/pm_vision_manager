@@ -828,6 +828,19 @@ class VisionProcessClass:
         return process_library_path
 
     @staticmethod
+    def get_camera_libary_path(logger=None)->str:
+        config_file_path = f"{get_package_share_directory('pm_vision_manager')}/vision_assistant_path_config.yaml"
+        camera_library_path = None
+        with open(str(config_file_path), "r") as file:
+            FileData = yaml.safe_load(file)
+            config = FileData["vision_assistant_path_config"]
+            camera_library_path = config["camera_config_path"]
+
+        if logger is not None:
+            logger.debug(f"Process library path: {camera_library_path}")
+        return camera_library_path
+        
+    @staticmethod
     def create_process_folder(process_folder:str,logger=None):
         try:
             process_library_path = VisionProcessClass.get_process_database_path(logger)
@@ -844,7 +857,78 @@ class VisionProcessClass:
             if logger is not None:
                 logger.error(f"Error creating process folder '{process_folder}'! Error: {str(e)}")
             pass     
+
+
+    @staticmethod
+    def correct_camera_pixel_per_um(camera_file_name: str, multiplicator:float, logger: RcutilsLogger = None)->bool:
+        file_path = VisionProcessClass.get_camera_libary_path(logger) + camera_file_name
+
+        try:
+            with open(file_path, "r") as file:
+                FileData = yaml.safe_load(file)
+
+            config = FileData["camera_params"]
+            if "pixelsize" in config:
+                config["pixelsize"] *= multiplicator
+                FileData["camera_params"] = config
+
+                with open(file_path, "w") as file:
+                    yaml.dump(FileData, file)
                 
+                if logger is not None:
+                    logger.info(f"Camera pixel size corrected in {file_path} by a factor of {multiplicator}.")
+                return True
+            else:
+                if logger is not None:
+                    logger.error(f"Camera configuration does not contain 'pixelsize' key in {file_path}.")
+                return False
+            
+        except FileNotFoundError:
+            if logger is not None:
+                logger.error(f"Camera configuration file {file_path} not found!")
+            return False
+        
+        except Exception as e:
+            if logger is not None:
+                logger.error(f"Error correcting camera pixel size in {file_path}! Error: {str(e)}")
+            return False
+
+    @staticmethod
+    def correct_camera_angle(camera_file_name: str, angle_diff:float, logger: RcutilsLogger = None)->bool:
+        file_path = VisionProcessClass.get_camera_libary_path(logger) + camera_file_name
+
+        try:
+            with open(file_path, "r") as file:
+                FileData = yaml.safe_load(file)
+
+            config = FileData["camera_params"]
+            if "camera_axis_1_angle" in config:
+                initial_value = config["camera_axis_1_angle"]
+                config["camera_axis_1_angle"] += angle_diff
+                FileData["camera_params"] = config
+
+                with open(file_path, "w") as file:
+                    yaml.dump(FileData, file)
+                
+                if logger is not None:
+                    logger.info(f"Camera angle corrected in {file_path} by factor of {angle_diff}. Initial value was {initial_value}, new value is {config['camera_axis_1_angle']}.")
+
+                return True
+            else:
+                if logger is not None:
+                    logger.error(f"Camera configuration does not contain 'camera_axis_1_angle' key in {file_path}.")
+                return False
+            
+        except FileNotFoundError:
+            if logger is not None:
+                logger.error(f"Camera configuration file {file_path} not found!")
+            return False
+        
+        except Exception as e:
+            if logger is not None:
+                logger.error(f"Error correcting camera angle in {file_path}! Error: {str(e)}")
+            return False
+
 def main(args=None):
     pass
 

@@ -17,6 +17,8 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/ExecuteVision.srv"
   "srv/DemoSetExposure.srv"
+  "srv/CalibratePixelPerUm.srv"
+  "srv/CalibrateAngle.srv"
   "msg/VisionPoint.msg"
   "msg/CrossValidation.msg"
   "msg/VisionResults.msg"

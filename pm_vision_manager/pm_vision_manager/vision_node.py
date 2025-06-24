@@ -21,7 +21,7 @@ from functools import partial
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from PyQt6.QtGui import QIcon
 
-from pm_vision_interfaces.srv import ExecuteVision
+from pm_vision_interfaces.srv import ExecuteVision, CalibrateAngle, CalibratePixelPerUm
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
 from pm_vision_manager.va_py_modules.vision_utils import get_screen_resolution, image_resize
 
@@ -77,6 +77,20 @@ class VisionNode(Node):
             ExecuteVision,
             f"{self.get_name()}/ExecuteVision",
             self.execute_vision,
+            callback_group=self.callback_group,
+        )
+
+        self.set_pixel_camera_srv = self.create_service(
+            CalibratePixelPerUm,
+            f"{self.get_name()}/SetCameraPixelPerUm",
+            self.set_camera_pixel_per_um,
+            callback_group=self.callback_group,
+        )
+
+        self.set_camera_angle_srv = self.create_service(
+            CalibrateAngle,
+            f"{self.get_name()}/SetCameraAngle",
+            self.set_camera_angle,
             callback_group=self.callback_group,
         )
 
@@ -220,6 +234,39 @@ class VisionNode(Node):
             
             if not check_for_valid_path_config(self.get_logger()):
                 raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            
+    def set_camera_pixel_per_um(self,request: CalibratePixelPerUm.Request, response: CalibratePixelPerUm.Response):
+        """
+        Set the camera pixel per um value in the camera config file.
+        """
+
+        if not check_for_valid_path_config(self.get_logger()):
+            self.get_logger().error("Invalid path configuration!")
+            return False
+        
+        set_success = VisionProcessClass.correct_camera_pixel_per_um(request.camera_config_file_name,
+                                                                    request.multiplicator,
+                                                                    self.get_logger())
+        
+        response.success = set_success
+        return response
+    
+    def set_camera_angle(self, request: CalibrateAngle.Request, response: CalibrateAngle.Response):
+        """
+        Set the camera angle in the camera config file.
+        """
+
+        if not check_for_valid_path_config(self.get_logger()):
+            self.get_logger().error("Invalid path configuration!")
+            return False
+        
+        set_success = VisionProcessClass.correct_camera_angle(request.camera_config_file_name,
+                                                              request.angle_diff,
+                                                              self.get_logger())
+        
+        response.success = set_success
+        
+        return response
             
 def main(args=None):
 
