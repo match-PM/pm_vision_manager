@@ -12,6 +12,8 @@ from pm_vision_manager.va_py_modules.image_modification_functions.extraction_fun
 import time
 
 def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, maxval:int, type:str) -> None:
+  if not image_processing_handler.is_process_image_grayscale():
+    raise ImageNotGrayScaleError("Error in 'threshold'. The input image should be a greyscale image!")
   frame_processed = image_processing_handler.get_processing_image()
   _Command = "cv2." + type
   _,frame_processed = cv2.threshold(frame_processed,thresh,maxval,exec(_Command))
@@ -204,7 +206,16 @@ def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, min
     image_processing_handler.set_vision_ok(False)
 
 
-def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, method: str, max_area:float, min_area:float):
+def selectArea(image_processing_handler: ImageProcessingHandler, 
+               mode:str, 
+               method: str, 
+               max_area:float, 
+               min_area:float,
+               logger=None):
+
+  if not image_processing_handler.is_process_image_grayscale() and not image_processing_handler.is_process_image_binary():
+    raise ValueError("Error in 'select_Area'. Image must be grayscale or binary!")
+
   if max_area < min_area:
     raise ValueError("max_area must be greater than min_area")
   
@@ -233,8 +244,25 @@ def selectArea(image_processing_handler: ImageProcessingHandler, mode:str, metho
   frame_processed = image_processing_handler.get_processing_image()
   _Command_mode = "cv2." + mode
   _Command_method = "cv2." + method
+  
+  #logger.warn(f"in function")
+
+  #logger.warn(f"Image is binary: {image_processing_handler.is_process_image_binary()}")
+  #logger.warn(f"Image is grey: {image_processing_handler.is_process_image_grayscale()}")
+  #logger.warn(f"type {frame_processed.dtype}")
+
+  #logger.warn(f"Image shape: {frame_processed.shape}")
+  #logger.warn(f"Image dtype: {frame_processed.dtype}")
+  #logger.warn(f"Image max: {frame_processed.max()}, min: {frame_processed.min()}")
+
+
+  if frame_processed.dtype != np.uint8:
+    contour_frame = (frame_processed * 255 if frame_processed.max() <= 1 else frame_processed).astype(np.uint8)
+  else:
+    contour_frame = frame_processed
+
   #contours, hierarchy  = cv2.findContours(frame_processed, exec(_Command_mode), exec(_Command_method))  # Keine Ahnung warum das nicht funktioniert!!!
-  contours, hierarchy  = cv2.findContours(frame_processed, mode_val, method_val)
+  contours, hierarchy  = cv2.findContours(contour_frame, mode_val, method_val)
   all_areas= []
   for cnt in contours:
     area= cv2.contourArea(cnt)
@@ -683,62 +711,15 @@ def process_image(vision_node: Node,
       if not image_processing_handler.get_vision_ok():
         # Break the for loop
         break
+      
+      #vision_node.get_logger().warn(f"Image is binary: {image_processing_handler.is_process_image_binary()}")
+      #vision_node.get_logger().warn(f"Image is grey: {image_processing_handler.is_process_image_grayscale()}")
+      #vision_node.get_logger().warn(f"Image is grey: {image_processing_handler.get_processing_image().shape}")
 
       for key, function_parameter in list_item.items():
+        #vision_node.get_logger().warn(f"Key: {(key)}")
+
         match key:
-
-          # case "Set_Camera_Exposure_Time":
-          #   active = function_parameter['active']
-          #   value = function_parameter['value']
-          #   if active and not image_processing_handler.cross_val_running:
-          #     has_been_set = image_processing_handler.set_camera_exposure_time(value)  
-          #     if has_been_set:
-          #       image_processing_handler.stop_vision_execution = False
-          #     # Break the for loop
-          #     break
-          
-          # case "SetCoAxLightBool":
-          #   active = function_parameter['active']
-          #   set_state = function_parameter['set_state']
-          #   #if active and not image_processing_handler.cross_val_running:
-          #   if active:
-          #     has_been_set = image_processing_handler.set_camera_coax_light_bool(set_state)
-          #     if has_been_set:
-          #       image_processing_handler.stop_vision_execution = False
-          #     # Break the for loop
-          #     break
-          
-          # case "SetCoAxLight":
-          #   active = function_parameter['active']
-          #   value = function_parameter['value']
-          #   #if active and not image_processing_handler.cross_val_running:
-          #   if active:
-          #     has_been_set = image_processing_handler.set_camera_coax_light(value)  
-          #     if has_been_set:
-          #       image_processing_handler.stop_vision_execution = False
-          #     # Break the for loop
-          #     break
-
-          # case "SetRingLight":
-          #   active = function_parameter['active']
-
-          #   bool_list = [function_parameter['enable_Q1'],
-          #                function_parameter['enable_Q2'],
-          #                function_parameter['enable_Q3'],
-          #                function_parameter['enable_Q4']]
-
-          #   rgb_list =  [function_parameter['r_value'],
-          #                function_parameter['g_value'],
-          #                function_parameter['b_value']] 
-                  
-          #   #if active and not image_processing_handler.cross_val_running:
-          #   if active:
-          #     has_been_set = image_processing_handler.set_ring_light(bool_list, rgb_list)  
-          #     if has_been_set:
-          #       image_processing_handler.stop_vision_execution = False
-          #     # Break the for loop
-          #     break
-
 
           case "Threshold":
             active = function_parameter['active']
@@ -871,7 +852,8 @@ def process_image(vision_node: Node,
                           mode=p_mode,
                           method=p_method,
                           max_area=p_max_area,
-                          min_area=p_min_area)
+                          min_area=p_min_area,
+                          logger=vision_node.get_logger())
 
           case "Morphology_Ex_Opening":
             active = function_parameter['active']
@@ -1085,7 +1067,7 @@ def process_image(vision_node: Node,
 
   except Exception as e:
     vision_node.get_logger().fatal("Fatal Error in vision function! Contact maintainer!")
-    vision_node.get_logger().fatal(e)
+    vision_node.get_logger().fatal(str(e))
   
   #finally: 
   image_processing_handler.init_results()

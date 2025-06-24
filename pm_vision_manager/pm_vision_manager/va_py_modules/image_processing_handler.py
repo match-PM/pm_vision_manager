@@ -212,13 +212,30 @@ class ImageProcessingHandler:
             return False  # Color image
         #elif len(self._processing_image.shape) == 3 and self._processing_image.shape[2] == 3:
 
-    def is_process_image_binary(self)->bool:
-        unique_values = np.unique(self._processing_image)
-        print(unique_values)
-        if len(unique_values) <= 2:
-            return True  # Binary image
-        else:
+    def is_process_image_binary(self) -> bool:
+        image = self._processing_image
+
+        # 1. Check if image is single-channel (2D)
+        if image.ndim != 2:
+            print("Image is not single-channel")
             return False
+
+        # 2. Check if dtype is uint8
+        if image.dtype != np.uint8:
+            print("Image is not uint8")
+            return False
+
+        # 3. Get unique values
+        unique_values = np.unique(image)
+        print("Unique values:", unique_values)
+
+        # 4. Accept if it's either {0}, {255}, or {0, 255}
+        binary_values = {0, 255}
+        if set(unique_values).issubset(binary_values):
+            return True
+
+        return False
+
         
     def set_cross_val_running(self, bool_value:bool):
         self.cross_val_running = bool_value
@@ -342,7 +359,7 @@ class ImageProcessingHandler:
         Origin of the image cs is the center of the image.
         ROI is not considered in this method.
         """
-        if self.camera_axis_2_angle == "-":
+        if self.camera_axis_2_angle == "++":
             y_val_c = -y_val_c
         x_val_i = x_val_c * math.cos(
             2 * pi - vu.degrees_to_rads(self.camera_axis_1_angle)
@@ -364,7 +381,7 @@ class ImageProcessingHandler:
         y_val_c = -x_val_i * math.sin(
             vu.degrees_to_rads(self.camera_axis_1_angle)
         ) + y_val_i * math.cos(vu.degrees_to_rads(self.camera_axis_1_angle))
-        if self.camera_axis_2_angle == "-":
+        if self.camera_axis_2_angle == "++":
             y_val_c = -y_val_c
         return x_val_c, y_val_c
     

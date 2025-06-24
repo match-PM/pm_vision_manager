@@ -256,7 +256,7 @@ class VisionProcessClass:
         if not self.launch_as_assistant:
             self.vision_node.get_logger().info("Starting watchdog for image topic with timeout of 10s...")
             self.timer_active = True
-            self.topic_timer = self.vision_node.create_timer(10, self._image_topic_watchdog, callback_group=self.callback_group_RE)
+            self.topic_timer = self.vision_node.create_timer(20, self._image_topic_watchdog, callback_group=self.callback_group_RE)
 
         return True
     
