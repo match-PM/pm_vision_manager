@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QScrollArea, QMenuBar, QMenu, QDialog, QHBoxLayout, QInputDialog, QTreeWidget, QTreeWidgetItem, QApplication, QGridLayout, QFrame, QMainWindow, QListWidget, QListWidgetItem, QDoubleSpinBox, QWidget, QVBoxLayout, QPushButton, QCheckBox, QLineEdit, QComboBox, QTextEdit,QLabel,QSlider, QSpinBox, QFontDialog, QFileDialog
+from PyQt6.QtWidgets import QScrollArea, QMenuBar, QMessageBox, QMenu, QDialog, QHBoxLayout, QInputDialog, QTreeWidget, QTreeWidgetItem, QApplication, QGridLayout, QFrame, QMainWindow, QListWidget, QListWidgetItem, QDoubleSpinBox, QWidget, QVBoxLayout, QPushButton, QCheckBox, QLineEdit, QComboBox, QTextEdit,QLabel,QSlider, QSpinBox, QFontDialog, QFileDialog
 import os
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QAction
@@ -30,8 +30,8 @@ class MainMenuWidget(QWidget):
         self.main_layout = QGridLayout()
         #self.running_assistans_widget = QListWidget()
         #self.vision_processes_widget = QListWidget()
-        self.vision_processes_widget = QTreeWidget()
-        self.vision_processes_widget.setHeaderHidden(True)
+        self.vision_processes_widget = DraggableTreeWidget(logger=self.node.get_logger())
+
         self.camera_configs_widget = QListWidget()
         # add button
         #self.stop_assistant_button = QPushButton("Stop Vision Assistant")
@@ -188,7 +188,69 @@ class MainMenuWidget(QWidget):
                         files.append(os.path.relpath(os.path.join(foldername, filename), directory))
         return files
     
+class DraggableTreeWidget(QTreeWidget):
+    def __init__(self, logger, parent=None):
+        super().__init__(parent)
+        self.setHeaderHidden(True)
+        self.setDragEnabled(True)
+        #self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
+        #self.vision_processes_widget.setDefaultDropAction(Qt.DropAction.MoveAction)
+        self.setDragDropMode(QTreeWidget.DragDropMode.DragDrop)        
+        self.setDefaultDropAction(Qt.DropAction.ActionMask)
+        self.logger = logger
 
+    def dropEvent(self, event):
+        target_item = self.itemAt(event.position().toPoint())
+        source_item = self.currentItem()
+
+        if source_item and target_item:
+            source_path = self.get_full_path(source_item)
+            target_path = self.get_full_path(target_item)
+
+            if not source_path.endswith('.json') or not target_path.endswith('.json'):
+                self.logger.warn("Drag and drop only allowed between .json files")
+                return
+
+            if source_path == target_path:
+                self.logger.warn("Cannot drop onto the same file.")
+                return
+
+            # ✅ Ask for confirmation
+            reply = QMessageBox.question(
+                self,
+                "Copy Vision Pipeline",
+                f"Do you want to copy the contents of:\n\n{source_path}\n\ninto:\n\n{target_path}?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+
+            if reply == QMessageBox.StandardButton.Yes:
+                self.logger.warn(f"Copying '{source_path}' into '{target_path}'")
+                copy_success = VisionProcessClass.copy_vision_pipeline_from_file_to_file(
+                    source_path, target_path, self.logger
+                )
+            else:
+                self.logger.warn("Copy cancelled by user.")
+                return  # Don't proceed with UI drop
+
+        event.ignore()  # prevent Qt from changing tree structure
+
+    def startDrag(self, supported_actions):
+        current = self.currentItem()
+        if current:
+            path = self.get_full_path(current)
+            if not path.endswith('.json'):
+                self.logger.warn("Only .json files can be dragged")
+                return  # Prevent dragging
+        super().startDrag(supported_actions)
+
+    def get_full_path(self, item):
+        parts = []
+        while item:
+            parts.insert(0, item.text(0))
+            item = item.parent()
+        return os.path.join(*parts)
+    
 class DummyMain(QMainWindow):
 
     def __init__(self, node:Node):

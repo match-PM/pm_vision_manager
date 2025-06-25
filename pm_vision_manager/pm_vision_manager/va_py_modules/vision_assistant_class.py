@@ -928,6 +928,49 @@ class VisionProcessClass:
             if logger is not None:
                 logger.error(f"Error correcting camera angle in {file_path}! Error: {str(e)}")
             return False
+        
+    @staticmethod
+    def copy_vision_pipeline_from_file_to_file(source_file_path: str, destination_file_path: str, logger: RcutilsLogger = None) -> bool:
+        """
+        Copies the vision pipeline from one file to another.
+        :param source_file_path: The path to the source file.
+        :param destination_file_path: The path to the destination file.
+        :param logger: Optional logger for logging messages.
+        :return: True if successful, False otherwise.
+        """
+        try:
+            process_library_path = VisionProcessClass.get_process_database_path(logger)
+            source_file_path = os.path.join(process_library_path, source_file_path)
+            destination_file_path = os.path.join(process_library_path, destination_file_path)
+            
+            with open(source_file_path, "r") as source_file:
+                source_data = json.load(source_file)
+
+            # Extract the vision pipeline
+            vision_pipeline = source_data.get("vision_pipeline", [])
+            
+            # Load existing data from destination file if it exists
+            if os.path.exists(destination_file_path):
+                with open(destination_file_path, "r") as dest_file:
+                    dest_data = json.load(dest_file)
+            else:
+                dest_data = {}
+
+            # Update the destination data with the vision pipeline
+            dest_data["vision_pipeline"] = vision_pipeline
+
+            # Write the updated data back to the destination file
+            with open(destination_file_path, "w") as dest_file:
+                json.dump(dest_data, dest_file, indent=4)
+
+            if logger is not None:
+                logger.info(f"Vision pipeline copied from {source_file_path} to {destination_file_path}.")
+            return True
+
+        except Exception as e:
+            if logger is not None:
+                logger.error(f"Error copying vision pipeline from {source_file_path} to {destination_file_path}! Error: {str(e)}")
+            return False
 
 def main(args=None):
     pass
