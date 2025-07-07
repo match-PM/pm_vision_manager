@@ -38,6 +38,17 @@ def fitLine_pre(image_processing_handler: ImageProcessingHandler, line_selection
   canvas = image_processing_handler.get_visual_elements_canvas()  
   # Draw detected lines on the original image
 
+
+  # # draw lines
+  # if lines is not None:
+  #   for line in lines:
+  #       x1, y1, x2, y2 = line[0]
+  #       cv2.line(canvas, (x1, y1), (x2, y2), (0, 255, 0), 2)
+  # image_processing_handler.apply_visual_elements_canvas(canvas)
+
+  # logger.warn(f"Found {len(lines)} lines!")
+
+
   if lines is not None:
 
     # calculate delas of x1 and x2
@@ -47,6 +58,7 @@ def fitLine_pre(image_processing_handler: ImageProcessingHandler, line_selection
     logger.debug(f"{(deltas_x)} are the deltas x!")
     logger.debug(f"{(deltas_y)} are the deltas y!")
 
+    # calculate if the delta_x - delta_y which says if the line is more vertical or horizontal
     delta_deltas = [delta_x - delta_y for delta_x, delta_y in zip(deltas_x, deltas_y)]
 
     logger.debug(f"{(delta_deltas)} are the delta deltas!")
@@ -55,9 +67,9 @@ def fitLine_pre(image_processing_handler: ImageProcessingHandler, line_selection
     horizontal_lines_indicies = [idx for idx, value in enumerate(delta_deltas) if value >= 0]
     vertical_lines_indicies = [idx for idx, value in enumerate(delta_deltas) if value < 0]
 
-    #if logger:
-    #  logger.info(f"{(horizontal_lines_indicies)} are horizontal lines!")
-    #  logger.info(f"{(vertical_lines_indicies)} are vertical lines!")
+    if logger:
+      logger.debug(f"{(horizontal_lines_indicies)} are horizontal lines!")
+      logger.debug(f"{(vertical_lines_indicies)} are vertical lines!")
 
     # calculate midpoints of horizontal lines
     midpoints_horizontal = [((line[0][0] + line[0][2]) / 2, (line[0][1] + line[0][3]) / 2) for idx, line in enumerate(lines) if idx in horizontal_lines_indicies]
@@ -118,35 +130,41 @@ def fitLine_pre(image_processing_handler: ImageProcessingHandler, line_selection
     selected_line = None
 
     #logger.error(f"{(line_selection)} is the line selection!")
+    #ind
+
+    logger.warn(f"Found {len(left_vert_mid_ind)} left vertical lines!")
+    logger.warn(f"Found {len(right_vert_mid_ind)} right vertical lines!")
+    logger.warn(f"Found {len(top_hor_mid_ind)} top horizontal lines!")
+    logger.warn(f"Found {len(bottom_hor_mid_ind)} bottom horizontal lines!")
 
     match line_selection:
       case "left":
         if left_vert_mid_ind:
           line_ind_left_vertical = vertical_lines_indicies[left_vert_mid_ind[0]]
           selected_line = lines[line_ind_left_vertical]
-          #logger.error("Found line according to 'left' selection")
-          #logger.error(f"Found {len(left_vert_mid_ind)} left vertical lines!")
+          logger.error("Found line according to 'left' selection")
+          logger.error(f"Found {len(left_vert_mid_ind)} left vertical lines!")
       case "right":
-        logger.error("right")
+        #logger.error("right")
         if right_vert_mid_ind:
           line_ind_right_vertical = vertical_lines_indicies[right_vert_mid_ind[0]]
           selected_line = lines[line_ind_right_vertical]
-          #logger.error("Found line according to 'right' selection")
-          #logger.error(f"Found {len(right_vert_mid_ind)} right vertical lines!")
+          logger.error("Found line according to 'right' selection")
+          logger.error(f"Found {len(right_vert_mid_ind)} right vertical lines!")
 
       case "top":
         if top_hor_mid_ind:
           line_ind_top_horizontal = horizontal_lines_indicies[top_hor_mid_ind[0]]
           selected_line = lines[line_ind_top_horizontal]
-          #logger.error("Found line according to 'top' selection")
-          #logger.error(f"Found {len(top_hor_mid_ind)} top horizontal lines!")
+          logger.error("Found line according to 'top' selection")
+          logger.error(f"Found {len(top_hor_mid_ind)} top horizontal lines!")
 
       case "bottom":
         if bottom_hor_mid_ind:
           line_ind_bottom_horizontal = horizontal_lines_indicies[bottom_hor_mid_ind[0]]
           selected_line = lines[line_ind_bottom_horizontal]
-          #logger.error("Found line according to 'bottom' selection")
-          #logger.error(f"Found {len(bottom_hor_mid_ind)} bottom horizontal lines!")
+          logger.error("Found line according to 'bottom' selection")
+          logger.error(f"Found {len(bottom_hor_mid_ind)} bottom horizontal lines!")
 
     if selected_line is not None:
       #logger.warn("Drawing selected line")
@@ -160,7 +178,7 @@ def fitLine_pre(image_processing_handler: ImageProcessingHandler, line_selection
 
   else:
     if logger:
-      logger.error("No lines detected")
+      logger.error("No lines detected. Hough lines found no lines")
     return None
 
 def fitLine(image_processing_handler: ImageProcessingHandler, line_selection: str, search_accuracy: str, minLineLength:int, logger = None):
@@ -264,6 +282,9 @@ def cornerDetection(image_processing_handler: ImageProcessingHandler,
   x = result[0]
   y = result[1]
 
+  logger.error(f"intersection {x}, {y}!")
+
+
   # check if x,y out of bounds
   if x < 0 or x > image_processing_handler.get_processing_image().shape[1] or y < 0 or y > image_processing_handler.get_processing_image().shape[0]:
     if logger:
@@ -276,6 +297,8 @@ def cornerDetection(image_processing_handler: ImageProcessingHandler,
   cv2.drawMarker(canvas, (int(x), int(y)), (0, 0, 255), markerType=cv2.MARKER_CROSS, markerSize=50, thickness=2)
   
   x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x,y)
+  logger.error(f"intersection {x_cs_camera}, {y_cs_camera}!")
+
   point = image_processing_handler.new_vision_point_result()
   point.axis_value_1 = x_cs_camera
   point.axis_value_2 = y_cs_camera

@@ -375,14 +375,16 @@ class ImageProcessingHandler:
         Origin of the image cs is the center of the image.
         ROI is not considered in this method.
         """
-        x_val_c = x_val_i * math.cos(
-            vu.degrees_to_rads(self.camera_axis_1_angle)
-        ) + y_val_i * math.sin(vu.degrees_to_rads(self.camera_axis_1_angle))
-        y_val_c = -x_val_i * math.sin(
-            vu.degrees_to_rads(self.camera_axis_1_angle)
-        ) + y_val_i * math.cos(vu.degrees_to_rads(self.camera_axis_1_angle))
+        x_val_c = x_val_i * math.cos(vu.degrees_to_rads(self.camera_axis_1_angle)) + y_val_i * math.sin(vu.degrees_to_rads(self.camera_axis_1_angle))
+        y_val_c = -x_val_i * math.sin(vu.degrees_to_rads(self.camera_axis_1_angle)) + y_val_i * math.cos(vu.degrees_to_rads(self.camera_axis_1_angle))
         if self.camera_axis_2_angle == "++":
             y_val_c = -y_val_c
+
+        if self.camera_axis_2_angle == "-":
+
+            if self.logger:
+                self.logger.error("Using '-' for camera angle setting is deprecated. Use '++' instead!")
+            
         return x_val_c, y_val_c
     
     def CS_Image_TO_Pixel(self, x_val_i, y_val_i):
@@ -407,12 +409,19 @@ class ImageProcessingHandler:
         This is the method you should use when calculating camera coordinates. 
         """
         x_tl, y_tl = self.CS_Conv_ROI_Pix_TO_Img_Pix(x_value, y_value)
-        x_center_pix, y_center_pix = self.CS_Conv_Pixel_Top_Left_TO_Center(
-            self.img_width, self.img_height, x_tl, y_tl
-        )
+
+        x_center_pix, y_center_pix = self.CS_Conv_Pixel_Top_Left_TO_Center(self.img_width, self.img_height, x_tl, y_tl)
+
         x_center_image_um, y_center_image_um = self.CS_Pixel_TO_Image(x_center_pix, y_center_pix)
 
         x_cs_camera, y_cs_camera = self.CS_Image_TO_Camera(x_center_image_um, y_center_image_um)
+
+        if self.logger:
+            self.logger.debug(f"x_tl: {x_tl}, y_tl_ {y_tl}")
+            self.logger.debug(f"x_center_pix: {x_center_pix}, y_center_pix {y_center_pix}")
+            self.logger.debug(f"x_center_image_um: {x_center_image_um}, y_center_image_um {y_center_image_um}")
+            self.logger.debug(f"x_cs_camera: {x_cs_camera}, y_cs_camera {y_cs_camera}")
+
 
         return x_cs_camera, y_cs_camera
     
