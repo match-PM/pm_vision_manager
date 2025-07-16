@@ -15,15 +15,15 @@ def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, max
   if not image_processing_handler.is_process_image_grayscale():
     raise ImageNotGrayScaleError("Error in 'threshold'. The input image should be a greyscale image!")
   frame_processed = image_processing_handler.get_processing_image()
-  _Command = "cv2." + type
-  _,frame_processed = cv2.threshold(frame_processed,thresh,maxval,exec(_Command))
+  _Command = getattr(cv2, type)
+  _,frame_processed = cv2.threshold(frame_processed,thresh,maxval,_Command)
   image_processing_handler.set_processing_image(frame_processed)
 
 def adaptiveThreshold(image_processing_handler: ImageProcessingHandler, maxValue, adaptiveMethod, thresholdType, blockSize, cValue):
-  _Command_adaptiveMethod = "cv2." + adaptiveMethod
-  _Command_thresholdType = "cv2." + thresholdType
+  _Command_adaptiveMethod = getattr(cv2, adaptiveMethod)
+  _Command_thresholdType = getattr(cv2, thresholdType)
   frame_processed  = image_processing_handler.get_processing_image()
-  frame_processed = cv2.adaptiveThreshold(frame_processed, maxValue, exec(_Command_adaptiveMethod), exec(_Command_thresholdType), blockSize, cValue)
+  frame_processed = cv2.adaptiveThreshold(frame_processed, maxValue, _Command_adaptiveMethod, _Command_thresholdType, blockSize, cValue)
   image_processing_handler.set_processing_image(frame_processed)
 
 def bitwise_not(image_processing_handler: ImageProcessingHandler):
