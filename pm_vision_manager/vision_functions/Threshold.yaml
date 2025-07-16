@@ -28,3 +28,4 @@ params:
       - "THRESH_TRUNC"
       - "THRESH_TOZERO"
       - "THRESH_TOZERO_INV"
+      - "THRESH_OTSU"
