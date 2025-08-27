@@ -22,6 +22,10 @@ def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, max
 def adaptiveThreshold(image_processing_handler: ImageProcessingHandler, maxValue, adaptiveMethod, thresholdType, blockSize, cValue):
   _Command_adaptiveMethod = getattr(cv2, adaptiveMethod)
   _Command_thresholdType = getattr(cv2, thresholdType)
+
+  if not image_processing_handler.is_process_image_grayscale():
+    raise ImageNotGrayScaleError("Error in 'threshold'. The input image should be a greyscale image!")
+  
   frame_processed  = image_processing_handler.get_processing_image()
   frame_processed = cv2.adaptiveThreshold(frame_processed, maxValue, _Command_adaptiveMethod, _Command_thresholdType, blockSize, cValue)
   image_processing_handler.set_processing_image(frame_processed)
@@ -96,23 +100,262 @@ def canny(image_processing_handler: ImageProcessingHandler, threshold1, threshol
   image_processing_handler.set_processing_image(frame_processed)
 
 
-def findContours(image_processing_handler: ImageProcessingHandler, draw_contours:bool, mode:str, method:str, fill:bool):
-  if not image_processing_handler.is_process_image_grayscale():
-    raise ImageNotGrayScaleError()
-  _Command_mode = "cv2." + mode
-  _Command_method = "cv2." + method
-  #contours, hierarchy  = cv2.findContours(frame_processed, exec(_Command_mode), exec(_Command_method))  # Keine Ahnung warum das nicht funktioniert!!!
-  frame_processed = image_processing_handler.get_processing_image()
-  contours, hierarchy  = cv2.findContours(frame_processed, exec(_Command_mode), cv2.CHAIN_APPROX_SIMPLE)
-  if fill:
-    cv2.fillPoly(frame_processed,pts=contours,color=(255,255,255))
-      
-  if draw_contours:
-    canvas = image_processing_handler.get_visual_elements_canvas()
-    cv2.drawContours(canvas, contours, -1, (0,255,75), 2)
-    image_processing_handler.apply_visual_elements_canvas(canvas)
+def fill_area(image_processing_handler: ImageProcessingHandler,
+                 draw_contours: bool,
+                 mode: str,
+                 method: str,
+                 white_padding_top: bool,
+                 white_padding_left: bool,
+                 white_padding_bottom: bool,
+                 white_padding_right: bool,
+                 logger=None):
+    
+    if not image_processing_handler.is_process_image_grayscale():
+        raise ImageNotGrayScaleError("Error in 'fillArea'. Image must be grayscale!")
 
-  image_processing_handler.set_processing_image(frame_processed)
+    # Select mode
+    mode_map = {
+        "RETR_EXTERNAL": cv2.RETR_EXTERNAL,
+        "RETR_LIST": cv2.RETR_LIST,
+        "RETR_CCOMP": cv2.RETR_CCOMP,
+        "RETR_TREE": cv2.RETR_TREE,
+        "RETR_FLOODFILL": cv2.RETR_FLOODFILL
+    }
+    if mode not in mode_map:
+        raise ValueError("Invalid mode: " + mode)
+    mode_val = mode_map[mode]
+
+    # Select method
+    method_map = {
+        "CHAIN_APPROX_SIMPLE": cv2.CHAIN_APPROX_SIMPLE,
+        "CHAIN_APPROX_NONE": cv2.CHAIN_APPROX_NONE,
+        "CHAIN_APPROX_TC89_L1": cv2.CHAIN_APPROX_TC89_L1,
+        "CHAIN_APPROX_TC89_KCOS": cv2.CHAIN_APPROX_TC89_KCOS
+    }
+    if method not in method_map:
+        raise ValueError("Invalid method: " + method)
+    method_val = method_map[method]
+
+    # Get the processed image
+    frame_processed = image_processing_handler.get_processing_image()
+
+    # Add a 1-pixel black border
+    #padded = cv2.copyMakeBorder(frame_processed, 1, 1, 1, 1, cv2.BORDER_CONSTANT, value=0)
+
+    frame_processed = fill_white_gaps_on_border(frame_processed, top=True, bottom=True, left=True, right=True)
+
+    frame_processed = fill_white_gaps_on_border_advanced(frame_processed, 
+                                                        top=white_padding_top, 
+                                                        bottom=white_padding_bottom, 
+                                                        left=white_padding_left, 
+                                                        right=white_padding_right)
+
+    # Find contours on padded image
+    contours, hierarchy = cv2.findContours(frame_processed, mode_val, method_val)
+
+    # Fill detected contours on padded image
+    cv2.drawContours(frame_processed, contours, -1, (255, 255, 255), thickness=cv2.FILLED)
+
+    frame_processed = add_black_border(frame_processed, border_size=1)
+
+    # Draw contours on visualization canvas
+    if draw_contours:
+        canvas = image_processing_handler.get_visual_elements_canvas()
+
+        # NOTE: Draw contours relative to padded image
+        #cv2.drawContours(canvas, [c - [1, 1] for c in contours], -1, (0, 255, 75), 2)
+        cv2.drawContours(canvas, contours, -1, (0, 255, 75), 2)
+
+        image_processing_handler.apply_visual_elements_canvas(canvas)
+
+    # Save the updated image
+    image_processing_handler.set_processing_image(frame_processed)
+
+
+def fill_white_gaps_on_border(image: np.ndarray,
+                            top=True,
+                            bottom=True,
+                            left=True,
+                            right=True) -> np.ndarray:
+  """
+  Fills gaps between white pixels along the selected image borders.
+  The image size remains unchanged.
+
+  Args:
+      image (np.ndarray): Grayscale image (0=black, 255=white).
+      top, bottom, left, right (bool): Select which borders to process.
+
+  Returns:
+      np.ndarray: Image with gaps filled on the selected borders.
+  """
+  # Ensure grayscale
+  if len(image.shape) != 2:
+      raise ValueError("Image must be grayscale")
+
+  # Copy so we don't modify the original image in-place
+  filled = image.copy()
+  height, width = filled.shape
+
+  # --- Process Top Border ---
+  if top:
+      row = filled[0, :]  # first row
+      white_indices = np.where(row == 255)[0]
+      if len(white_indices) > 1:
+          start = white_indices.min()
+          end = white_indices.max()
+          filled[0, start:end + 1] = 255
+
+  # --- Process Bottom Border ---
+  if bottom:
+      row = filled[-1, :]  # last row
+      white_indices = np.where(row == 255)[0]
+      if len(white_indices) > 1:
+          start = white_indices.min()
+          end = white_indices.max()
+          filled[-1, start:end + 1] = 255
+
+  # --- Process Left Border ---
+  if left:
+      col = filled[:, 0]  # first column
+      white_indices = np.where(col == 255)[0]
+      if len(white_indices) > 1:
+          start = white_indices.min()
+          end = white_indices.max()
+          filled[start:end + 1, 0] = 255
+
+  # --- Process Right Border ---
+  if right:
+      col = filled[:, -1]  # last column
+      white_indices = np.where(col == 255)[0]
+      if len(white_indices) > 1:
+          start = white_indices.min()
+          end = white_indices.max()
+          filled[start:end + 1, -1] = 255
+
+  return filled
+
+def fill_white_gaps_on_border_advanced(image: np.ndarray,
+                                      top=True,
+                                    bottom=True,
+                                    left=True,
+                                    right=True) -> np.ndarray:
+  """
+  Connects white pixel segments along the image border in a counterclockwise manner,
+  filling gaps only on the enabled sides. The image size remains unchanged.
+
+  Args:
+      image (np.ndarray): Grayscale image (0=black, 255=white).
+      top, bottom, left, right (bool): Select which borders to process.
+
+  Returns:
+      np.ndarray: Image with gaps filled on the selected borders.
+  """
+  # Ensure grayscale
+  if len(image.shape) != 2:
+      raise ValueError("Image must be grayscale")
+
+  filled = image.copy()
+  h, w = filled.shape
+
+  # Collect the border coordinates in counterclockwise order
+  border_coords = []
+
+  # Top row (left → right)
+  if top:
+      border_coords.extend([(0, x) for x in range(w)])
+  else:
+      border_coords.extend([(0, x) for x in range(w)])  # still needed for continuity but won't fill
+
+  # Right column (top → bottom, excluding first pixel to avoid duplication)
+  if right:
+      border_coords.extend([(y, w - 1) for y in range(1, h)])
+  else:
+      border_coords.extend([(y, w - 1) for y in range(1, h)])
+
+  # Bottom row (right → left, excluding corner pixel)
+  if bottom:
+      border_coords.extend([(h - 1, x) for x in range(w - 2, -1, -1)])
+  else:
+      border_coords.extend([(h - 1, x) for x in range(w - 2, -1, -1)])
+
+  # Left column (bottom → top, excluding both corners)
+  if left:
+      border_coords.extend([(y, 0) for y in range(h - 2, 0, -1)])
+  else:
+      border_coords.extend([(y, 0) for y in range(h - 2, 0, -1)])
+
+  # Get all indices where we have white pixels on the border
+  white_indices = [i for i, (y, x) in enumerate(border_coords) if filled[y, x] == 255]
+
+  if len(white_indices) < 2:
+      # Nothing to connect
+      return filled
+
+  # Traverse white indices counterclockwise and connect gaps if allowed
+  for i in range(len(white_indices) - 1):
+      start_idx = white_indices[i]
+      end_idx = white_indices[i + 1]
+
+      # Get coordinates along the path between start and end
+      segment = border_coords[start_idx:end_idx + 1]
+
+      # Check if at least one pixel in the segment lies on an enabled border
+      can_fill = False
+      for (y, x) in segment:
+          if (y == 0 and top) or (y == h - 1 and bottom) or (x == 0 and left) or (x == w - 1 and right):
+              can_fill = True
+              break
+
+      # If filling is allowed → set pixels to white
+      if can_fill:
+          for (y, x) in segment:
+              if (y == 0 and top) or (y == h - 1 and bottom) or (x == 0 and left) or (x == w - 1 and right):
+                  filled[y, x] = 255
+
+  # Also connect the last white region back to the first (closing the loop)
+  first_idx = white_indices[0]
+  last_idx = white_indices[-1]
+  wrap_segment = border_coords[last_idx:] + border_coords[:first_idx + 1]
+
+  can_fill = False
+  for (y, x) in wrap_segment:
+      if (y == 0 and top) or (y == h - 1 and bottom) or (x == 0 and left) or (x == w - 1 and right):
+          can_fill = True
+          break
+
+  if can_fill:
+      for (y, x) in wrap_segment:
+          if (y == 0 and top) or (y == h - 1 and bottom) or (x == 0 and left) or (x == w - 1 and right):
+              filled[y, x] = 255
+
+  return filled
+
+def add_black_border(image: np.ndarray, border_size: int = 1) -> np.ndarray:
+    """
+    Draws a black border INSIDE the image without changing its size.
+
+    Args:
+        image (np.ndarray): Input image (grayscale or color).
+        border_size (int): Thickness of the border in pixels.
+
+    Returns:
+        np.ndarray: Image with black border drawn inside.
+    """
+    if border_size < 1:
+        raise ValueError("Border size must be at least 1 pixel")
+    
+    bordered_image = image.copy()
+    
+    # Top border
+    bordered_image[:border_size, :] = 0
+    # Bottom border
+    bordered_image[-border_size:, :] = 0
+    # Left border
+    bordered_image[:, :border_size] = 0
+    # Right border
+    bordered_image[:, -border_size:] = 0
+
+    return bordered_image
 
 def minEnclosingCircle(image_processing_handler: ImageProcessingHandler, draw_circles:bool, mode:str, method:str,line_size:int):
   if not image_processing_handler.is_process_image_grayscale():
@@ -205,12 +448,55 @@ def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, min
   else:
     image_processing_handler.set_vision_ok(False)
 
+def imageSharpness(image_processing_handler: ImageProcessingHandler, 
+                   method: str, 
+                   logger = None):
+  
+  image = image_processing_handler.get_processing_image()
+
+  image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if len(image.shape) == 3 else image
+  score = 0.0
+
+  if method == "Laplacian Var":
+    laplacian = cv2.Laplacian(image, cv2.CV_64F)
+    # Calculate variance of Laplacian → sharpness score
+    score = laplacian.var()
+
+  elif method == "Tenengrad":
+    # Compute gradients using Sobel operator
+    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
+    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+    # Calculate the gradient magnitude
+    gradient_magnitude = np.sqrt(sobel_x**2 + sobel_y**2)
+    # Compute the sharpness score as the mean of the gradient magnitudes
+    score = np.mean(gradient_magnitude)
+
+  elif method == "Brenner":
+    # Compute the Brenner gradient
+    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
+    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+    score = np.sum(sobel_x**2 + sobel_y**2)
+
+  elif method == "FFT-Based":
+    # Compute the FFT and use the magnitude spectrum
+    f = np.fft.fft2(image)
+    fshift = np.fft.fftshift(f)
+    magnitude_spectrum = np.abs(fshift)
+    score = np.mean(magnitude_spectrum)
+  else:
+    raise ValueError("Invalid method: " + method)
+
+  if logger:
+    logger.info(f"Image sharpness ({method}): {score}")
+
+  image_processing_handler.set_image_sharpness(score)
 
 def selectArea(image_processing_handler: ImageProcessingHandler, 
                mode:str, 
                method: str, 
                max_area:float, 
                min_area:float,
+               use_roi_percent: bool,
                logger=None):
 
   if not image_processing_handler.is_process_image_grayscale() and not image_processing_handler.is_process_image_binary():
@@ -271,7 +557,11 @@ def selectArea(image_processing_handler: ImageProcessingHandler,
   area_found = False
 
   #print(all_areas)
-  image_area = frame_processed.shape[0]*frame_processed.shape[1]
+  if use_roi_percent:
+      image_area = frame_processed.shape[0]*frame_processed.shape[1]
+  else:
+      image_area = image_processing_handler.img_width*image_processing_handler.img_height
+
   #print(image_area)
   max_area = max_area*image_area/100
   min_area = min_area*image_area/100
@@ -789,19 +1079,35 @@ def process_image(vision_node: Node,
                       L2gradient=p_L2gradient,
                       logger = vision_node.get_logger())
                 
-          case "FindContours":
+          case "FillArea":
             active = function_parameter['active']
             p_draw_contours = function_parameter['draw_contours']
             p_mode = function_parameter['mode']
             p_method = function_parameter['method']
-            p_fill = function_parameter['fill']
+            p_white_padding_top = function_parameter['white_padding_top']
+            p_white_padding_left = function_parameter['white_padding_left']
+            p_white_padding_bottom = function_parameter['white_padding_bottom']
+            p_white_padding_right = function_parameter['white_padding_right']
 
             if active:
-              findContours(image_processing_handler=image_processing_handler,
+              fill_area(image_processing_handler=image_processing_handler,
                             draw_contours=p_draw_contours,
                             mode=p_mode,
                             method=p_method,
-                            fill=p_fill)
+                            white_padding_top=p_white_padding_top,
+                            white_padding_left=p_white_padding_left,
+                            white_padding_bottom=p_white_padding_bottom,
+                            white_padding_right=p_white_padding_right,
+                            logger=vision_node.get_logger())
+              
+
+          case "ImageSharpness":
+            active = function_parameter['active']
+            p_method = function_parameter['method']
+            if active:
+              imageSharpness(image_processing_handler=image_processing_handler,
+                             method=p_method,
+                             logger=vision_node.get_logger())
 
           case "MinEnclosingCircle":
             active = function_parameter['active']
@@ -847,12 +1153,14 @@ def process_image(vision_node: Node,
             p_method = function_parameter['method']
             p_max_area = function_parameter['max_area']
             p_min_area = function_parameter['min_area']
+            p_use_roi_percent = function_parameter['use_roi_percent']
             if active:
               selectArea(image_processing_handler=image_processing_handler,
                           mode=p_mode,
                           method=p_method,
                           max_area=p_max_area,
                           min_area=p_min_area,
+                          use_roi_percent=p_use_roi_percent,
                           logger=vision_node.get_logger())
 
           case "Morphology_Ex_Opening":

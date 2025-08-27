@@ -15,7 +15,11 @@ params:
       - "RETR_EXTERNAL"
       - "RETR_CCOMP"
       - "RETR_TREE"
-      
+
+  - param_name: "use_roi_percent"
+    description: "Whether to use the ROI (Region of Interest) as a percentage of the image."
+    type: "bool"
+    default_val: False
 
   - param_name: "method"
     description: "tbd"

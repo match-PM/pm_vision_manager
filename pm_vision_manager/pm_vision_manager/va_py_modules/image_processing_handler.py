@@ -119,6 +119,9 @@ class ImageProcessingHandler:
         return self._initial_image
 
     def get_processing_image(self):
+        """
+        Returns a copy of the current processing image.
+        """
         return np.copy(self._processing_image)
     
     def init_begin(self):
@@ -464,6 +467,9 @@ class ImageProcessingHandler:
     
     def new_vision_line_result(self)->pvimsg.VisionLine:
         return pvimsg.VisionLine()
+    
+    def set_image_sharpness(self, sharpness_value: float):
+        self._vision_response.results.image_sharpness.sharpness_value = sharpness_value
     
     def _sort_results(self):
         """

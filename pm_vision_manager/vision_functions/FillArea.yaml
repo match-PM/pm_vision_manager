@@ -1,0 +1,49 @@
+function_name: "FillArea"
+description: "BlaBla"
+function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "draw_contours"
+    description: "Specify whether to draw the detected contours."
+    type: "bool"
+
+  - param_name: "mode"
+    description: "Specify the contour retrieval mode.\n RETR_EXTERNAL - retrieves only the extreme outer contours \n RETR_CCOMP - retrieves all of the contours and organizes them into a two-level hierarchy. \n RETR_LIST - retrieves all of the contours without establishing any hierarchical relationships. \n RETR_TREE - retrieves all of the contours and reconstructs a full hierarchy of nested contours."
+    type: "string_list"
+    values: 
+      - "RETR_EXTERNAL"
+      - "RETR_CCOMP"
+      - "RETR_LIST"
+      - "RETR_TREE"
+
+  - param_name: "method"
+    description: "Specify the contour approximation method."
+    type: "string_list"
+    values: 
+      - "CHAIN_APPROX_SIMPLE"
+      - "CHAIN_APPROX_NONE"
+      - "CHAIN_APPROX_TC89_L1"
+      - "CHAIN_APPROX_TC89_KCOS"
+
+  - param_name: "white_padding_top"
+    description: "Specify whether to draw the detected contours."
+    type: "bool"
+
+  - param_name: "white_padding_left"
+    description: "Specify whether to draw the detected contours."
+    type: "bool"
+
+  - param_name: "white_padding_bottom"
+    description: "Specify whether to draw the detected contours."
+    type: "bool"
+
+  - param_name: "white_padding_right"
+    description: "Specify whether to draw the detected contours."
+    type: "bool"
+
+
+

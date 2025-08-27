@@ -26,6 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/VisionArea.msg"
   "msg/VisionCircle.msg"
   "msg/VisionResponse.msg"
+  "msg/ImageSharpness.msg"
   DEPENDENCIES geometry_msgs # dd packages that above messages depend on, in this case geometry_msgs for Sphere.msg
 )
 
