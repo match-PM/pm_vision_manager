@@ -7,6 +7,7 @@ from math import pi
 from pm_vision_manager.va_py_modules.vision_utils import rotate_image
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError
 from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec import fitLine, cornerDetection
+from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec_sub_pixel import cornerDetectionSubPixel
 from pm_vision_manager.va_py_modules.feature_detect_functions.circle_detect import circleDetection
 from pm_vision_manager.va_py_modules.image_modification_functions.extraction_functions import extract_color_areas
 import time
@@ -1359,6 +1360,28 @@ def process_image(vision_node: Node,
                               minLineLength_1=p_minLineLength_1,
                               minLineLength_2=p_minLineLength_2,
                               logger = vision_node.get_logger())
+              
+          case "CornerDetectionSubPixel":
+            active = function_parameter.get('active')
+            p_line_1_selection = function_parameter.get('line_1_selection')
+            p_line_2_selection = function_parameter.get('line_2_selection')
+            p_search_accuracy= function_parameter.get('search_accuracy')
+            p_minLineLength_1 = function_parameter.get('minLineLength_1')
+            p_minLineLength_2 = function_parameter.get('minLineLength_2')
+            p_dist_thresh = function_parameter.get('dist_thresh')
+            p_min_inliers = function_parameter.get('min_inliers')
+
+            if active:
+              cornerDetectionSubPixel(image_processing_handler=image_processing_handler,
+                              line_1_selection=p_line_1_selection,
+                              line_2_selection=p_line_2_selection,
+                              search_accuracy=p_search_accuracy,
+                              minLineLength_1=p_minLineLength_1,
+                              minLineLength_2=p_minLineLength_2,
+                              dist_thresh=p_dist_thresh,
+                              min_inliers=p_min_inliers,
+                              logger = vision_node.get_logger())
+
                               
     if image_processing_handler.get_vision_ok():
       vision_node.get_logger().info('Vision process executed cleanly!')

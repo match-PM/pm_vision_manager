@@ -1,0 +1,68 @@
+function_name: "CornerDetectionSubPixel"
+description: "Takes a binary image. Detects the intersection point (corner) of two dominant lines selected from specified image edges. Uses Hough-based line detection and computes line intersection."
+
+function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    default: true
+    type: "bool"
+
+  - param_name: "line_1_selection"
+    description: "Edge of the image (top, bottom, left, right) from which to detect the first line."
+    type: "string_list"
+    default: "top"
+    values:
+      - "top"
+      - "bottom"
+      - "left"
+      - "right"
+
+  - param_name: "minLineLength_1"
+    description: "Minimum length (in microns) of segments for the first line detection."
+    type: "float"
+    min_val: 0.1
+    max_val: "inf"
+    default: 0.1
+
+  - param_name: "line_2_selection"
+    description: "Edge of the image (top, bottom, left, right) from which to detect the second line."
+    type: "string_list"
+    default: "top"
+    values:
+      - "top"
+      - "bottom"
+      - "left"
+      - "right"
+
+  - param_name: "minLineLength_2"
+    description: "Minimum length (in microns) of segments for the second line detection."
+    type: "float"
+    min_val: 0.1
+    max_val: "inf"
+    default: 0.1
+    
+  - param_name: "search_accuracy"
+    description: "Controls the accuracy of the HoughLinesP search. 'coarse': rho_adaptive=1.0, theta_adaptive=180; 'fine': rho_adaptive=0.5, theta_adaptive=1800; 'finest': rho_adaptive=0.5, theta_adaptive=3600; 'max_limit': rho_adaptive=0.5, theta_adaptive=16400."
+    type: "string_list"
+    default: "fine"
+    values:
+      - "coarse"
+      - "fine"
+      - "finest"
+      - "max_limit"
+
+  - param_name: "dist_thresh"
+    description: "Distance threshold (in pixels) for the RANSAC line fitting during line refinement."
+    type: "float"
+    min_val: 0.1
+    max_val: 10.0
+    default: 1.5
+
+  - param_name: "min_inliers"
+    description: "Minimum number of inliers required for a valid line fit."
+    type: "int"
+    min_val: 1
+    max_val: 1000
+    default: 10
