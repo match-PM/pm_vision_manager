@@ -422,9 +422,8 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     '''
     Detect corner via intersection of two lines with compact quality payload.
 
-    Returns (token-efficient):
-      success: {"v":"c1","ok":1,"Q":int0-100,"P":[...5 ints...],"W":0-4,"A":"a|s|t|l|c"}
-      failure: {"v":"c1","ok":0,"e":"same|l1|l2|par|oob"}
+    Returns:
+        None (results are stored in the image_processing_handler)
     '''
     if line_1_selection == line_2_selection:
         if logger: logger.error("Line 1 and Line 2 cannot be the same!")
@@ -497,8 +496,18 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     image_processing_handler.apply_visual_elements_canvas(canvas)
     image_processing_handler.set_vision_ok(True)
 
+    # store compact quality scores for retrieval
+    _corner_quality_dict = {
+        "residual_score": P[0],
+        "inlier_score": P[1],
+        "weakest_score_index": W,
+        "weakest_score_action": A,
+        "angle_degrees": G
+    }
+    image_processing_handler.set_quality_scores("cornerDetectionSubPixel", _corner_quality_dict)
+
     # minimal, token-efficient payload for the agent
-    if logger: logger.info(f"Corner detected with quality {P}, weakest {W}:{A}, angle {G} deg")
+    if logger: logger.info(f"Corner detected with quality {_corner_quality_dict}")
 
     return
 

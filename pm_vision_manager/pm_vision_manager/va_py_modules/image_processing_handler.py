@@ -40,7 +40,11 @@ class ImageProcessingHandler:
 
         self._vision_results_dict = {}
         self._vision_results_list = []
-        
+
+        self._debug_log_list = []
+
+        self._quality_scores_dict = {}
+
         self.process_db_path = None
 
         self.pixelsize = None
@@ -72,6 +76,7 @@ class ImageProcessingHandler:
         # object that contains all vision results
         self._vision_response = pvimsg.VisionResponse()
         self._mode = self.MODE_EXECUTE
+    
     
     def set_mode(self, mode:int):
         """
@@ -427,9 +432,21 @@ class ImageProcessingHandler:
 
 
         return x_cs_camera, y_cs_camera
-    
+
+    def get_quality_scores(self):
+        return self._quality_scores_dict
+
+    def set_quality_scores(self, function_name:str, quality_dict:dict):
+        self._quality_scores_dict[function_name] = quality_dict
+
     def append_to_results(self, result:dict):
         self._vision_results_list.append(result)
+
+    def append_vision_process_debug(self, log_str: str):
+        self._debug_log_list.append(log_str)
+
+    def get_vision_process_debug(self)->list:
+        return self._debug_log_list
 
     def clear_vision_results(self):
         self._vision_response = pvimsg.VisionResponse()
