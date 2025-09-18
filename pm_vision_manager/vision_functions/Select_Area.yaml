@@ -1,5 +1,5 @@
 function_name: "Select_Area"
-description: "BlaBla"
+description: Finds all contours using the specified retrieval mode and approximation method, then filters them by area percentage within [min_area, max_area] of the total image area.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

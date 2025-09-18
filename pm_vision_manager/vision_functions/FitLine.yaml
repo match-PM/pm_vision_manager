@@ -1,5 +1,5 @@
 function_name: "FitLine"
-description: "BlaBla"
+description: Fits a straight line to a set of 2D points (e.g., contour or edge points) using the chosen selection side and search accuracy, then returns line parameters.
 function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:
@@ -42,6 +42,5 @@ params:
   #   type: "unsigned_int"
   #   min_val: 180
   #   max_val: 3600
-
 
 

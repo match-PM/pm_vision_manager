@@ -1,5 +1,5 @@
 function_name: "Bitwise_Not"
-description: "BlaBla"
+description: Performs a bitwise NOT operation on each pixel, inverting all bits. Produces a photographic negative of the image.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

@@ -1,5 +1,5 @@
 function_name: "Blur"
-description: "BlaBla"
+description: Applies a blur filter to the image. Supports Gaussian, average (box), and median blur types with user-specified kernel size and sigma.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

@@ -1,5 +1,5 @@
 function_name: "MinEnclosingCircle"
-description: "BlaBla"
+description: Finds the minimum enclosing circle for each contour in the binary image. Returns center coordinates and radius, and optionally draws the circles.
 function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:
@@ -29,4 +29,3 @@ params:
     type: "string_list"
     values: 
       - "CHAIN_APPROX_SIMPLE"
-

@@ -1,5 +1,5 @@
 function_name: "Draw_CS"
-description: "BlaBla"
+description: Draws a coordinate system (axes and origin) overlay on the image for reference or calibration purposes.
 
 function_category: "Image Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 

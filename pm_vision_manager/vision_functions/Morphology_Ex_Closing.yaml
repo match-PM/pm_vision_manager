@@ -1,5 +1,5 @@
 function_name: "Morphology_Ex_Closing"
-description: "BlaBla"
+description: Performs a morphological closing operation (dilation followed by erosion) with the specified kernel size to fill small holes and gaps. Works only on binary images.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 

@@ -1,5 +1,5 @@
 function_name: "HoughCircles"
-description: "BlaBla"
+description: Detects circles in a grayscale image using the Hough Gradient method. Parameters control the accumulator resolution (dp), minimum distance between centers, edge detection thresholds, and radius range.
 function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

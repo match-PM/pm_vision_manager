@@ -1,5 +1,5 @@
 function_name: "Errosion"
-description: "BlaBla"
+description: Applies morphological erosion to the image using a square kernel of the given size, repeated for the specified number of iterations. Shrinks bright regions and removes small noise.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

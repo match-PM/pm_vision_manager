@@ -1,5 +1,5 @@
 function_name: "ReduceSaturation"
-description: "Converts the BGR-image into the HSV-Colorspace to reduce the saturation 
+description: Converts the input BGR image to HSV color space, reduces the saturation of pixels whose hue falls within the specified range [HueMin, HueMax] by dividing their saturation channel by f_reduce_s, then converts the result back to BGR. Useful for toning down dominant colors.
     for the hues given in the 'HueRange'. Then the methods returns an BGR-image. 
     Should help in Images with a dominating Color"
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image conversion'

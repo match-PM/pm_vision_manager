@@ -1,5 +1,5 @@
 function_name: "Morphology_Ex_Opening"
-description: "BlaBla"
+description: Performs a morphological opening operation (erosion followed by dilation) with the specified kernel size to remove small objects and noise. Works only on binary images.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

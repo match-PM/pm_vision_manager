@@ -1,5 +1,5 @@
 function_name: "AdaptiveThreshold"
-description: "BlaBla"
+description: Applies adaptive thresholding by computing a threshold for each pixel based on the local neighborhood, then subtracting constant C. Supports mean or Gaussian weighted methods.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image conversion'
 
 params:
@@ -38,4 +38,3 @@ params:
     values: 
       - "THRESH_BINARY"
       - "THRESH_BINARY_INV"
-

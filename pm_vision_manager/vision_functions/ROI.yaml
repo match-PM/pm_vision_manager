@@ -1,5 +1,5 @@
 function_name: "ROI"
-description: "BlaBla"
+description: Defines and extracts a rectangular region of interest (ROI) from the image based on center offsets and relative width/height percentages. Be careful with the ROI size to avoid cropping out important features or including features that are not relevant.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

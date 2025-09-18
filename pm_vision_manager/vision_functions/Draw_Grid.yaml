@@ -1,5 +1,5 @@
 function_name: "Draw_Grid"
-description: "BlaBla"
+description: Overlays a regular grid on the image with the specified spacing (in microns) between grid lines, aiding calibration and measurement.
 function_category: "Image Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

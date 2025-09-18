@@ -1,5 +1,5 @@
 function_name: "Save_Image"
-description: "BlaBla"
+description: Saves the current processing image to disk with an optional filename prefix. Can include drawn vision elements and supports cross-validation folder structure.
 function_category: "Image Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

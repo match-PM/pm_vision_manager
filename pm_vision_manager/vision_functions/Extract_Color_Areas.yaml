@@ -1,5 +1,5 @@
 function_name: "Extract_Color_Areas"
-description: "The function validates the input image type, applies an HSV mask based on the given boundaries, extracts the specified color regions,
+description: Validates the input, converts the image to HSV, applies color range masks defined by the provided hue, saturation, and value boundaries, and extracts regions matching those criteria.
     and updates the processing image in the handler."
 
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'

@@ -1,5 +1,5 @@
 function_name: "Morphology_Ex_Gradient"
-description: "BlaBla"
+description: Performs a morphological gradient operation by subtracting the eroded image from the dilated image, highlighting edge transitions. Works only on binary images.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

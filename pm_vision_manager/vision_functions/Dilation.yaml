@@ -1,5 +1,5 @@
 function_name: "Dilation"
-description: "BlaBla"
+description: Applies morphological dilation to the image using a square kernel of the specified size for a given number of iterations. Enlarges bright regions and fills small holes.
 
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 

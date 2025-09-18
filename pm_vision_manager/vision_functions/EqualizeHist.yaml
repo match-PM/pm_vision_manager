@@ -1,5 +1,5 @@
 function_name: "EqualizeHist"
-description: "Equalizes the Histogram of an Gray-Image or a Channel of an Image."
+description: Equalizes the histogram of a single-channel (grayscale) image or specified channel of a multi-channel image to improve global contrast.
 
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 

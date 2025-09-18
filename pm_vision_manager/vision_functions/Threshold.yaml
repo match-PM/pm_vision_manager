@@ -1,5 +1,5 @@
 function_name: "Threshold"
-description: "BlaBla"
+description: Converts a grayscale image to a binary image by applying a global threshold. Pixels above 'thresh' are set to 'maxval', others to zero.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

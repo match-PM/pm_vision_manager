@@ -1,5 +1,5 @@
 function_name: "CircleDetection"
-description: "This function detects circles in an image. Input to the function must be a binary image. It then detects the contours and fits a best fit circle through the contorus. It is based of the Circle-Fit libary by AlliedToasters. "
+description: Detects circles in a binary image by finding contours and fitting a best-fit circle to each contour using the specified algorithm mode. Returns circle parameters and optionally draws the circles on the image.
 
 function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 

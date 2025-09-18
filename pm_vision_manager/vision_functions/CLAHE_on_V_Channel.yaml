@@ -1,5 +1,5 @@
 function_name: "CLAHE_on_V_Channel"
-description: "Apply the Contrast Limited Adaptive Histogram Equalization (CLAHE) 
+description: Converts the image to HSV, applies Contrast Limited Adaptive Histogram Equalization (CLAHE) to the Value channel to enhance local contrast, then converts back to BGR.
     to the Value-Channel of the converted HSV-Image.
     Helps to get a better contrast of the brightness in the image.
     Therefore it should get more easy to find edges for example."
