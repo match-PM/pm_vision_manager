@@ -1,5 +1,5 @@
 vision_assistant_path_config:
-  process_library_path: "/home/match-mover/pm_Server/01_PM_Zelle/03_PM_DataBase/pm_assembly_database/Vision/vision_processes/"
-  function_library_path: "/home/match-mover/pm_Server/01_PM_Zelle/03_PM_DataBase/pm_assembly_database/Vision/vision_functions/"
-  vision_database_path: "/home/match-mover/pm_Server/01_PM_Zelle/03_PM_DataBase/pm_assembly_database/Vision/vision_db/"
-  camera_config_path: "/home/match-mover/pm_Server/01_PM_Zelle/03_PM_DataBase/pm_assembly_database/Vision/camera_configs/"
+  camera_config_path: /home/match-mover/pm_Server/01_PM_Zelle/03_PM_DataBase/pm_assembly_database/Vision/vision_camera_configs/
+  function_libary_path: "/home/match-mover/Documents/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_functions/"
+  process_library_path: /home/match-mover/pm_Server/01_PM_Zelle/03_PM_DataBase/pm_assembly_database/Vision/vision_processes/
+  vision_database_path: /home/match-mover/pm_Server/01_PM_Zelle/03_PM_DataBase/pm_assembly_database/Vision/vision_image_db/

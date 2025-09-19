@@ -1,7 +1,17 @@
 function_name: "CornerDetectionSubPixel"
-description: "Takes a binary image. Detects the intersection point (corner) of two dominant lines selected from specified image edges. Uses Hough-based line detection and computes line intersection."
-
+description: "Detects the intersection point (corner) of two dominant lines in a binary image, each selected from a specified image edge (top, bottom, left, right). Uses Hough-based line detection with adjustable search accuracy. Returns subpixel-accurate corner coordinates and quality scores."
 function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+quality_score:
+  line1: "Number of detected line segments for line 1"
+  line2: "Number of detected line segments for line 2"
+  residual_score: "0-100 (higher better)"
+  inlier_score: "0-100 (higher better)"
+  weakest_score_index: "index of weakest subscore (0=resid,1=inliers)"
+  weakest_score_action:
+    s: "more smoothing / larger dist_thresh"
+    t: "finer search_accuracy"
+    l: "longer minLineLength_1 / minLineLength_2"
+  angle_degrees: "G"
 
 params:
   - param_name: "active"
@@ -54,7 +64,7 @@ params:
       - "max_limit"
 
   - param_name: "dist_thresh"
-    description: "Distance threshold (in pixels) for the RANSAC line fitting during line refinement."
+    description: "Sets the maximum perpendicular distance (in pixels) from the initial line segment within which edge points are considered inliers for line refinement."
     type: "float"
     min_val: 0.1
     max_val: 10.0

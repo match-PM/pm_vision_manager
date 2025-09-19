@@ -113,7 +113,7 @@ def _calculate_intersection_homography(seg1_xyxy, seg2_xyxy):
     return float(X[0]/X[2]), float(X[1]/X[2])
 
 
-def _corner_quality(meta1, meta2, *, R0=0.75, alpha=0.30, N0_min=20, N0_max=10000):
+def _corner_quality(meta1, meta2, *, R0=0.75, alpha=0.30, N0_min=20, N0_max=10000, detected_lines_1=None, detected_lines_2=None):
     """
     Compute compact sub-scores (no overall score, no angle subscore) and
     return the inter-line angle G in [0..180] degrees.
@@ -142,12 +142,24 @@ def _corner_quality(meta1, meta2, *, R0=0.75, alpha=0.30, N0_min=20, N0_max=1000
     G = int(round(np.degrees(np.arccos(dot))))  # 0..180
 
     P = [int(round(100*q_resid)), int(round(100*q_inliers))]
-    return P, G
+
+    # weakest subscore + action suggestion
+    # indices: 0=resid, 1=inliers
+    W = int(np.argmin(P))
+    A = ["s","t"][W]  # s: more smoothing or larger dist_thresh; t: more inliers (lower Canny, increase maxLineGap, finer search)
+
+    K_LOW = 1
+    K_HIGH = 5
+
+    if int(detected_lines_1) > K_HIGH or int(detected_lines_2) > K_HIGH:
+        A = "l"
+
+    return P, G, A
 
 
 # -----------------------------------------------------------
 
-def _refine_line_with_fitLine(edges, line_xyxy, gray, dist_thresh=2.5, min_inliers=10):
+def _refine_line_with_fitLine(edges, line_xyxy, gray, dist_thresh=1.5, min_inliers=10):
     """
     Refines the Hough segment with subpixel accuracy (returns segment and meta).
     """
@@ -332,43 +344,43 @@ def fitLine_pre(image_processing_handler: ImageProcessingHandler, line_selection
                 if left_vert_mid_ind:
                     line_ind_left_vertical = vertical_lines_indicies[left_vert_mid_ind[0]]
                     selected_line = lines[line_ind_left_vertical]
-                    image_processing_handler.append_vision_process_debug(f"Found {len(left_vert_mid_ind)} left vertical lines!")
+                    detected_lines = len(left_vert_mid_ind)
                     if logger:
                         logger.error("Found line according to 'left' selection")
             case "right":
                 if right_vert_mid_ind:
                     line_ind_right_vertical = vertical_lines_indicies[right_vert_mid_ind[0]]
                     selected_line = lines[line_ind_right_vertical]
-                    image_processing_handler.append_vision_process_debug(f"Found {len(right_vert_mid_ind)} right vertical lines!")
+                    detected_lines = len(right_vert_mid_ind)
                     if logger:
                         logger.error("Found line according to 'right' selection")
             case "top":
                 if top_hor_mid_ind:
                     line_ind_top_horizontal = horizontal_lines_indicies[top_hor_mid_ind[0]]
                     selected_line = lines[line_ind_top_horizontal]
-                    image_processing_handler.append_vision_process_debug(f"Found {len(top_hor_mid_ind)} top horizontal lines!")
+                    detected_lines = len(top_hor_mid_ind)
                     if logger:
                         logger.error("Found line according to 'top' selection")
             case "bottom":
                 if bottom_hor_mid_ind:
                     line_ind_bottom_horizontal = horizontal_lines_indicies[bottom_hor_mid_ind[0]]
                     selected_line = lines[line_ind_bottom_horizontal]
-                    image_processing_handler.append_vision_process_debug(f"Found {len(bottom_hor_mid_ind)} bottom horizontal lines!")
+                    detected_lines = len(bottom_hor_mid_ind)
                     if logger:
                         logger.error("Found line according to 'bottom' selection")
 
         if selected_line is not None:
             refined, meta = _refine_line_with_fitLine(edges, selected_line[0], frame_processed, dist_thresh=dist_thresh, min_inliers=min_inliers)
-            return refined, meta  # refined shape (1,4), plus meta
+            return refined, meta, detected_lines  # refined shape (1,4), plus meta
         else:
             if logger:
                 logger.error("No lines detected")
-            image_processing_handler.append_vision_process_debug("No lines detected")
+            image_processing_handler.append_vision_process_debug("Error: No lines detected")
             return None
     else:
         if logger:
             logger.error("No lines detected. Hough lines found no lines")
-        image_processing_handler.append_vision_process_debug("No lines detected. Hough lines found no lines")
+        image_processing_handler.append_vision_process_debug("Error: No lines detected. Hough lines found no lines")
         return None
 
 def fitLine(image_processing_handler: ImageProcessingHandler, line_selection: str, search_accuracy: str, minLineLength:int, dist_thresh: float, min_inliers: int, logger = None):
@@ -376,7 +388,7 @@ def fitLine(image_processing_handler: ImageProcessingHandler, line_selection: st
     if out is None:
         image_processing_handler.set_vision_ok(False)
         return
-    line, _meta = out
+    line, _meta, detected_lines = out
 
     canvas = image_processing_handler.get_visual_elements_canvas()
 
@@ -427,18 +439,18 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     '''
     if line_1_selection == line_2_selection:
         if logger: logger.error("Line 1 and Line 2 cannot be the same!")
-        image_processing_handler.append_vision_process_debug("Line 1 and Line 2 cannot be the same!")
+        image_processing_handler.append_vision_process_debug("Error: Line 1 and Line 2 cannot be the same!")
         image_processing_handler.set_vision_ok(False)
         return 
 
     out1 = fitLine_pre(image_processing_handler, line_1_selection, search_accuracy, minLineLength_1, dist_thresh, min_inliers, logger=logger)
     if out1 is None:
         if logger: logger.error("No line for input 1 detected")
-        image_processing_handler.append_vision_process_debug("No line for input 1 detected")
+        image_processing_handler.append_vision_process_debug("Error: No line for input 1 detected")
         image_processing_handler.set_vision_ok(False)
         return
 
-    line_1, meta_1 = out1
+    line_1, meta_1, detected_lines_1 = out1
     canvas = image_processing_handler.get_visual_elements_canvas()
     l1x1, l1y1, l1x2, l1y2 = [float(v) for v in line_1[0]]
     cv2.line(canvas, (int(round(l1x1)), int(round(l1y1))), (int(round(l1x2)), int(round(l1y2))), (0, 255, 0), 2)
@@ -446,11 +458,11 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     out2 = fitLine_pre(image_processing_handler, line_2_selection, search_accuracy, minLineLength_2, dist_thresh, min_inliers, logger=logger)
     if out2 is None:
         if logger: logger.error("No line for input 2 detected")
-        image_processing_handler.append_vision_process_debug("No line for input 2 detected")
+        image_processing_handler.append_vision_process_debug("Error: No line for input 2 detected")
         image_processing_handler.set_vision_ok(False)
         return
 
-    line_2, meta_2 = out2
+    line_2, meta_2, detected_lines_2 = out2
     l2x1, l2y1, l2x2, l2y2 = [float(v) for v in line_2[0]]
     cv2.line(canvas, (int(round(l2x1)), int(round(l2y1))), (int(round(l2x2)), int(round(l2y2))), (0, 255, 0), 2)
 
@@ -458,7 +470,7 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     inter = _calculate_intersection_homography(line_1[0], line_2[0])
     if inter is None:
         if logger: logger.error("No intersection point detected!")
-        image_processing_handler.append_vision_process_debug("No intersection point detected!")
+        image_processing_handler.append_vision_process_debug("Error: No intersection point detected!")
         image_processing_handler.set_vision_ok(False)
         return
 
@@ -467,21 +479,13 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     h, w = image_processing_handler.get_processing_image().shape[:2]
     if x < 0 or x > w or y < 0 or y > h:
         if logger: logger.error("No valid point of intersection found!")
-        image_processing_handler.append_vision_process_debug("No valid point of intersection found!")
+        image_processing_handler.append_vision_process_debug("Error: No valid point of intersection found!")
         image_processing_handler.apply_visual_elements_canvas(canvas)
         image_processing_handler.set_vision_ok(False)
         return
 
     cv2.drawMarker(canvas, (int(round(x)), int(round(y))), (0, 0, 255),
                    markerType=cv2.MARKER_CROSS, markerSize=50, thickness=2)
-
-    # quality computation 
-    P, G = _corner_quality(meta_1, meta_2, R0=0.75, alpha=0.30, N0_min=20)
-
-    # weakest subscore + action suggestion
-    # indices: 0=resid, 1=inliers
-    W = int(np.argmin(P))
-    A = ["s","t"][W]  # s: more smoothing or larger dist_thresh; t: more inliers (lower Canny, increase maxLineGap, finer search)
 
     # convert to camera CS (side-effect only)
     x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x, y)
@@ -496,14 +500,19 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     image_processing_handler.apply_visual_elements_canvas(canvas)
     image_processing_handler.set_vision_ok(True)
 
+    # quality computation 
+    P, G, A = _corner_quality(meta_1, meta_2, R0=0.75, alpha=0.30, N0_min=20, detected_lines_1=detected_lines_1, detected_lines_2=detected_lines_2)
+
     # store compact quality scores for retrieval
     _corner_quality_dict = {
+        "line1": detected_lines_1,
+        "line2": detected_lines_2,
         "residual_score": P[0],
         "inlier_score": P[1],
-        "weakest_score_index": W,
         "weakest_score_action": A,
         "angle_degrees": G
     }
+
     image_processing_handler.set_quality_scores("cornerDetectionSubPixel", _corner_quality_dict)
 
     # minimal, token-efficient payload for the agent

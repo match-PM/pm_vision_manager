@@ -1,6 +1,6 @@
 function_name: "Set_Camera_Exposure_Time"
 description: "Set the exposure time of the camera. This might not be available for all cameras. No effect in cross validation."
-function_category: "Camera Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_category: "Camera Tools"   # supported: 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:
   - param_name: "active"

@@ -3,7 +3,6 @@ description: Converts the image to HSV, applies Contrast Limited Adaptive Histog
     to the Value-Channel of the converted HSV-Image.
     Helps to get a better contrast of the brightness in the image.
     Therefore it should get more easy to find edges for example."
-
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:
