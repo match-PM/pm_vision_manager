@@ -1,5 +1,5 @@
 function_name: "FillArea"
-description: "BlaBla"
+description: "Fills all detected contours in a grayscale image, optionally visualizing them, while handling gaps along image borders. This function ensures that disconnected white pixel regions touching the edges are connected, contours are detected and filled in white, and a clean black border is added to the image. Useful for cleaning up binary images and preparing them for further analysis."
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:
@@ -8,11 +8,11 @@ params:
     type: "bool"
 
   - param_name: "draw_contours"
-    description: "Specify whether to draw the detected contours."
+    description: "Specify whether to draw the detected contours on the visualization canvas."
     type: "bool"
 
   - param_name: "mode"
-    description: "Specify the contour retrieval mode.\n RETR_EXTERNAL - retrieves only the extreme outer contours \n RETR_CCOMP - retrieves all of the contours and organizes them into a two-level hierarchy. \n RETR_LIST - retrieves all of the contours without establishing any hierarchical relationships. \n RETR_TREE - retrieves all of the contours and reconstructs a full hierarchy of nested contours."
+    description: "Specify the contour retrieval mode.\n RETR_EXTERNAL - retrieves only the extreme outer contours. \n RETR_CCOMP - retrieves all of the contours and organizes them into a two-level hierarchy. \n RETR_LIST - retrieves all of the contours without establishing any hierarchical relationships. \n RETR_TREE - retrieves all of the contours and reconstructs a full hierarchy of nested contours."
     type: "string_list"
     values: 
       - "RETR_EXTERNAL"
@@ -21,7 +21,7 @@ params:
       - "RETR_TREE"
 
   - param_name: "method"
-    description: "Specify the contour approximation method."
+    description: "Specify the contour approximation method used by OpenCV for contour detection."
     type: "string_list"
     values: 
       - "CHAIN_APPROX_SIMPLE"
@@ -30,20 +30,21 @@ params:
       - "CHAIN_APPROX_TC89_KCOS"
 
   - param_name: "white_padding_top"
-    description: "Specify whether to draw the detected contours."
+    description: "Fill white pixel gaps along the top image border before contour detection."
     type: "bool"
 
   - param_name: "white_padding_left"
-    description: "Specify whether to draw the detected contours."
+    description: "Fill white pixel gaps along the left image border before contour detection."
     type: "bool"
 
   - param_name: "white_padding_bottom"
-    description: "Specify whether to draw the detected contours."
+    description: "Fill white pixel gaps along the bottom image border before contour detection."
     type: "bool"
 
   - param_name: "white_padding_right"
-    description: "Specify whether to draw the detected contours."
+    description: "Fill white pixel gaps along the right image border before contour detection."
     type: "bool"
+
 
 
 
