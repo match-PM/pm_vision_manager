@@ -8,7 +8,7 @@ params:
     type: "bool"
 
   - param_name: "blockSize"
-    description: "A variable of the integer type representing size of the pixelneighborhood used to calculate the threshold value."
+    description: "type: int. Representing size of the pixelneighborhood used to calculate the threshold value."
     type: "kernel"
     min_val: 3
     max_val: 999

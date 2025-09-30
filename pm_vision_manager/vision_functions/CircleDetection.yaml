@@ -1,5 +1,18 @@
 function_name: "CircleDetection"
-description: Detects circles in a binary image by finding contours and fitting a best-fit circle to each contour using the specified algorithm mode. Returns circle parameters and optionally draws the circles on the image.
+description: >-
+  A high-precision circle detector that identifies circles in a **binary image**.
+  It operates by finding object contours and then applying a least-squares
+  fitting algorithm to the contour points. This function is ideal for
+  accurately measuring the center and radius of circular objects in the image.
+  Set the `minRadius` and `maxRadius` span larger at first to ensure detection,
+  then narrow down the range for more precise results.
+
+  **WARNING:** This method is sensitive and will likely fail if the circles are
+  truncated by the image border. The fitting algorithm will be corrupted by the
+  non-circular points from the image edge. To handle such cases, a
+  `morphological_opening` or `morphological_closing` function **must** be applied to the binary image
+  *before* calling this function to detach the shape from the edges.
+
 function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:

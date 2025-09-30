@@ -1,5 +1,14 @@
 function_name: "Morphology_Ex_Closing"
-description: Performs a morphological closing operation (dilation followed by erosion) with the specified kernel size to fill small holes and gaps. Works only on binary images.
+description: >-  
+  Performs a morphological closing operation (dilation followed by erosion) with the specified kernel size to fill small holes and gaps. Works only on binary images.
+  **Crucially, any black hole or gap smaller than this kernel size will be filled or closed.**
+
+  **GUIDANCE:**
+  1. To fill holes within an object, set the kernelsize slightly larger than the largest hole you want to fill.
+  2. To connect separate parts of an object, set the kernelsize larger than the gap between them.
+  3. **WARNING:** If the kernelsize is too large, it can incorrectly merge distinct, nearby objects into one, leading to inaccurate contour detection.
+
+  **Typical kernelsize for closing small gaps or holes are small, odd integers like 3, 5, or 7.**
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 
@@ -9,7 +18,7 @@ params:
     type: "bool"
 
   - param_name: "kernelsize"
-    description: "tbd"
+    description: "value type: int, odd values"
     type: "kernel"
     min_val: 1
-    max_val: 10000
+    max_val: 10

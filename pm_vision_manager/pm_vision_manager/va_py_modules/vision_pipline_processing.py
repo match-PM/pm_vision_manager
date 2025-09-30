@@ -1148,7 +1148,7 @@ def process_image(vision_node: Node,
                           minLineLength=p_minLineLength,
                           maxLineGap=p_maxLineGap)
 
-          case "Select_Area":
+          case "FillSelectedArea":
             active = function_parameter['active']
             p_mode = function_parameter['mode']
             p_method = function_parameter['method']
@@ -1167,7 +1167,9 @@ def process_image(vision_node: Node,
           case "Morphology_Ex_Opening":
             active = function_parameter['active']
             p_kernelsize = function_parameter['kernelsize']
-
+            # if p_kernelsize not type(int), convert to int
+            p_kernelsize = int(p_kernelsize)
+            
             if active:
               morphologyExOpening(image_processing_handler=image_processing_handler,
                                   kernelsize=p_kernelsize)
@@ -1175,6 +1177,7 @@ def process_image(vision_node: Node,
           case "Morphology_Ex_Closing":
             active = function_parameter['active']
             p_kernelsize = function_parameter['kernelsize']
+            p_kernelsize = int(p_kernelsize)
 
             if active:
               morphologyExClosing(image_processing_handler=image_processing_handler,
@@ -1209,6 +1212,7 @@ def process_image(vision_node: Node,
           case "Morphology_Ex_Gradient":
             active = function_parameter['active']
             p_kernelsize = function_parameter['kernelsize']
+            p_kernelsize = int(p_kernelsize)
 
             if active:
               morphologyExGradient(image_processing_handler=image_processing_handler,
@@ -1218,6 +1222,7 @@ def process_image(vision_node: Node,
             active = function_parameter['active']
             p_kernelsize = function_parameter['kernelsize']
             p_iterations = function_parameter['iterations']
+            p_kernelsize = int(p_kernelsize)
 
             if active:
               Errosion(image_processing_handler=image_processing_handler,
@@ -1228,7 +1233,8 @@ def process_image(vision_node: Node,
             active = function_parameter['active']
             p_kernelsize = function_parameter['kernelsize']
             p_iterations = function_parameter['iterations']
-
+            p_kernelsize = int(p_kernelsize)
+            
             if active:
               Dilation(image_processing_handler=image_processing_handler,
                        kernelsize=p_kernelsize,
@@ -1385,8 +1391,10 @@ def process_image(vision_node: Node,
                               
     if image_processing_handler.get_vision_ok():
       vision_node.get_logger().info('Vision process executed cleanly!')
+      image_processing_handler.set_vision_ok(True)
     else:
       vision_node.get_logger().error('Vision process executed with error!')
+      image_processing_handler.set_vision_ok(False)
 
   except ImageNotGrayScaleError as e:
     vision_node.get_logger().error(str(e))

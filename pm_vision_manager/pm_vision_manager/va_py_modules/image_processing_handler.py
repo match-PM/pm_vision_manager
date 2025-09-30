@@ -33,6 +33,7 @@ class ImageProcessingHandler:
         self._processing_image: np.ndarray = None
         self._display_frame: np.ndarray = None
         self._final_image: np.ndarray = None
+        self._processed_image_overlay: np.ndarray = None
         self.frame_visual_elements = None
         self.frame_buffer = []
         self.logger = logger
@@ -170,6 +171,9 @@ class ImageProcessingHandler:
         self._display_frame = self.create_vision_element_overlay(self._display_frame, 
                                                                 self.frame_visual_elements, 
                                                                 self.logger)
+
+        self._processed_image_overlay = deepcopy(self._display_frame)
+
         self._vision_results_dict["vision_results"] = self._vision_results_list
 
         # Handle `_initial_image` grayscale case
@@ -212,6 +216,9 @@ class ImageProcessingHandler:
     def get_display_image(self):
         return deepcopy(self._display_frame)
     
+    def get_processed_image_overlay(self):
+        return  self._processed_image_overlay
+
     def is_process_image_grayscale(self)->bool:
         # Check the number of color channels
         if len(self._processing_image.shape) == 2 or (len(self._processing_image.shape) == 3 and self._processing_image.shape[2] == 1):
@@ -447,6 +454,9 @@ class ImageProcessingHandler:
 
     def get_vision_process_debug(self)->list:
         return self._debug_log_list
+
+    def clear_vision_process_debug(self):
+        self._debug_log_list = []
 
     def clear_vision_results(self):
         self._vision_response = pvimsg.VisionResponse()

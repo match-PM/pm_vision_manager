@@ -8,7 +8,7 @@ params:
     type: "bool"
 
   - param_name: "kernelsize"
-    description: "tbd"
+    description: "value type: int, odd"
     type: "kernel"
     min_val: 1
     max_val: 10000

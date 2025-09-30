@@ -1,0 +1,40 @@
+{
+    "vision_process_name": "test_pipeline",
+    "process creation": "2025-09-30 16:44:14",
+    "vision_pipeline": [
+        {
+            "BGR2GRAY": {
+                "active": true
+            }
+        },
+        {
+            "Threshold": {
+                "active": true,
+                "thresh": 0,
+                "maxval": 255,
+                "type": "THRESH_OTSU"
+            }
+        },
+        {
+            "Morphology_Ex_Opening": {
+                "active": true,
+                "kernelsize": 5
+            }
+        },
+        {
+            "Morphology_Ex_Closing": {
+                "active": true,
+                "kernelsize": 5
+            }
+        },
+        {
+            "CircleDetection": {
+                "active": true,
+                "draw_circles": true,
+                "mode": "standardLSQ",
+                "minRadius": 200.0,
+                "maxRadius": 2500.0
+            }
+        }
+    ]
+}

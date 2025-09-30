@@ -1,4 +1,4 @@
-function_name: "Select_Area"
+function_name: "FillSelectedArea"
 description: Detects contours in a grayscale or binary image using the specified retrieval mode and approximation method. Contours are filtered by area relative to the image or ROI, and only those within [min_area, max_area] are filled to produce a clean binary mask.
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
@@ -33,13 +33,13 @@ params:
   - param_name: "max_area"
     description: "Maximum allowed contour area as a percentage of the selected reference (image or ROI)."
     type: "float"
-    min_val: 0.0
+    min_val: 0.1
     max_val: 100.0
     default_val: 100.0
     
   - param_name: "min_area"
     description: "Minimum allowed contour area as a percentage of the selected reference (image or ROI)."
     type: "float"
-    min_val: 0.0
+    min_val: 0.1
     max_val: 100.0
-    default_val: 0.0
+    default_val: 0.1

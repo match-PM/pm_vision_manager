@@ -1,5 +1,14 @@
 function_name: "Morphology_Ex_Opening"
-description: Performs a morphological opening operation (erosion followed by dilation) with the specified kernel size to remove small objects and noise. Works only on binary images.
+description: >-
+  Performs a morphological opening operation (erosion followed by dilation). Works only on binary images.
+  **Crucially, any white object or connection thinner than this kernel size will be removed.**
+
+  **GUIDANCE:**
+  1. To remove noise, set the kernelsize slightly larger than the largest noise particle you want to eliminate.
+  2. To separate objects or detach them from the border, set the kernelsize larger than the connecting bridge of pixels.
+  3. **WARNING:** If the kernelsize is larger than the objects you want to detect, they will be erased from the image entirely.
+
+  **Typical kernelsize for noise removal are small, odd integers like 3, 5, or 7.**
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 params:
@@ -8,7 +17,7 @@ params:
     type: "bool"
 
   - param_name: "kernelsize"
-    description: "tbd"
+    description: "value type: int, odd values"
     type: "kernel"
     min_val: 1
-    max_val: 10000
+    max_val: 10
