@@ -43,6 +43,7 @@ def circleDetection(image_processing_handler: ImageProcessingHandler,
         if index > 100:
             if logger:
                 logger.warn("More than 100 contours found. Only the first 100 will be processed")
+                image_processing_handler.append_vision_process_debug("More than 100 contours found. Only the first 100 will be processed")
             break
 
         for point in contour:
@@ -86,6 +87,7 @@ def circleDetection(image_processing_handler: ImageProcessingHandler,
     if len(found_circles_x) == 0:
         if logger:
             logger.warn("No circles found")
+            image_processing_handler.append_vision_process_debug("No circles found")
         image_processing_handler.set_vision_ok(False)
         return
     
