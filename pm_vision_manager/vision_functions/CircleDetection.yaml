@@ -4,8 +4,7 @@ description: >-
   It operates by finding object contours and then applying a least-squares
   fitting algorithm to the contour points. This function is ideal for
   accurately measuring the center and radius of circular objects in the image.
-  Set the `minRadius` and `maxRadius` span larger at first to ensure detection,
-  then narrow down the range for more precise results.
+  **Important**: Set the `minRadius` to 10.0 and `maxRadius` to 10000.0 at first to ensure detection of all circles. Then adjust the range to only detect the desired circles.
 
   **WARNING:** This method is sensitive and will likely fail if the circles are
   truncated by the image border. The fitting algorithm will be corrupted by the
@@ -37,14 +36,14 @@ params:
   - param_name: "minRadius"
     description: "Minimum radius of the circle to be detected [um]."
     type: "float"
-    min_val: 0.0
-    max_val: "inf"
+    min_val: 1.0
+    max_val: 4000.0
 
   - param_name: "maxRadius"
     description: "Maximum radius of the circle to be detected [um]."
     type: "float"
-    min_val: 0.001
-    max_val: "inf"
+    min_val: 1.0
+    max_val: 10000.0
 
   - param_name: "draw_circles"
     description: "Draw the detected circles on the image. This has no effect on the output of the function."

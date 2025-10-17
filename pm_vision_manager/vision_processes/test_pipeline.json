@@ -1,10 +1,15 @@
 {
     "vision_process_name": "test_pipeline",
-    "process creation": "2025-09-30 16:44:14",
+    "process creation": "2025-10-12 11:44:00",
     "vision_pipeline": [
         {
             "BGR2GRAY": {
                 "active": true
+            }
+        },
+        {
+            "EqualizeHist": {
+                "active": false
             }
         },
         {
@@ -17,22 +22,34 @@
         },
         {
             "Morphology_Ex_Opening": {
-                "active": true,
-                "kernelsize": 5
+                "active": false,
+                "kernelsize": 7
             }
         },
         {
             "Morphology_Ex_Closing": {
                 "active": true,
-                "kernelsize": 5
+                "kernelsize": 11
+            }
+        },
+        {
+            "FillArea": {
+                "active": false,
+                "draw_contours": false,
+                "white_padding_top": false,
+                "white_padding_left": false,
+                "white_padding_bottom": false,
+                "white_padding_right": false,
+                "mode": "RETR_EXTERNAL",
+                "method": "CHAIN_APPROX_SIMPLE"
             }
         },
         {
             "CircleDetection": {
                 "active": true,
                 "draw_circles": true,
-                "mode": "standardLSQ",
-                "minRadius": 200.0,
+                "mode": "prattSVD",
+                "minRadius": 300.0,
                 "maxRadius": 2500.0
             }
         }

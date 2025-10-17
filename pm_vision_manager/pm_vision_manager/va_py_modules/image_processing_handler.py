@@ -624,8 +624,10 @@ class ImageProcessingHandler:
         """
         Converts image coordinates given in top left origin to center origin. 
         """
-        x_center = int(round(x_tl - img_width / 2))
-        y_center = int(round(img_height / 2 - y_tl))
+        # x_center = int(round(x_tl - img_width / 2))
+        # y_center = int(round(img_height / 2 - y_tl))
+        x_center = x_tl - img_width / 2.0
+        y_center = img_height / 2.0 - y_tl
         return x_center, y_center
     
     @staticmethod

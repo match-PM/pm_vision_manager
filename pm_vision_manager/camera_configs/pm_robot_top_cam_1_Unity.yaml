@@ -1,0 +1,23 @@
+camera_params:
+  cameraname: 'Cam_1_Top'
+  pixelsize: 2.2 # in um
+  magnification: 1 
+  camera_axis_1: 'x'
+  camera_axis_2: 'y'
+  camera_axis_1_angle: 0                # Starting from normal 'x' in math. positive direction
+  camera_axis_2_angle: '+'              # '+' -> 90 degree; '-' -> -90 degree 
+  subscription_topic: 'Image_Cam1_raw'
+    
+  exposure_time:
+    srv_client_name: '/Camera_Top_View/pylon_ros2_camera_node/set_exposure'
+    srv_type: 'pm_vision_interfaces/srv/DemoSetExposure'
+    min_val: 4.0
+    max_val: 35000.0
+    
+  set_coax_light_bool:
+    srv_client_name: '/pm_lights_controller/CoaxLight/SetState'
+    srv_type: 'pm_msgs/srv/CoaxLightSetState'
+
+  ring_light:
+    srv_client_name: '/pm_lights_controller/RingLight/SetState'
+    srv_type: 'pm_msgs/srv/RingLightSetState'
