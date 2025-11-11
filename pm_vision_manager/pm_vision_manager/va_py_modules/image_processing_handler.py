@@ -33,6 +33,7 @@ class ImageProcessingHandler:
         self._processing_image: np.ndarray = None
         self._display_frame: np.ndarray = None
         self._final_image: np.ndarray = None
+        self._initial_image_overlay: np.ndarray = None
         self._processed_image_overlay: np.ndarray = None
         self.frame_visual_elements = None
         self.frame_buffer = []
@@ -172,6 +173,10 @@ class ImageProcessingHandler:
                                                                 self.frame_visual_elements, 
                                                                 self.logger)
 
+        self._initial_image_overlay = self.create_vision_element_overlay(self._initial_image,
+                                                                      self.frame_visual_elements,
+                                                                      self.logger)
+
         self._processed_image_overlay = deepcopy(self._display_frame)
 
         self._vision_results_dict["vision_results"] = self._vision_results_list
@@ -203,6 +208,10 @@ class ImageProcessingHandler:
         if self.show_input_and_output_image:
             self._display_frame = cv2.vconcat([_initial_image, self._display_frame])
 
+        # Concatenate initial image overlay and processed image overlay
+        # self._initial_image_overlay = cv2.vconcat([self._initial_image, self._initial_image_overlay])
+        self._initial_image_overlay = cv2.vconcat([self._initial_image, self._initial_image_overlay])
+
         self._final_image = self.get_display_image()
         
         # Sort results if there are any
@@ -215,9 +224,12 @@ class ImageProcessingHandler:
     
     def get_display_image(self):
         return deepcopy(self._display_frame)
-    
+
+    def get_initial_image_overlay(self):
+        return np.copy(self._initial_image_overlay)
+
     def get_processed_image_overlay(self):
-        return  self._processed_image_overlay
+        return  np.copy(self._processed_image_overlay)
 
     def is_process_image_grayscale(self)->bool:
         # Check the number of color channels
@@ -445,6 +457,9 @@ class ImageProcessingHandler:
 
     def set_quality_scores(self, function_name:str, quality_dict:dict):
         self._quality_scores_dict[function_name] = quality_dict
+
+    def delete_quality_scores(self):
+        self._quality_scores_dict = {}
 
     def append_to_results(self, result:dict):
         self._vision_results_list.append(result)

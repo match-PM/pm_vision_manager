@@ -4,11 +4,9 @@ description: >-
   **Crucially, any black hole or gap smaller than this kernel size will be filled or closed.**
 
   **GUIDANCE:**
-  1. To fill holes within an object, set the kernelsize slightly larger than the largest hole you want to fill.
-  2. To connect separate parts of an object, set the kernelsize larger than the gap between them.
-  3. **WARNING:** If the kernelsize is too large, it can incorrectly merge distinct, nearby objects into one, leading to inaccurate contour detection.
+  1. Use only typical kernelsize: small, odd integers like 3, 5, or 7.
+  2. **WARNING:** If the kernelsize is too large, it can incorrectly merge distinct, nearby objects into one, leading to inaccurate contour detection.
 
-  **Typical kernelsize for closing small gaps or holes are small, odd integers like 3, 5, or 7.**
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
 

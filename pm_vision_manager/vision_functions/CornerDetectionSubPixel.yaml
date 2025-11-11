@@ -1,14 +1,21 @@
 function_name: "CornerDetectionSubPixel"
-description: "Detects the intersection point (corner) of two dominant lines in a binary image, each selected from a specified image edge (top, bottom, left, right). Uses Hough-based line detection with adjustable search accuracy. Returns subpixel-accurate corner coordinates and quality scores."
+description: >- 
+  Detects the intersection point (corner) of two dominant lines in a binary image, each selected from a specified image edge (top, bottom, left, right). 
+  Uses Hough-based line detection with adjustable search accuracy. Returns subpixel-accurate corner coordinates and quality scores.
+
+  **GUIDANCE:**
+  - **Important**: Do not use any thresholding or morphological operations before this function! This functions works with subpixel edge detection and requires a clean binary edge image.
+  - Set `minLineLength_1` and `minLineLength_2` to values that reflect the expected lengths of the lines to be detected.
+  - Analyse the `weakest_score_action` in the quality score output. Optimize parameters accordingly to improve detection robustness and accuracy.
+
 function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 quality_score:
   line1: "Number of detected line segments for line 1"
   line2: "Number of detected line segments for line 2"
   residual_score: "0-100 (higher better)"
   inlier_score: "0-100 (higher better)"
-  weakest_score_index: "index of weakest subscore (0=resid,1=inliers)"
   weakest_score_action:
-    s: "more smoothing / larger dist_thresh"
+    s: "smaller dist_thresh"
     t: "finer search_accuracy"
     l: "longer minLineLength_1 / minLineLength_2"
   angle_degrees: "G"
@@ -30,7 +37,7 @@ params:
       - "right"
 
   - param_name: "minLineLength_1"
-    description: "Minimum length (in microns) of segments for the first line detection."
+    description: "Minimum length (um) of segments for the first line detection."
     type: "float"
     min_val: 0.1
     max_val: "inf"
@@ -47,7 +54,7 @@ params:
       - "right"
 
   - param_name: "minLineLength_2"
-    description: "Minimum length (in microns) of segments for the second line detection."
+    description: "Minimum length (um) of segments for the second line detection."
     type: "float"
     min_val: 0.1
     max_val: "inf"

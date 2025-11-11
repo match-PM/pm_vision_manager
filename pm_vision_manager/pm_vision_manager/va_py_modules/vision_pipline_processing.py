@@ -675,6 +675,10 @@ def HoughCircles(image_processing_handler: ImageProcessingHandler,
       x, y, r = pt[0], pt[1], pt[2]
 
       x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x, y)
+
+      x_roi, y_roi = image_processing_handler.CS_Conv_ROI_Pix_TO_Img_Pix(x, y)
+      image_processing_handler.append_vision_process_debug(f"Circle: ({x_roi}, {y_roi}), radius {r}")
+
       radius_um=r*image_processing_handler.umPROpixel
       #print(str(image_processing_handler.camera_axis_1)+'-Coordinate:'+ str(x_cs_camera))
       #print(str(image_processing_handler.camera_axis_2)+'-Coordinate:'+ str(y_cs_camera))

@@ -8,13 +8,13 @@ params:
     type: "bool"
 
   - param_name: "kernelsize"
-    description: "tbd"
+    description: "Size of the square kernel used for erosion."
     type: "kernel"
     min_val: 1
-    max_val: 10000
+    max_val: 20
 
   - param_name: "iterations"
-    description: "tbd"
+    description: "Number of times to apply the erosion."
     type: "unsigned_int"
     min_val: 1
     max_val: 255

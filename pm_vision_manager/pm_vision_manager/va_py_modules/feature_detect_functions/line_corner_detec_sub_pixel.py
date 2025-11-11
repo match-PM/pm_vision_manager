@@ -149,7 +149,7 @@ def _corner_quality(meta1, meta2, *, R0=0.75, alpha=0.30, N0_min=20, N0_max=1000
     A = ["s","t"][W]  # s: more smoothing or larger dist_thresh; t: more inliers (lower Canny, increase maxLineGap, finer search)
 
     K_LOW = 1
-    K_HIGH = 5
+    K_HIGH = 2
 
     if int(detected_lines_1) > K_HIGH or int(detected_lines_2) > K_HIGH:
         A = "l"
@@ -491,6 +491,9 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(x, y)
     if logger: logger.error(f"intersection {x_cs_camera}, {y_cs_camera}!")
 
+    x_roi, y_roi = image_processing_handler.CS_Conv_ROI_Pix_TO_Img_Pix(x, y)
+    image_processing_handler.append_vision_process_debug(f"Corner: ({x_roi}, {y_roi})")
+
     point = image_processing_handler.new_vision_point_result()
     point.axis_value_1 = x_cs_camera
     point.axis_value_2 = y_cs_camera
@@ -500,23 +503,27 @@ def cornerDetectionSubPixel(image_processing_handler: ImageProcessingHandler,
     image_processing_handler.apply_visual_elements_canvas(canvas)
     image_processing_handler.set_vision_ok(True)
 
-    # quality computation 
-    P, G, A = _corner_quality(meta_1, meta_2, R0=0.75, alpha=0.30, N0_min=20, detected_lines_1=detected_lines_1, detected_lines_2=detected_lines_2)
+    # if a point is detected, compute quality score
+    if point is not []:
+        # quality computation 
+        P, G, A = _corner_quality(meta_1, meta_2, R0=3, alpha=0.30, N0_min=20, detected_lines_1=detected_lines_1, detected_lines_2=detected_lines_2)
 
-    # store compact quality scores for retrieval
-    _corner_quality_dict = {
-        "line1": detected_lines_1,
-        "line2": detected_lines_2,
-        "residual_score": P[0],
-        "inlier_score": P[1],
-        "weakest_score_action": A,
-        "angle_degrees": G
-    }
+        # store compact quality scores for retrieval
+        _corner_quality_dict = {
+            "line1": detected_lines_1,
+            "line2": detected_lines_2,
+            "residual_score": P[0],
+            "inlier_score": P[1],
+            "weakest_score_action": A,
+            "angle_degrees": G
+        }
 
-    image_processing_handler.set_quality_scores("cornerDetectionSubPixel", _corner_quality_dict)
+        image_processing_handler.set_quality_scores("cornerDetectionSubPixel", _corner_quality_dict)
 
-    # minimal, token-efficient payload for the agent
-    if logger: logger.info(f"Corner detected with quality {_corner_quality_dict}")
+        # minimal, token-efficient payload for the agent
+        if logger: logger.info(f"Corner detected with quality {_corner_quality_dict}")
+    else:
+        image_processing_handler.delete_quality_scores()
 
     return
 

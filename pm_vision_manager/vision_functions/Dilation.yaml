@@ -1,5 +1,7 @@
 function_name: "Dilation"
-description: Applies morphological dilation to the image using a square kernel of the specified size for a given number of iterations. Enlarges bright regions and fills small holes.
+description: >- 
+  Applies morphological dilation to the image using a square kernel of the specified size for a given number of iterations. Enlarges bright regions and fills small holes.
+  typical values for kernelsize are small, odd integers like 3, 5, or 7.
 
 function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
 
@@ -9,13 +11,13 @@ params:
     type: "bool"
 
   - param_name: "kernelsize"
-    description: "tbd"
+    description: "Size of the square kernel used for dilation."
     type: "kernel"
     min_val: 1
     max_val: 10000
 
   - param_name: "iterations"
-    description: "tbd"
+    description: "Number of times to apply the dilation."
     type: "unsigned_int"
     min_val: 1
     max_val: 255
