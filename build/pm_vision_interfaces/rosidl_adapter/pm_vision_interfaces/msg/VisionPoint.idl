@@ -1,0 +1,18 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from pm_vision_interfaces/msg/VisionPoint.msg
+// generated code does not contain a copyright notice
+
+
+module pm_vision_interfaces {
+  module msg {
+    struct VisionPoint {
+      float axis_value_1;
+
+      float axis_value_2;
+
+      string axis_suffix_1;
+
+      string axis_suffix_2;
+    };
+  };
+};

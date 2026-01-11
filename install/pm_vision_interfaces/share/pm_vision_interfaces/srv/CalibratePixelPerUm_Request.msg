@@ -1,0 +1,2 @@
+float64 multiplicator
+string camera_config_file_name

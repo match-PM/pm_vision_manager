@@ -1,0 +1,4 @@
+vision_assistant_config:
+  scale_ouput_window_to_screen_size: true
+  show_input_and_output_image: true
+

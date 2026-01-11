@@ -1,0 +1,20 @@
+[0.544s] Invoking command in '/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_app': PYTHONPATH=/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_app/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_app/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/pm_vision_app build --build-base /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_app/build install --record /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_app/install.log --single-version-externally-managed install_data
+[0.671s] running egg_info
+[0.671s] writing ../build/pm_vision_app/pm_vision_app.egg-info/PKG-INFO
+[0.671s] writing dependency_links to ../build/pm_vision_app/pm_vision_app.egg-info/dependency_links.txt
+[0.671s] writing entry points to ../build/pm_vision_app/pm_vision_app.egg-info/entry_points.txt
+[0.671s] writing requirements to ../build/pm_vision_app/pm_vision_app.egg-info/requires.txt
+[0.671s] writing top-level names to ../build/pm_vision_app/pm_vision_app.egg-info/top_level.txt
+[0.672s] reading manifest file '../build/pm_vision_app/pm_vision_app.egg-info/SOURCES.txt'
+[0.673s] writing manifest file '../build/pm_vision_app/pm_vision_app.egg-info/SOURCES.txt'
+[0.673s] running build
+[0.673s] running build_py
+[0.673s] running install
+[0.673s] running install_lib
+[0.674s] running install_data
+[0.674s] running install_egg_info
+[0.675s] removing '/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_app/lib/python3.10/site-packages/pm_vision_app-0.1.0-py3.10.egg-info' (and everything under it)
+[0.675s] Copying ../build/pm_vision_app/pm_vision_app.egg-info to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_app/lib/python3.10/site-packages/pm_vision_app-0.1.0-py3.10.egg-info
+[0.676s] running install_scripts
+[0.686s] writing list of installed files to '/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_app/install.log'
+[0.696s] Invoked command in '/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_app' returned '0': PYTHONPATH=/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_app/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_app/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/pm_vision_app build --build-base /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_app/build install --record /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_app/install.log --single-version-externally-managed install_data

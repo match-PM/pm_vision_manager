@@ -1,0 +1,31 @@
+function_name: "MinEnclosingCircle"
+description: Finds the minimum enclosing circle for each contour in the binary image. Returns center coordinates and radius, and optionally draws the circles.
+function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "draw_circles"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "line_size"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 1
+    max_val: 100
+    default_val: 5
+    
+  - param_name: "mode"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "RETR_EXTERNAL"
+
+  - param_name: "method"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "CHAIN_APPROX_SIMPLE"

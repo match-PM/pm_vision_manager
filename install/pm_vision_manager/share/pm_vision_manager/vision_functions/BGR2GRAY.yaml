@@ -1,0 +1,8 @@
+function_name: "BGR2GRAY"
+description: Converts a BGR (color) image to an 8-bit single-channel grayscale image using standard luminance conversion.
+function_category: "Image Conversion"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"

@@ -1,6 +1,6 @@
 {
     "vision_process_name": "test_pipeline",
-    "process creation": "2025-09-30 16:44:14",
+    "process creation": "2026-01-11 14:39:56",
     "vision_pipeline": [
         {
             "BGR2GRAY": {
@@ -34,6 +34,20 @@
                 "mode": "standardLSQ",
                 "minRadius": 200.0,
                 "maxRadius": 2500.0
+            }
+        },
+        {
+            "Draw_Grid": {
+                "active": false,
+                "grid_spacing": 200
+            }
+        },
+        {
+            "Save_Image": {
+                "active": false,
+                "with_vision_elements": true,
+                "save_in_cross_val": true,
+                "prefix": "A"
             }
         }
     ]

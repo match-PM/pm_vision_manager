@@ -1,0 +1,12 @@
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:srv/ExecuteVision.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:srv/DemoSetExposure.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:srv/CalibratePixelPerUm.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:srv/CalibrateAngle.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:msg/VisionPoint.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:msg/CrossValidation.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:msg/VisionResults.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:msg/VisionLine.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:msg/VisionArea.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:msg/VisionCircle.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:msg/VisionResponse.idl
+/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/rosidl_adapter/pm_vision_interfaces:msg/ImageSharpness.idl

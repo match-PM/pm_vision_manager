@@ -1,0 +1,2 @@
+VisionPoint center_point
+float64 radius

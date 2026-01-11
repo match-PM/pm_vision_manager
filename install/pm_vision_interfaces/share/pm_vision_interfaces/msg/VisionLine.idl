@@ -1,0 +1,21 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from pm_vision_interfaces/msg/VisionLine.msg
+// generated code does not contain a copyright notice
+
+#include "pm_vision_interfaces/msg/VisionPoint.idl"
+
+module pm_vision_interfaces {
+  module msg {
+    struct VisionLine {
+      pm_vision_interfaces::msg::VisionPoint point_1;
+
+      pm_vision_interfaces::msg::VisionPoint point_2;
+
+      pm_vision_interfaces::msg::VisionPoint point_mid;
+
+      float angle;
+
+      float length;
+    };
+  };
+};

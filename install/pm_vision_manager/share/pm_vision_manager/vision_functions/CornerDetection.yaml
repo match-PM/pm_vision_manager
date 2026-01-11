@@ -1,0 +1,55 @@
+function_name: "CornerDetection"
+description: Takes a binary image. Detects the intersection point (corner) of two dominant lines selected from specified image edges. Uses Hough-based line detection and computes line intersection.
+function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    default: true
+    type: "bool"
+
+  - param_name: "line_1_selection"
+    description: "tbd"
+    type: "string_list"
+    default: "top"
+    values:
+      - "top"
+      - "bottom"
+      - "left"
+      - "right"
+
+  - param_name: "minLineLength_1"
+    description: "in microns"
+    type: "float"
+    min_val: 0.1
+    max_val: "inf"
+    default: 0.1
+
+  - param_name: "line_2_selection"
+    description: "tbd"
+    type: "string_list"
+    default: "top"
+    values:
+      - "top"
+      - "bottom"
+      - "left"
+      - "right"
+
+  - param_name: "minLineLength_2"
+    description: "in microns"
+    type: "float"
+    min_val: 0.1
+    max_val: "inf"
+    default: 0.1
+    
+  - param_name: "search_accuracy"
+    description: "tbd"
+    type: "string_list"
+    default: "fine"
+    values:
+      - "coarse"
+      - "fine"
+      - "finest"
+      - "max_limit"
+
+

@@ -1,0 +1,50 @@
+function_name: "Extract_Color_Areas"
+description: Validates the input, converts the image to HSV, applies color range masks defined by the provided hue, saturation, and value boundaries, and extracts regions matching those criteria and updates the processing image in the handler."
+function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "lower_hue"
+    description: "Lower boundary for the hue channel."
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 255
+    default_val: 0
+
+  - param_name: "upper_hue"
+    description: "Upper boundary for the hue channel."
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 255
+    default_val: 255
+
+  - param_name: "lower_saturation"
+    description: "Lower boundary for the saturation channel."
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 255
+    default_val: 200
+
+  - param_name: "upper_saturation"
+    description: "Upper boundary for the saturation channel."
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 255
+    default_val: 255
+
+  - param_name: "lower_value"
+    description: "Lower boundary for the value channel."
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 255
+    default_val: 200
+
+  - param_name: "upper_value"
+    description: "Upper boundary for the value channel."
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 255
+    default_val: 255

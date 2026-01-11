@@ -1,0 +1,31 @@
+function_name: "Threshold"
+description: Converts a grayscale image to a binary image by applying a global threshold. Pixels above 'thresh' are set to 'maxval', others to zero.
+function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "thresh"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 255
+
+  - param_name: "maxval"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 255
+    max_val: 255
+
+  - param_name: "type"
+    description: "tbd"
+    type: "string_list"
+    values: 
+      - "THRESH_BINARY"
+      - "THRESH_BINARY_INV"
+      - "THRESH_TRUNC"
+      - "THRESH_TOZERO"
+      - "THRESH_TOZERO_INV"
+      - "THRESH_OTSU"

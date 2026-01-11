@@ -1,0 +1,25 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from pm_vision_interfaces/msg/VisionResults.msg
+// generated code does not contain a copyright notice
+
+#include "pm_vision_interfaces/msg/ImageSharpness.idl"
+#include "pm_vision_interfaces/msg/VisionArea.idl"
+#include "pm_vision_interfaces/msg/VisionCircle.idl"
+#include "pm_vision_interfaces/msg/VisionLine.idl"
+#include "pm_vision_interfaces/msg/VisionPoint.idl"
+
+module pm_vision_interfaces {
+  module msg {
+    struct VisionResults {
+      sequence<pm_vision_interfaces::msg::VisionPoint> points;
+
+      sequence<pm_vision_interfaces::msg::VisionLine> lines;
+
+      sequence<pm_vision_interfaces::msg::VisionArea> areas;
+
+      sequence<pm_vision_interfaces::msg::VisionCircle> circles;
+
+      pm_vision_interfaces::msg::ImageSharpness image_sharpness;
+    };
+  };
+};

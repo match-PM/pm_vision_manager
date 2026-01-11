@@ -1,0 +1,73 @@
+import rclpy
+from rclpy.node import Node
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import cv2
+
+class ImagePublisher(Node):
+    def __init__(self):
+        super().__init__('webcam_image_publisher')
+        print("=== Starting Webcam Publisher ===")
+        
+        # Create publisher
+        self.publisher_ = self.create_publisher(Image, 'video_frames', 10)
+        
+        # Timer for 10 FPS (0.1 seconds)
+        timer_period = 0.1
+        self.timer = self.create_timer(timer_period, self.timer_callback)
+        
+        # Open the camera (use /dev/video0 which we know works)
+        self.cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
+        
+        if not self.cap.isOpened():
+            self.get_logger().error("❌ Cannot open webcam!")
+            raise RuntimeError("Cannot open camera")
+        
+        # Set camera properties
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        
+        self.br = CvBridge()
+        self.get_logger().info('✅ Webcam publisher started successfully!')
+        self.get_logger().info('📹 Camera: UGREEN Camera 2K')
+        self.get_logger().info('🎯 Publishing to: /video_frames')
+
+    def timer_callback(self):
+        # Capture frame
+        ret, frame = self.cap.read()
+        
+        if ret:
+            try:
+                # Convert to ROS message and publish
+                img_msg = self.br.cv2_to_imgmsg(frame, encoding="bgr8")
+                self.publisher_.publish(img_msg)
+                self.get_logger().info('📤 Publishing video frame', throttle_duration_sec=2.0)
+            except Exception as e:
+                self.get_logger().error(f'❌ Error converting image: {str(e)}')
+        else:
+            self.get_logger().warning('⚠️ Failed to capture frame')
+
+def main():
+    print("Initializing ROS 2...")
+    rclpy.init()
+    
+    try:
+        image_publisher = ImagePublisher()
+        print("Node created successfully!")
+        print("Spinning... (Press Ctrl+C to stop)")
+        rclpy.spin(image_publisher)
+        
+    except KeyboardInterrupt:
+        print("\n🛑 Keyboard interrupt received")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+    finally:
+        print("🧹 Cleaning up...")
+        if 'image_publisher' in locals():
+            image_publisher.destroy_node()
+        rclpy.shutdown()
+        print("✅ Shutdown complete")
+
+if __name__ == '__main__':
+		    main()

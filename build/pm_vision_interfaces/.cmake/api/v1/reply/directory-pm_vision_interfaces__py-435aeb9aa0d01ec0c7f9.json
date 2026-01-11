@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "pm_vision_interfaces__py",
+		"source" : "/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_interfaces/pm_vision_interfaces__py"
+	}
+}

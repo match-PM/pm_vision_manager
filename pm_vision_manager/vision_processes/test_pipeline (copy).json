@@ -1,6 +1,6 @@
 {
-    "vision_process_name": "detect_fitting_hole_outer_edge_v2",
-    "process creation": "2025-09-30 12:08:42",
+    "vision_process_name": "test_pipeline (copy)",
+    "process creation": "2025-12-06 12:56:03",
     "vision_pipeline": [
         {
             "ROI": {
@@ -32,7 +32,7 @@
         {
             "Morphology_Ex_Closing": {
                 "active": true,
-                "kernelsize": 15
+                "kernelsize": 11
             }
         },
         {
@@ -45,21 +45,29 @@
             "FillArea": {
                 "active": true,
                 "draw_contours": false,
-                "mode": "RETR_EXTERNAL",
-                "method": "CHAIN_APPROX_SIMPLE",
                 "white_padding_top": false,
                 "white_padding_left": false,
                 "white_padding_bottom": false,
-                "white_padding_right": false
+                "white_padding_right": false,
+                "mode": "RETR_EXTERNAL",
+                "method": "CHAIN_APPROX_SIMPLE"
             }
         },
         {
             "CircleDetection": {
                 "active": true,
+                "draw_circles": true,
                 "mode": "prattSVD",
                 "minRadius": 1980.0,
-                "maxRadius": 2420.0,
-                "draw_circles": true
+                "maxRadius": 2420.0
+            }
+        },
+        {
+            "Save_Image": {
+                "active": false,
+                "with_vision_elements": false,
+                "save_in_cross_val": false,
+                "prefix": ""
             }
         }
     ]

@@ -36,7 +36,7 @@ class MainMenuWidget(QWidget):
         # add button
         #self.stop_assistant_button = QPushButton("Stop Vision Assistant")
 
-        self.start_assistant_button = QPushButton("Start Vision Assistant")
+        self.start_assistant_button = QPushButton ("Start VisionAssistant")
         #self.start_assistant_button.clicked.connect(self.start_vision_assistant)
         
         #self.referesh_running_assistant_button = QPushButton("Refresh Assistants")

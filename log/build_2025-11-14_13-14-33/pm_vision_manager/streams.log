@@ -1,0 +1,146 @@
+[0.583s] Invoking command in '/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_manager': PYTHONPATH=/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/pm_vision_manager build --build-base /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build install --record /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/install.log --single-version-externally-managed install_data
+[0.709s] running egg_info
+[0.709s] creating ../build/pm_vision_manager/pm_vision_manager.egg-info
+[0.709s] writing ../build/pm_vision_manager/pm_vision_manager.egg-info/PKG-INFO
+[0.709s] writing dependency_links to ../build/pm_vision_manager/pm_vision_manager.egg-info/dependency_links.txt
+[0.709s] writing entry points to ../build/pm_vision_manager/pm_vision_manager.egg-info/entry_points.txt
+[0.709s] writing requirements to ../build/pm_vision_manager/pm_vision_manager.egg-info/requires.txt
+[0.709s] writing top-level names to ../build/pm_vision_manager/pm_vision_manager.egg-info/top_level.txt
+[0.709s] writing manifest file '../build/pm_vision_manager/pm_vision_manager.egg-info/SOURCES.txt'
+[0.710s] reading manifest file '../build/pm_vision_manager/pm_vision_manager.egg-info/SOURCES.txt'
+[0.711s] writing manifest file '../build/pm_vision_manager/pm_vision_manager.egg-info/SOURCES.txt'
+[0.711s] running build
+[0.711s] running build_py
+[0.711s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build
+[0.711s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib
+[0.711s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager
+[0.711s] copying pm_vision_manager/vision_sub.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager
+[0.711s] copying pm_vision_manager/vision_node.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager
+[0.711s] copying pm_vision_manager/webcam_image_pub.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager
+[0.711s] copying pm_vision_manager/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager
+[0.712s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] copying pm_vision_manager/va_py_modules/vision_pipline_processing.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] copying pm_vision_manager/va_py_modules/image_processing_handler.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] copying pm_vision_manager/va_py_modules/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] copying pm_vision_manager/va_py_modules/vision_utils.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] copying pm_vision_manager/va_py_modules/test_vision_pipline_processing.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] copying pm_vision_manager/va_py_modules/vision_assistant_class.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] copying pm_vision_manager/va_py_modules/camera_ros_interfaces.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] copying pm_vision_manager/va_py_modules/manager_configuration.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules
+[0.712s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules
+[0.712s] copying pm_vision_manager/va_py_modules/vision_app_modules/MainMenuWidget.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules
+[0.712s] copying pm_vision_manager/va_py_modules/vision_app_modules/VisionAssistantWindow.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules
+[0.712s] copying pm_vision_manager/va_py_modules/vision_app_modules/ImageDisplayWidget.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules
+[0.712s] copying pm_vision_manager/va_py_modules/vision_app_modules/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules
+[0.712s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.712s] copying pm_vision_manager/va_py_modules/feature_detect_functions/circle_detect.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.713s] copying pm_vision_manager/va_py_modules/feature_detect_functions/line_corner_detec_sub_pixel.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.713s] copying pm_vision_manager/va_py_modules/feature_detect_functions/line_corner_detec.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.713s] copying pm_vision_manager/va_py_modules/feature_detect_functions/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.713s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/image_modification_functions
+[0.713s] copying pm_vision_manager/va_py_modules/image_modification_functions/extraction_functions.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/image_modification_functions
+[0.713s] copying pm_vision_manager/va_py_modules/image_modification_functions/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/image_modification_functions
+[0.713s] running install
+[0.713s] running install_lib
+[0.714s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/vision_sub.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager
+[0.714s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.714s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions/circle_detect.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions/line_corner_detec_sub_pixel.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions/line_corner_detec.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/feature_detect_functions/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions
+[0.714s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules/MainMenuWidget.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules/VisionAssistantWindow.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules/ImageDisplayWidget.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules
+[0.714s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules
+[0.714s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/image_modification_functions
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/image_modification_functions/extraction_functions.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/image_modification_functions
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/image_modification_functions/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/image_modification_functions
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_pipline_processing.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/image_processing_handler.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_utils.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/test_vision_pipline_processing.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_assistant_class.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/camera_ros_interfaces.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/manager_configuration.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/vision_node.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/webcam_image_pub.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager
+[0.715s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/__init__.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager
+[0.715s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/vision_sub.py to vision_sub.cpython-310.pyc
+[0.716s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions/circle_detect.py to circle_detect.cpython-310.pyc
+[0.716s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions/line_corner_detec_sub_pixel.py to line_corner_detec_sub_pixel.cpython-310.pyc
+[0.718s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions/line_corner_detec.py to line_corner_detec.cpython-310.pyc
+[0.719s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/feature_detect_functions/__init__.py to __init__.cpython-310.pyc
+[0.719s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules/MainMenuWidget.py to MainMenuWidget.cpython-310.pyc
+[0.720s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules/VisionAssistantWindow.py to VisionAssistantWindow.cpython-310.pyc
+[0.721s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules/ImageDisplayWidget.py to ImageDisplayWidget.cpython-310.pyc
+[0.722s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules/__init__.py to __init__.cpython-310.pyc
+[0.722s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/image_modification_functions/extraction_functions.py to extraction_functions.cpython-310.pyc
+[0.722s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/image_modification_functions/__init__.py to __init__.cpython-310.pyc
+[0.722s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_pipline_processing.py to vision_pipline_processing.cpython-310.pyc
+[0.726s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/image_processing_handler.py to image_processing_handler.cpython-310.pyc
+[0.727s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/__init__.py to __init__.cpython-310.pyc
+[0.727s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_utils.py to vision_utils.cpython-310.pyc
+[0.728s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/test_vision_pipline_processing.py to test_vision_pipline_processing.cpython-310.pyc
+[0.728s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_assistant_class.py to vision_assistant_class.cpython-310.pyc
+[0.730s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/camera_ros_interfaces.py to camera_ros_interfaces.cpython-310.pyc
+[0.731s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/manager_configuration.py to manager_configuration.cpython-310.pyc
+[0.731s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/vision_node.py to vision_node.cpython-310.pyc
+[0.732s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/webcam_image_pub.py to webcam_image_pub.cpython-310.pyc
+[0.732s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/__init__.py to __init__.cpython-310.pyc
+[0.732s] running install_data
+[0.732s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/ament_index
+[0.732s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/ament_index/resource_index
+[0.732s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/ament_index/resource_index/packages
+[0.732s] copying resource/pm_vision_manager -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/ament_index/resource_index/packages
+[0.732s] copying package.xml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager
+[0.732s] copying config/vision_assistant_path_config.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager
+[0.732s] copying config/vision_assistant_config.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager
+[0.733s] copying config/app_icon.png -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager
+[0.733s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/launch
+[0.733s] copying launch/pm_vision.launch.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/launch
+[0.733s] creating /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions
+[0.733s] copying vision_functions/SetCoAxLight.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.733s] copying vision_functions/Morphology_Ex_Closing.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.733s] copying vision_functions/Extract_Color_Areas.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.733s] copying vision_functions/FillArea.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.733s] copying vision_functions/SetCoAxLightBool.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.733s] copying vision_functions/Threshold.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/Morphology_Ex_Opening.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/Blur.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/ImageSharpness.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/EqualizeHist.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/Dilation.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/MinEnclosingCircle.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/HoughLinesP.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/CornerDetection.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/ROI.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.734s] copying vision_functions/CLAHE_on_V_Channel.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/SetRingLight.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/CircleDetection.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/Bitwise_Not.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/Errosion.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/Set_Camera_Exposure_Time.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/HoughCircles.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/ReduceSaturation.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/Save_Image.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/CornerDetectionSubPixel.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.735s] copying vision_functions/BGR2GRAY.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.736s] copying vision_functions/FillSelectedArea.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.736s] copying vision_functions/Canny.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.736s] copying vision_functions/Draw_Grid.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.736s] copying vision_functions/Draw_CS.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.736s] copying vision_functions/AdaptiveThreshold.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.736s] copying vision_functions/FitLine.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.736s] copying vision_functions/Morphology_Ex_Gradient.yaml -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/share/pm_vision_manager/vision_functions/
+[0.736s] running install_egg_info
+[0.737s] Copying ../build/pm_vision_manager/pm_vision_manager.egg-info to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager-0.1.0-py3.10.egg-info
+[0.737s] running install_scripts
+[0.748s] Installing vision_node script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+[0.748s] Installing vision_subscriber script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+[0.748s] Installing vision_webcam_publisher script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+[0.748s] writing list of installed files to '/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/install.log'
+[0.758s] Invoked command in '/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_manager' returned '0': PYTHONPATH=/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/pm_vision_manager build --build-base /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build install --record /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/install.log --single-version-externally-managed install_data

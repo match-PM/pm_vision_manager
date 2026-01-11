@@ -1,0 +1,5 @@
+[console_scripts]
+vision_node = pm_vision_manager.vision_node:main
+vision_subscriber = pm_vision_manager.vision_sub:main
+vision_webcam_publisher = pm_vision_manager.webcam_image_pub:main
+

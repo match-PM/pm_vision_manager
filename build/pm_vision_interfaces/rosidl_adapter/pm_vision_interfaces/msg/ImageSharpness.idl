@@ -1,0 +1,12 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from pm_vision_interfaces/msg/ImageSharpness.msg
+// generated code does not contain a copyright notice
+
+
+module pm_vision_interfaces {
+  module msg {
+    struct ImageSharpness {
+      double sharpness_value;
+    };
+  };
+};

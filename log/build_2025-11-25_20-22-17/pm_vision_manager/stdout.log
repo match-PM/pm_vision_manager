@@ -1,0 +1,27 @@
+running egg_info
+writing ../build/pm_vision_manager/pm_vision_manager.egg-info/PKG-INFO
+writing dependency_links to ../build/pm_vision_manager/pm_vision_manager.egg-info/dependency_links.txt
+writing entry points to ../build/pm_vision_manager/pm_vision_manager.egg-info/entry_points.txt
+writing requirements to ../build/pm_vision_manager/pm_vision_manager.egg-info/requires.txt
+writing top-level names to ../build/pm_vision_manager/pm_vision_manager.egg-info/top_level.txt
+reading manifest file '../build/pm_vision_manager/pm_vision_manager.egg-info/SOURCES.txt'
+writing manifest file '../build/pm_vision_manager/pm_vision_manager.egg-info/SOURCES.txt'
+running build
+running build_py
+copying pm_vision_manager/va_py_modules/vision_app_modules/VisionAssistantWindow.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules
+copying pm_vision_manager/va_py_modules/vision_app_modules/ImageDisplayWidget.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules
+running install
+running install_lib
+copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules/VisionAssistantWindow.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules
+copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/va_py_modules/vision_app_modules/ImageDisplayWidget.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules
+byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules/VisionAssistantWindow.py to VisionAssistantWindow.cpython-310.pyc
+byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/va_py_modules/vision_app_modules/ImageDisplayWidget.py to ImageDisplayWidget.cpython-310.pyc
+running install_data
+running install_egg_info
+removing '/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager-0.1.0-py3.10.egg-info' (and everything under it)
+Copying ../build/pm_vision_manager/pm_vision_manager.egg-info to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager-0.1.0-py3.10.egg-info
+running install_scripts
+Installing vision_node script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+Installing vision_subscriber script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+Installing vision_webcam_publisher script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+writing list of installed files to '/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/install.log'

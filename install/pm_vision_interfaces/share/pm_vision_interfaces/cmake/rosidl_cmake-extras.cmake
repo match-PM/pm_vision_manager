@@ -1,0 +1,4 @@
+# generated from rosidl_cmake/cmake/rosidl_cmake-extras.cmake.in
+
+set(pm_vision_interfaces_IDL_FILES "srv/ExecuteVision.idl;srv/DemoSetExposure.idl;srv/CalibratePixelPerUm.idl;srv/CalibrateAngle.idl;msg/VisionPoint.idl;msg/CrossValidation.idl;msg/VisionResults.idl;msg/VisionLine.idl;msg/VisionArea.idl;msg/VisionCircle.idl;msg/VisionResponse.idl;msg/ImageSharpness.idl")
+set(pm_vision_interfaces_INTERFACE_FILES "srv/ExecuteVision.srv;srv/ExecuteVision_Request.msg;srv/ExecuteVision_Response.msg;srv/DemoSetExposure.srv;srv/DemoSetExposure_Request.msg;srv/DemoSetExposure_Response.msg;srv/CalibratePixelPerUm.srv;srv/CalibratePixelPerUm_Request.msg;srv/CalibratePixelPerUm_Response.msg;srv/CalibrateAngle.srv;srv/CalibrateAngle_Request.msg;srv/CalibrateAngle_Response.msg;msg/VisionPoint.msg;msg/CrossValidation.msg;msg/VisionResults.msg;msg/VisionLine.msg;msg/VisionArea.msg;msg/VisionCircle.msg;msg/VisionResponse.msg;msg/ImageSharpness.msg")

@@ -1,0 +1,46 @@
+function_name: "FitLine"
+description: Fits a straight line to a set of 2D points (e.g., contour or edge points) using the chosen selection side and search accuracy, then returns line parameters.
+function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "line selection"
+    description: "tbd"
+    type: "string_list"
+    values:
+      - "top"
+      - "bottom"
+      - "left"
+      - "right"
+
+  - param_name: "search accuracy"
+    description: "tbd"
+    type: "string_list"
+    values:
+      - "coarse"
+      - "fine"
+      - "finest"
+      - "max_limit"
+
+  - param_name: "minLineLength"
+    description: "in microns"
+    type: "float"
+    min_val: 0.1
+    max_val: "inf"
+
+  # - param_name: "rho"
+  #   description: "Accuracy"
+  #   type: "float"
+  #   min_val: 0.001
+  #   max_val: 2.0
+
+  # - param_name: "theta"
+  #   description: "tbd"
+  #   type: "unsigned_int"
+  #   min_val: 180
+  #   max_val: 3600
+
+

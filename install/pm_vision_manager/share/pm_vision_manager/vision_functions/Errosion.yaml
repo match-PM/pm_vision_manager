@@ -1,0 +1,20 @@
+function_name: "Errosion"
+description: Applies morphological erosion to the image using a square kernel of the given size, repeated for the specified number of iterations. Shrinks bright regions and removes small noise.
+function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "kernelsize"
+    description: "tbd"
+    type: "kernel"
+    min_val: 1
+    max_val: 10000
+
+  - param_name: "iterations"
+    description: "tbd"
+    type: "unsigned_int"
+    min_val: 1
+    max_val: 255

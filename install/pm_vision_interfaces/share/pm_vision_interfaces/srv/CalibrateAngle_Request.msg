@@ -1,0 +1,2 @@
+float64 angle_diff
+string camera_config_file_name

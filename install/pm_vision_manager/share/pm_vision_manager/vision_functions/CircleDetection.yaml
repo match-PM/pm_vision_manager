@@ -1,0 +1,52 @@
+function_name: "CircleDetection"
+description: >-
+  A high-precision circle detector that identifies circles in a **binary image**.
+  It operates by finding object contours and then applying a least-squares
+  fitting algorithm to the contour points. This function is ideal for
+  accurately measuring the center and radius of circular objects in the image.
+  Set the `minRadius` and `maxRadius` span larger at first to ensure detection,
+  then narrow down the range for more precise results.
+
+  **WARNING:** This method is sensitive and will likely fail if the circles are
+  truncated by the image border. The fitting algorithm will be corrupted by the
+  non-circular points from the image edge. To handle such cases, a
+  `morphological_opening` or `morphological_closing` function **must** be applied to the binary image
+  *before* calling this function to detach the shape from the edges.
+
+function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    default: true
+    type: "bool"
+
+  - param_name: "mode"
+    description: "Select the method to be used for the fitting algorithm."
+    type: "string_list"
+    values: 
+      - "standardLSQ"
+      - "hyperLSQ"
+      - "riemannSWFLa"
+      #- "lm"
+      - "prattSVD"
+      - "taubinSVD"
+      - "hyperSVD"
+      - "kmh"
+
+  - param_name: "minRadius"
+    description: "Minimum radius of the circle to be detected [um]."
+    type: "float"
+    min_val: 0.0
+    max_val: "inf"
+
+  - param_name: "maxRadius"
+    description: "Maximum radius of the circle to be detected [um]."
+    type: "float"
+    min_val: 0.001
+    max_val: "inf"
+
+  - param_name: "draw_circles"
+    description: "Draw the detected circles on the image. This has no effect on the output of the function."
+    type: "bool"
+    default_val: true

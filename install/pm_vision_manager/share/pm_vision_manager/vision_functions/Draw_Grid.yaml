@@ -1,0 +1,15 @@
+function_name: "Draw_Grid"
+description: Overlays a regular grid on the image with the specified spacing (in microns) between grid lines, aiding calibration and measurement.
+function_category: "Image Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "grid_spacing"
+    description: "Grid spacing in um."
+    type: "unsigned_int"
+    min_val: 100
+    max_val: "inf"
+    default_val: 200

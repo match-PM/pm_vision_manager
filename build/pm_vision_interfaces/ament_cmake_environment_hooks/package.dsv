@@ -1,0 +1,4 @@
+source;share/pm_vision_interfaces/local_setup.bash
+source;share/pm_vision_interfaces/local_setup.dsv
+source;share/pm_vision_interfaces/local_setup.sh
+source;share/pm_vision_interfaces/local_setup.zsh

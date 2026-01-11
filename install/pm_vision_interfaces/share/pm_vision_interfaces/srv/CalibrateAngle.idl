@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from pm_vision_interfaces/srv/CalibrateAngle.srv
+// generated code does not contain a copyright notice
+
+
+module pm_vision_interfaces {
+  module srv {
+    struct CalibrateAngle_Request {
+      double angle_diff;
+
+      string camera_config_file_name;
+    };
+    struct CalibrateAngle_Response {
+      boolean success;
+    };
+  };
+};

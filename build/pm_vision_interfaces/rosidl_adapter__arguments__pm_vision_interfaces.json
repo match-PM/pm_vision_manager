@@ -1,0 +1,17 @@
+{
+  "package_name": "pm_vision_interfaces",
+  "non_idl_tuples": [
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:srv/ExecuteVision.srv",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:srv/DemoSetExposure.srv",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:srv/CalibratePixelPerUm.srv",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:srv/CalibrateAngle.srv",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:msg/VisionPoint.msg",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:msg/CrossValidation.msg",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:msg/VisionResults.msg",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:msg/VisionLine.msg",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:msg/VisionArea.msg",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:msg/VisionCircle.msg",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:msg/VisionResponse.msg",
+    "/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_interfaces:msg/ImageSharpness.msg"
+  ]
+}

@@ -1,0 +1,20 @@
+function_name: "Save_Image"
+description: Saves the current processing image to disk with an optional filename prefix. Can include drawn vision elements and supports cross-validation folder structure.
+function_category: "Image Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "prefix"
+    description: "tbd"
+    type: "string"
+
+  - param_name: "with_vision_elements"
+    description: "tbd"
+    type: "bool"
+
+  - param_name: "save_in_cross_val"
+    description: "tbd"
+    type: "bool"

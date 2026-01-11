@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from pm_vision_interfaces/msg/VisionCircle.msg
+// generated code does not contain a copyright notice
+
+#include "pm_vision_interfaces/msg/VisionPoint.idl"
+
+module pm_vision_interfaces {
+  module msg {
+    struct VisionCircle {
+      pm_vision_interfaces::msg::VisionPoint center_point;
+
+      double radius;
+    };
+  };
+};

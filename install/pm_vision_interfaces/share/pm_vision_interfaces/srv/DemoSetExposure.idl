@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from pm_vision_interfaces/srv/DemoSetExposure.srv
+// generated code does not contain a copyright notice
+
+
+module pm_vision_interfaces {
+  module srv {
+    struct DemoSetExposure_Request {
+      double target_value;
+    };
+    struct DemoSetExposure_Response {
+      boolean success;
+    };
+  };
+};

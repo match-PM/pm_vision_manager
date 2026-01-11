@@ -1,0 +1,26 @@
+[0.524s] Invoking command in '/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_manager': PYTHONPATH=/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/pm_vision_manager build --build-base /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build install --record /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/install.log --single-version-externally-managed install_data
+[0.652s] running egg_info
+[0.652s] writing ../build/pm_vision_manager/pm_vision_manager.egg-info/PKG-INFO
+[0.652s] writing dependency_links to ../build/pm_vision_manager/pm_vision_manager.egg-info/dependency_links.txt
+[0.652s] writing entry points to ../build/pm_vision_manager/pm_vision_manager.egg-info/entry_points.txt
+[0.652s] writing requirements to ../build/pm_vision_manager/pm_vision_manager.egg-info/requires.txt
+[0.652s] writing top-level names to ../build/pm_vision_manager/pm_vision_manager.egg-info/top_level.txt
+[0.654s] reading manifest file '../build/pm_vision_manager/pm_vision_manager.egg-info/SOURCES.txt'
+[0.655s] writing manifest file '../build/pm_vision_manager/pm_vision_manager.egg-info/SOURCES.txt'
+[0.655s] running build
+[0.655s] running build_py
+[0.655s] copying pm_vision_manager/webcam_image_pub.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager
+[0.656s] running install
+[0.656s] running install_lib
+[0.657s] copying /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build/lib/pm_vision_manager/webcam_image_pub.py -> /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager
+[0.657s] byte-compiling /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager/webcam_image_pub.py to webcam_image_pub.cpython-310.pyc
+[0.658s] running install_data
+[0.658s] running install_egg_info
+[0.659s] removing '/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager-0.1.0-py3.10.egg-info' (and everything under it)
+[0.659s] Copying ../build/pm_vision_manager/pm_vision_manager.egg-info to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages/pm_vision_manager-0.1.0-py3.10.egg-info
+[0.660s] running install_scripts
+[0.670s] Installing vision_node script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+[0.670s] Installing vision_subscriber script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+[0.670s] Installing vision_webcam_publisher script to /home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/pm_vision_manager
+[0.671s] writing list of installed files to '/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/install.log'
+[0.681s] Invoked command in '/home/brotato211/ros2_humble/src/pm_vision_manager/pm_vision_manager' returned '0': PYTHONPATH=/home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/brotato211/ros2_humble/src/pm_vision_manager/install/pm_vision_manager/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../build/pm_vision_manager build --build-base /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/build install --record /home/brotato211/ros2_humble/src/pm_vision_manager/build/pm_vision_manager/install.log --single-version-externally-managed install_data
