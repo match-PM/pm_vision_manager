@@ -624,8 +624,10 @@ class ImageProcessingHandler:
         """
         Converts image coordinates given in top left origin to center origin. 
         """
-        x_center = int(round(x_tl - img_width / 2))
-        y_center = int(round(img_height / 2 - y_tl))
+        # x_center = int(round(x_tl - img_width / 2))
+        # y_center = int(round(img_height / 2 - y_tl))
+        x_center = x_tl - img_width / 2.0
+        y_center = img_height / 2.0 - y_tl
         return x_center, y_center
     
     @staticmethod
@@ -635,6 +637,8 @@ class ImageProcessingHandler:
         """
         x_tl = int(round(img_width / 2) + x_center)
         y_tl = int(round(img_height / 2) - y_center)
+        # x_tl = (img_width / 2.0) + x_center
+        # y_tl = (img_height / 2.0) - y_center
         return x_tl, y_tl
 
 # def plot_grid_heatmap(grid, potential, rows, cols):
