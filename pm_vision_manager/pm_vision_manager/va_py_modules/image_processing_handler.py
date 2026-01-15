@@ -406,8 +406,10 @@ class ImageProcessingHandler:
         """
         This method converts coordinates given in um to coordinates in pixel.
         """
-        x_val_pix = int(round(self.pixelPROum * x_val_i))
-        y_val_pix = int(round(self.pixelPROum * y_val_i))
+        # x_val_pix = int(round(self.pixelPROum * x_val_i))
+        # y_val_pix = int(round(self.pixelPROum * y_val_i))
+        x_val_pix = self.pixelPROum * x_val_i
+        y_val_pix = self.pixelPROum * y_val_i
         return x_val_pix, y_val_pix
 
     def CS_Pixel_TO_Image(self, x_val_pix, y_val_pix):
