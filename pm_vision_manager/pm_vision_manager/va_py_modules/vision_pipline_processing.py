@@ -12,7 +12,7 @@ from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec_
 from pm_vision_manager.va_py_modules.feature_detect_functions.circle_detect import circleDetection
 from pm_vision_manager.va_py_modules.image_modification_functions.extraction_functions import extract_color_areas
 import time
-from skimage.measure import ransac, CircleModel
+from skimage.measure import ransac, CircleModel, label, regionprops
 
 def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, maxval:int, type:str) -> None:
   if not image_processing_handler.is_process_image_grayscale():
@@ -101,6 +101,132 @@ def canny(image_processing_handler: ImageProcessingHandler, threshold1, threshol
   frame_processed = image_processing_handler.get_processing_image()
   frame_processed = cv2.Canny(frame_processed, threshold1, threshold2, aperatureSize)
   image_processing_handler.set_processing_image(frame_processed)
+   
+def visionOkOverride(image_processing_handler: ImageProcessingHandler, 
+                    override_vision_ok:bool,
+                    logger = None):
+  
+  image_processing_handler.set_vision_ok(override_vision_ok)
+
+def selectHomogenousArea(image_processing_handler: ImageProcessingHandler, 
+                        max_area: float,
+                        min_area: float,
+                        use_roi_percent: float,
+                        analyse_horizontal: bool ,
+                        analyse_vertical: bool,
+                        num_of_areas:int,
+                        invert_order:bool,      
+                         logger = None):
+  
+  if not image_processing_handler.is_process_image_binary():
+    raise ImageNotBinaryError()
+  
+  if not analyse_horizontal and analyse_vertical:
+    raise ValueError(f"Error in 'selectHomogenousArea'! No direction selected!'")
+    
+  frame_processed = image_processing_handler.get_processing_image()
+    
+  if use_roi_percent:
+    image_area = frame_processed.shape[0]*frame_processed.shape[1]
+  else:
+    image_area = image_processing_handler.img_width*image_processing_handler.img_height
+      
+  max_area = max_area*image_area/100
+  min_area = min_area*image_area/100
+  
+  labels = label(frame_processed, connectivity=2)
+  regions = regionprops(labels)
+  
+  if logger:
+    logger.warn(f"{len(regions)}")
+    
+  def horizontal_run_lengths(mask):
+    runs = []
+    for row in mask:
+        run = 0
+        for px in row:
+            if px:
+                run += 1
+            elif run > 0:
+                runs.append(run)
+                run = 0
+        if run > 0:
+            runs.append(run)
+    return runs
+  
+  def vertical_run_lengths(mask):
+    runs = []
+    for col in mask.T:
+        run = 0
+        for px in col:
+            if px:
+                run += 1
+            elif run > 0:
+                runs.append(run)
+                run = 0
+        if run > 0:
+            runs.append(run)
+    return runs
+
+  region_scores = []
+
+  for r in regions:
+    #region_mask = (labels == r.label)
+        # ---- AREA FILTER ----
+    if r.area < min_area or r.area > max_area:
+      continue
+
+    region_mask = (labels == r.label)
+
+    h_runs = horizontal_run_lengths(region_mask)
+    v_runs = vertical_run_lengths(region_mask)
+
+    if len(h_runs) < 2 or len(v_runs) < 2:
+      continue
+
+    h_std = np.std(h_runs)
+    v_std = np.std(v_runs)
+
+    homogeneity_score = 0
+    # Combined homogeneity score (lower = more homogeneous)
+    
+    if analyse_horizontal:
+      homogeneity_score = h_std 
+    if analyse_vertical:
+      homogeneity_score += v_std
+
+    region_scores.append((r.label, homogeneity_score))
+
+  if not region_scores:
+      return
+
+  if logger:
+    logger.warn(f"{region_scores}")
+  # Find lowest std in the image
+    
+  # --------------------------------------------------
+  # Sort regions by homogeneity score
+  # --------------------------------------------------
+  # Lower score = more homogeneous
+  region_scores.sort(key=lambda x: x[1], reverse=invert_order)
+
+  # --------------------------------------------------
+  # Select top-N regions
+  # --------------------------------------------------
+  if num_of_areas <= 0 or num_of_areas > len(region_scores):
+      selected = region_scores
+  else:
+      selected = region_scores[:num_of_areas]
+
+  selected_labels = [label for label, _ in selected]
+
+  # Create output mask
+  output = np.zeros_like(frame_processed)
+
+  for lbl in selected_labels:
+      output[labels == lbl] = 255
+
+  image_processing_handler.set_processing_image(output)
 
 
 def fill_area(image_processing_handler: ImageProcessingHandler,
@@ -1402,7 +1528,35 @@ def process_image(vision_node: Node,
                         with_vision_elements = p_with_vision_elements,
                         save_in_cross_val = p_save_in_cross_val,
                         logger = vision_node.get_logger())
-                                
+              
+          case "SelectHomogenousArea":
+            active = function_parameter['active']
+            _max_area = function_parameter['max_area']
+            _use_roi_percent = function_parameter['use_roi_percent']
+            _min_area = function_parameter['min_area']
+            _analyse_horizontal= function_parameter['analyse_horizontal']
+            _analyse_vertical = function_parameter['analyse_vertical']
+            _num_of_areas = function_parameter['num_of_areas']
+            _invert_order = function_parameter['invert_order']
+
+            if active:
+              selectHomogenousArea(image_processing_handler=image_processing_handler,
+                                   max_area = _max_area,
+                                   min_area = _min_area,
+                                   use_roi_percent = _use_roi_percent,
+                                   analyse_horizontal = _analyse_horizontal,
+                                   analyse_vertical = _analyse_vertical,
+                                   num_of_areas = _num_of_areas,
+                                   invert_order = _invert_order,                                   
+                                  logger = vision_node.get_logger())   
+    
+          case "VisionOkOverride":
+            active = function_parameter['active']
+            _override = function_parameter['override_vision_ok']
+            if active:
+              visionOkOverride(image_processing_handler=image_processing_handler,
+                                  override_vision_ok = _override,                                 
+                                  logger = vision_node.get_logger())   
           case "Draw_Grid":
             active = function_parameter['active']
             p_grid_spacing = function_parameter['grid_spacing']

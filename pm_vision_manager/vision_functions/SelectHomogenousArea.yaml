@@ -1,0 +1,74 @@
+function_name: "SelectHomogenousArea"
+function_category: "Image Processing"
+
+description: >
+  Identifies and selects the most homogeneous connected white regions in a binary image.
+  Homogeneity is evaluated using pixel-wise run-length statistics in the horizontal
+  and/or vertical direction. Only regions whose pixel area lies within the specified
+  bounds are considered. The selected regions are returned as a binary mask containing
+  the best-ranked homogeneous areas.
+
+params:
+  - param_name: "active"
+    description: >
+      Enables or disables the execution of this function.
+      When set to False, the function is skipped and the image remains unchanged.
+    type: "bool"
+    default: true
+
+  - param_name: "use_roi_percent"
+    description: >
+      If True, the minimum and maximum area thresholds are interpreted as percentages
+      of the current ROI size. If False, they are interpreted as percentages of the
+      full image size.
+    type: "bool"
+    default_val: false
+
+  - param_name: "max_area"
+    description: >
+      Maximum allowed connected region area, expressed as a percentage of the selected
+      reference area (image or ROI). Regions larger than this threshold are ignored.
+    type: "float"
+    min_val: 0.1
+    max_val: 100.0
+    default_val: 100.0
+
+  - param_name: "min_area"
+    description: >
+      Minimum allowed connected region area, expressed as a percentage of the selected
+      reference area (image or ROI). Regions smaller than this threshold are ignored.
+    type: "float"
+    min_val: 0.1
+    max_val: 100.0
+    default_val: 5.0
+
+  - param_name: "analyse_horizontal"
+    description: >
+      If True, horizontal homogeneity is evaluated using the standard deviation of
+      horizontal run-lengths of white pixels within each region.
+    type: "bool"
+    default_val: true
+
+  - param_name: "analyse_vertical"
+    description: >
+      If True, vertical homogeneity is evaluated using the standard deviation of
+      vertical run-lengths of white pixels within each region.
+    type: "bool"
+    default_val: false
+
+  - param_name: "num_of_areas"
+    description: >
+      Number of homogeneous regions to keep after ranking. Regions are sorted by
+      homogeneity score, and the top N regions are selected. If the value exceeds
+      the number of valid regions, all valid regions are kept.
+    type: "unsigned_int"
+    min_val: 1
+    max_val: 10
+    default_val: 1
+
+  - param_name: "invert_order"
+    description: >
+      If False, regions with lower homogeneity scores (more uniform pixel structure)
+      are preferred. If True, regions with higher homogeneity scores are selected instead.
+    type: "bool"
+    default_val: false

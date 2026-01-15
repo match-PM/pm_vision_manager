@@ -1,0 +1,12 @@
+function_name: "VisionOkOverride"
+description: Overrides the vision okay boolean. This function is helpful as a default function for new vision piplines to fail by default.
+function_category: "Image Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"
+
+  - param_name: "override_vision_ok"
+    description: "Overrides the vision ok boolean."
+    type: "bool"

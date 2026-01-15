@@ -785,7 +785,15 @@ class VisionProcessClass:
         default_process_file_metadata_dict["File_created"] = str(
             datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
         )
-        default_process_file_metadata_dict["vision_pipeline"] = []
+        default_process_file_metadata_dict["vision_pipeline"] = [
+        {
+            "VisionOkOverride": {
+                "active": True,
+                "override_vision_ok": False
+            }
+        }
+        ]
+        
         return default_process_file_metadata_dict
     
     @staticmethod
