@@ -1,4 +1,5 @@
 # Import the necessary libraries
+from pyexpat import model
 from rclpy.node import Node # Handles the creation of nodes
 import cv2 # OpenCV library
 import numpy as np
@@ -11,6 +12,7 @@ from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec_
 from pm_vision_manager.va_py_modules.feature_detect_functions.circle_detect import circleDetection
 from pm_vision_manager.va_py_modules.image_modification_functions.extraction_functions import extract_color_areas
 import time
+from skimage.measure import ransac, CircleModel
 
 def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, maxval:int, type:str) -> None:
   if not image_processing_handler.is_process_image_grayscale():
@@ -615,6 +617,155 @@ def vertical(image_processing_handler: ImageProcessingHandler, v_kernelsize):
   frame_processed = cv2.dilate(frame_processed, verticalStructure)
   image_processing_handler.set_processing_image(frame_processed)
 
+def sharpness_cut(image_processing_handler: ImageProcessingHandler,
+                  block_size: int = 32,
+                  percentile: float = 65.0,
+                  blur: bool = True,
+                  logger=None):
+    """
+    Keeps only sharp regions:
+    - sharp  -> white (255)
+    - unsharp -> black (0)
+
+    Robust block-based approach using Laplacian variance.
+    """
+
+    frame_processed = image_processing_handler.get_processing_image()
+
+    if not image_processing_handler.is_process_image_grayscale():
+        raise ImageNotGrayScaleError()
+
+    gray = frame_processed
+    h, w = gray.shape
+
+    # --- optional pre-blur (noise robustness)
+    if blur:
+        gray = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # --- sharpness map (block-wise)
+    sharpness_map = np.zeros((h, w), dtype=np.float64)
+
+    for y in range(0, h - block_size + 1, block_size):
+        for x in range(0, w - block_size + 1, block_size):
+            patch = gray[y:y + block_size, x:x + block_size]
+
+            lap = cv2.Laplacian(patch, cv2.CV_64F)
+            score = lap.var()  # variance of Laplacian = focus measure
+
+            sharpness_map[y:y + block_size, x:x + block_size] = score
+
+    # --- adaptive threshold (robust!)
+    threshold = np.percentile(sharpness_map, percentile)
+
+    mask = sharpness_map > threshold
+
+    # --- binary output image
+    sharp_only = np.zeros_like(gray, dtype=np.uint8)
+    sharp_only[mask] = 255
+
+    # --- morphological cleanup
+    kernel = np.ones((5, 5), np.uint8)
+    sharp_only = cv2.morphologyEx(sharp_only, cv2.MORPH_CLOSE, kernel)
+
+    image_processing_handler.set_processing_image(sharp_only)
+
+  # sharp_only = frame_processed.copy()
+  # sharp_only[~mask] = 0
+  # image_processing_handler.set_processing_image(sharp_only)
+
+
+def circleDetectionRANSAC(image_processing_handler: ImageProcessingHandler,
+                          max_radius: float,
+                          min_radius: float,
+                          draw_circles: bool,
+                          min_samples: int = 3, 
+                          residual_threshold: float = 2.0,
+                          max_trials: int = 3000,
+                          logger=None):
+    """
+    Detects circles (including partial circles) using RANSAC.
+    Outputs results in ImageProcessingHandler like your circleDetection function.
+    
+    Args:
+        image_processing_handler: handler with binary image
+        max_radius, min_radius: allowed radius range in microns
+        draw_circles: whether to draw detected circles on canvas
+        residual_threshold: max pixel distance to circle for inlier
+        max_trials: RANSAC max iterations
+        logger: optional logger
+    """
+    
+    if not image_processing_handler.is_process_image_binary():
+        raise ImageNotBinaryError()
+    
+    frame_processed = image_processing_handler.get_processing_image()
+    canvas = image_processing_handler.get_visual_elements_canvas()
+    
+    logger.warn("Test RANSAC Circle Detection")
+
+    # Extract edge points from binary image
+    points = np.column_stack(np.where(frame_processed > 0))  # returns (y,x)
+    if points.shape[0] < 3:
+        if logger:
+            logger.warn("Not enough points for RANSAC")
+        image_processing_handler.set_vision_ok(False)
+        return
+    
+    # RANSAC circle fitting
+    try:
+        model, inliers = ransac(
+            points,
+            CircleModel,
+            min_samples=min_samples,
+            residual_threshold=residual_threshold,
+            max_trials=max_trials
+        )
+    except Exception as e:
+        if logger:
+            logger.warn(f"RANSAC failed: {e}")
+        image_processing_handler.set_vision_ok(False)
+        return
+    
+    # Check if any inliers found
+    if inliers.sum() < 3:
+        if logger:
+            logger.warn("No circle found after RANSAC")
+        image_processing_handler.set_vision_ok(False)
+        return
+    
+    cx, cy, r = model.params  # circle parameters in pixel coordinates
+    radius_um = r * image_processing_handler.umPROpixel
+    
+    # Check radius bounds
+    if radius_um < min_radius or radius_um > max_radius:
+        if logger:
+            logger.debug(f"Detected circle radius {radius_um:.2f} out of range {min_radius}-{max_radius}")
+        image_processing_handler.set_vision_ok(False)
+        return
+    
+    # Convert center to camera coordinates
+    x_cs_camera, y_cs_camera = image_processing_handler.CS_CV_TO_camera_with_ROI(cx, cy)
+    
+    # Store circle result
+    circle = image_processing_handler.new_vision_circle_result()
+    circle.radius = radius_um
+    circle.center_point.axis_value_1 = x_cs_camera
+    circle.center_point.axis_value_2 = y_cs_camera
+    circle.center_point.axis_suffix_1 = image_processing_handler.camera_axis_1
+    circle.center_point.axis_suffix_2 = image_processing_handler.camera_axis_2
+    image_processing_handler.append_vision_obj_to_results(circle)
+    
+    image_processing_handler.set_vision_ok(True)
+    
+    # Draw circle if requested
+    if draw_circles:
+        line_size = image_processing_handler.img_height // 200 + 1
+        cv2.circle(canvas, (int(cx), int(cy)), int(round(r)), (0, 255, 0), line_size)
+        cv2.circle(canvas, (int(cx), int(cy)), 1, (0, 0, 255), line_size)
+        image_processing_handler.apply_visual_elements_canvas(canvas)
+    
+    if logger:
+        logger.debug(f"RANSAC circle found: center=({cx:.2f},{cy:.2f}), radius={radius_um:.2f} um")
 
 def blur(image_processing_handler: ImageProcessingHandler, kernelsize: int, blur_type: str, gaus_std: int):
 
@@ -1366,6 +1517,44 @@ def process_image(vision_node: Node,
                               minLineLength_1=p_minLineLength_1,
                               minLineLength_2=p_minLineLength_2,
                               logger = vision_node.get_logger())
+              
+
+          case "SharpnessCut":
+            active = function_parameter.get('active')
+            blur = function_parameter.get('blur')
+            percentile = function_parameter.get('percentile')
+            block_size = function_parameter.get('block_size')
+
+            
+            if active:
+              sharpness_cut(image_processing_handler=image_processing_handler,
+                            percentile=percentile,
+                            block_size=block_size,
+                            blur=blur,
+                            logger = vision_node.get_logger()
+              )
+
+
+          case "FindInnerOuterCircle":
+            active = function_parameter.get('active')
+            min_samples = function_parameter.get('min_samples')
+            residual_threshold = function_parameter.get('residual_threshold')
+            max_trials = function_parameter.get('max_trials')
+            min_radius = function_parameter.get('minRadius')
+            max_radius = function_parameter.get('maxRadius')
+            draw_circles = function_parameter.get('draw_circles')
+
+            if active:
+              circleDetectionRANSAC(image_processing_handler=image_processing_handler,
+                            min_samples=min_samples,
+                            residual_threshold=residual_threshold,
+                            max_trials=max_trials,
+                            min_radius=min_radius,
+                            max_radius=max_radius,
+                            draw_circles=draw_circles,
+                            logger = vision_node.get_logger()
+              )
+
               
           case "CornerDetectionSubPixel":
             active = function_parameter.get('active')
