@@ -1,0 +1,4 @@
+scikit-image
+PyQt6
+libxcb-cursor0
+circle-fit

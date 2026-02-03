@@ -1053,8 +1053,11 @@ def drawGrid(image_processing_handler: ImageProcessingHandler, grid_spacing):
   cv2.putText(img=image_processing_handler.frame_visual_elements,text="Grid: "+ str(grid_spacing) + "um", org=(5,30), fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1,color=(255,0,0), thickness=1)
 
 def saveImage(image_processing_handler: ImageProcessingHandler, 
-              prefix: str, with_vision_elements: bool, save_in_cross_val :bool, logger = None):
-  
+              prefix: str, 
+              with_vision_elements: bool, 
+              save_initial_image: bool, 
+              logger = None):
+
   if not os.path.exists(image_processing_handler.process_db_path):
     os.makedirs(image_processing_handler.process_db_path)
   
@@ -1063,32 +1066,49 @@ def saveImage(image_processing_handler: ImageProcessingHandler,
   # get time_stamp
   time_stamp = time.strftime("%Y-%m-%d_%H-%M-%S")
   
+  if image_processing_handler.get_mode() != ImageProcessingHandler.MODE_EXECUTE:
+    if logger:
+      #logger.warn("Skipping")
+      pass
+    return
+  
+  file_ending = ""
+
   if prefix != "":
-    prefix = "_" + prefix
+    file_ending = "_" + prefix
 
-  if image_processing_handler.get_mode() == ImageProcessingHandler.MODE_EXECUTE:
-    image_name=f"{image_processing_handler.process_db_path}/{time_stamp}{prefix}.png"
+  image_name=f"{image_processing_handler.process_db_path}/{time_stamp}{file_ending}.png"
+  image_name_initial=f"{image_processing_handler.process_db_path}/{time_stamp}_INITIAL_{file_ending}.png"
 
-  elif image_processing_handler.get_mode() == ImageProcessingHandler.MODE_LOOP:
-    image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}_{prefix}.png"
+  # if image_processing_handler.get_mode() == ImageProcessingHandler.MODE_EXECUTE:
+  #   image_name=f"{image_processing_handler.process_db_path}/{time_stamp}{file_ending}.png"
+  #   image_name_initial=f"{image_processing_handler.process_db_path}/{time_stamp}_INITIAL_{file_ending}.png"
 
-  # it must be in Crossvalidation
-  else:
-    image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}_{prefix}.png"
+  # elif image_processing_handler.get_mode() == ImageProcessingHandler.MODE_LOOP:
+  #   image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}_{file_ending}.png"
+  #   image_name_initial=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}_INITIAL{file_ending}.png"
+
+  # else:
+  #   return
+
+  if save_initial_image:
+    initial_image = image_processing_handler.create_vision_element_overlay(image_processing_handler.get_initial_image(),
+                                                                              image_processing_handler.frame_visual_elements)
+    
+    cv2.imwrite(image_name_initial, initial_image)
 
   #if not os.path.isfile(image_name) and (not image_processing_handler.cross_val_running or save_in_cross_val):
-  if (not image_processing_handler.cross_val_running or save_in_cross_val):
-    if with_vision_elements:
-      image_to_save = image_processing_handler.create_vision_element_overlay(image_processing_handler.get_display_image(),
-                                                                             image_processing_handler.frame_visual_elements)
-      
-    else:
-      image_to_save = image_processing_handler.get_processing_image()
+  if with_vision_elements:
+    image_to_save = image_processing_handler.create_vision_element_overlay(image_processing_handler.get_display_image(),
+                                                                              image_processing_handler.frame_visual_elements)
+  
+  else:
+    image_to_save = image_processing_handler.get_processing_image()
 
-    cv2.imwrite(image_name, image_to_save)
-    Save_image_results_dict={"Image saved:": image_name} # image_processing_handler.
-    image_processing_handler.append_to_results(Save_image_results_dict)
-
+  cv2.imwrite(image_name, image_to_save)
+  
+  Save_image_results_dict={"Image saved:": image_name} # image_processing_handler.
+  image_processing_handler.append_to_results(Save_image_results_dict)
 
 
 def reduce_saturation(image_processing_handler: ImageProcessingHandler, 
@@ -1286,7 +1306,8 @@ def process_image(vision_node: Node,
 
       for key, function_parameter in list_item.items():
         #vision_node.get_logger().warn(f"Key: {(key)}")
-
+        function_parameter: dict
+      
         match key:
 
           case "Threshold":
@@ -1521,12 +1542,13 @@ def process_image(vision_node: Node,
             active = function_parameter['active']
             p_prefix = function_parameter['prefix']
             p_with_vision_elements = function_parameter['with_vision_elements']
-            p_save_in_cross_val = function_parameter['save_in_cross_val']
+            p_save_initial_image = function_parameter.get('save_initial_image',False)
+
             if active:
               saveImage(image_processing_handler=image_processing_handler,
                         prefix = p_prefix,
                         with_vision_elements = p_with_vision_elements,
-                        save_in_cross_val = p_save_in_cross_val,
+                        save_initial_image = p_save_initial_image,
                         logger = vision_node.get_logger())
               
           case "SelectHomogenousArea":
