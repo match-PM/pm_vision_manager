@@ -6,7 +6,7 @@ import numpy as np
 import os
 from math import pi                              
 from pm_vision_manager.va_py_modules.vision_utils import rotate_image
-from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError
+from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError, ImageNotColorError
 from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec import fitLine, cornerDetection
 from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec_sub_pixel import cornerDetectionSubPixel
 from pm_vision_manager.va_py_modules.feature_detect_functions.circle_detect import circleDetection
@@ -779,34 +779,65 @@ def sharpness_cut(image_processing_handler: ImageProcessingHandler,
     gray = frame_processed
     h, w = gray.shape
 
+
+    # This works okay
+    # # --- Sobel gradients
+    # gx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+    # gy = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+
+    # # --- gradient magnitude
+    # sharpness = np.sqrt(gx * gx + gy * gy)
+
+    # # --- adaptive threshold
+    # threshold = np.percentile(sharpness, percentile)
+    # mask = sharpness > threshold
+
+    # # --- binary output
+    # sharp_only = np.zeros_like(gray, dtype=np.uint8)
+    # sharp_only[mask] = 255
+
+    # # --- morphological cleanup
+    # kernel = np.ones((5, 5), np.uint8)
+    # sharp_only = cv2.morphologyEx(sharp_only, cv2.MORPH_CLOSE, kernel)
+
+    # image_processing_handler.set_processing_image(sharp_only)
+
+
     # --- optional pre-blur (noise robustness)
     if blur:
         gray = cv2.GaussianBlur(gray, (5, 5), 0)
 
-    # --- sharpness map (block-wise)
-    sharpness_map = np.zeros((h, w), dtype=np.float64)
 
-    for y in range(0, h - block_size + 1, block_size):
-        for x in range(0, w - block_size + 1, block_size):
-            patch = gray[y:y + block_size, x:x + block_size]
+    # --- Sobel (once)
+    gx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+    gy = cv2.Sobel(gray, cv2.CV_32F, 0, 1, ksize=3)
+    mag = cv2.magnitude(gx, gy)
 
-            lap = cv2.Laplacian(patch, cv2.CV_64F)
-            score = lap.var()  # variance of Laplacian = focus measure
+    # --- block-aligned region
+    h_crop = (h // block_size) * block_size
+    w_crop = (w // block_size) * block_size
+    mag_crop = mag[:h_crop, :w_crop]
 
-            sharpness_map[y:y + block_size, x:x + block_size] = score
+    # --- block-wise mean
+    mag_blocks = mag_crop.reshape(
+        h_crop // block_size, block_size,
+        w_crop // block_size, block_size
+    ).mean(axis=(1, 3))
 
-    # --- adaptive threshold (robust!)
-    threshold = np.percentile(sharpness_map, percentile)
+    # --- threshold on block values
+    threshold = np.percentile(mag_blocks, percentile)
 
-    mask = sharpness_map > threshold
+    # --- full-size binary mask (IMPORTANT)
+    sharp_only = np.zeros((h, w), dtype=np.uint8)
 
-    # --- binary output image
-    sharp_only = np.zeros_like(gray, dtype=np.uint8)
-    sharp_only[mask] = 255
+    # --- expand blocks back
+    block_mask = mag_blocks > threshold
+    block_mask = np.repeat(
+        np.repeat(block_mask, block_size, axis=0),
+        block_size, axis=1
+    )
 
-    # --- morphological cleanup
-    kernel = np.ones((5, 5), np.uint8)
-    sharp_only = cv2.morphologyEx(sharp_only, cv2.MORPH_CLOSE, kernel)
+    sharp_only[:h_crop, :w_crop][block_mask] = 255
 
     image_processing_handler.set_processing_image(sharp_only)
 
@@ -1166,6 +1197,9 @@ def CLAHE_on_V_Channel(image_processing_handler: ImageProcessingHandler,
   """
   # TODO Evtl. wäre ein Test gut, zuschauen ob das Bild ein BGR-Image ist
 
+  if not image_processing_handler.is_process_image_color():
+    raise ImageNotColorError()
+  
   frame_processed = image_processing_handler.get_processing_image()
 
   clahe = cv2.createCLAHE(clipLimit=clipLimit, tileGridSize=(tileGridSize_M,tileGridSize_N)) # Create CLAHE-Object
@@ -1183,6 +1217,8 @@ def EqualizeHist(image_processing_handler: ImageProcessingHandler):
   """
   Equalizes the Histogram of an Gray-Image or a Channel of an Image.
   """
+  if not image_processing_handler.is_process_image_grayscale():
+    raise ImageNotGrayScaleError()
   frame_processed = image_processing_handler.get_processing_image()
   frame_processed = cv2.equalizeHist(frame_processed)
   image_processing_handler.set_processing_image(frame_processed)
@@ -1785,6 +1821,10 @@ def process_image(vision_node: Node,
     image_processing_handler.set_vision_ok(False)
 
   except ImageNotBinaryError as e:
+    vision_node.get_logger().error(str(e))
+    image_processing_handler.set_vision_ok(False)
+
+  except ImageNotColorError as e:
     vision_node.get_logger().error(str(e))
     image_processing_handler.set_vision_ok(False)
 

@@ -22,6 +22,11 @@ class ImageNotBinaryError(Exception):
         self.message = message
         super().__init__(self.message)
 
+class ImageNotColorError(Exception):
+    def __init__(self, message="Processing image is not color. Convert to color before calling this function!"):
+        self.message = message
+        super().__init__(self.message)
+
 class ImageProcessingHandler:
 
     MODE_EXECUTE = 0
@@ -226,6 +231,14 @@ class ImageProcessingHandler:
     
     def get_processed_image_overlay(self):
         return  self._processed_image_overlay
+
+    def is_process_image_color(self)->bool:
+        # Check the number of color channels
+        if len(self._processing_image.shape) == 3 and self._processing_image.shape[2] == 3:
+            return True  # Color image
+        else:
+            return False  # Grayscale image
+        #elif len(self._processing_image.shape) == 2 or (len(self._processing_image.shape) == 3 and self._processing_image.shape[2] == 1):
 
     def is_process_image_grayscale(self)->bool:
         # Check the number of color channels

@@ -1,29 +1,70 @@
 function_name: "SharpnessCut"
-description: tbd
-function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+description: >
+  Extracts sharp (in-focus) regions from a grayscale image using a
+  fast, block-based Sobel gradient method.
+
+  The image is divided into square blocks. For each block, the average
+  Sobel gradient magnitude is computed as a sharpness score. Blocks
+  whose score lies above a configurable percentile threshold are
+  classified as sharp and retained, while the remaining regions are
+  suppressed.
+
+  The output is a binary mask:
+    - Sharp regions are set to white (255)
+    - Unsharp regions are set to black (0)
+
+  This method is robust to noise, efficient for high-resolution images,
+  and suitable for real-time vision pipelines.
+
+function_category: "Image Processing"
 
 params:
   - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
-    default: true
+    description: >
+      Enables or disables the SharpnessCut function.
+      When disabled, the input image is passed through unchanged.
     type: "bool"
+    default: true
 
   - param_name: "blur"
-    description: "Parameter to activate or deactivate this function."
-    default: true
+    description: >
+      Applies a Gaussian blur before computing Sobel gradients.
+      This reduces noise and prevents false edge responses in
+      low-texture regions.
+
+      Recommended: enabled for real-world camera images.
     type: "bool"
+    default: true
 
   - param_name: "block_size"
-    description: "tbd"
+    description: >
+      Size (in pixels) of the square blocks used for sharpness evaluation.
+      Larger blocks produce smoother, more stable sharp regions but
+      reduce spatial precision. Smaller blocks increase detail but may
+      introduce noise.
+
+      Typical values:
+        - 8–16  : fine detail, higher sensitivity
+        - 16–32 : balanced (recommended)
+        - 32+   : coarse, very stable regions
     type: "unsigned_int"
-    min_val: 0
+    min_val: 1
     max_val: 255
     default_val: 10
 
   - param_name: "percentile"
-    description: "TDB"
+    description: >
+      Percentile threshold used to classify blocks as sharp.
+
+      Blocks whose sharpness score lies above this percentile are
+      retained. Higher values result in fewer, more strictly focused
+      regions; lower values retain more of the image.
+
+      Typical values:
+        - 40–50 : permissive (keeps more regions)
+        - 60–70 : balanced (recommended)
+        - 80+   : very strict focus selection
     type: "float"
     min_val: 0.0
     max_val: 100.0
     default_val: 50.0
-
