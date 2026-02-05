@@ -1,20 +1,40 @@
 function_name: "Save_Image"
-description: Saves the current processing image to disk with an optional filename prefix. Can include drawn vision elements and supports cross-validation folder structure.
-function_category: "Image Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+description: >
+  Saves the current processing image to disk. The image is stored in the
+  process database directory using a timestamp-based filename. Optionally,
+  vision elements (overlays) can be drawn on the image, and the initial
+  reference image can also be saved for later inspection or debugging.
+
+function_category: "Image Tools"   # supported:
+                                  # 'Image Processing', 'Machine Vision',
+                                  # 'Camera Tools', 'Image Analysis',
+                                  # 'Image Tools', 'Image Conversion'
 
 params:
   - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+    description: >
+      Enables or disables execution of this function. If set to false,
+      no image will be saved.
     type: "bool"
 
   - param_name: "prefix"
-    description: "tbd"
+    description: >
+      Optional suffix added to the image filename. This can be used to
+      distinguish images from different processing stages or tools.
     type: "string"
 
   - param_name: "with_vision_elements"
-    description: "tbd"
+    description: >
+      If true, the saved image will include visual overlays such as frames,
+      axes, planes, or other vision elements. If false, the raw processing
+      image is saved without overlays.
     type: "bool"
+    default_val: true
 
-  - param_name: "save_in_cross_val"
-    description: "tbd"
+  - param_name: "save_initial_image"
+    description: >
+      If true, an additional image of the initial input image is saved.
+      This image includes vision element overlays and is marked with
+      '_INITIAL' in the filename.
     type: "bool"
+    default_val: true

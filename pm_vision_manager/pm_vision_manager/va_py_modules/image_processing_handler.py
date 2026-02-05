@@ -27,7 +27,8 @@ class ImageProcessingHandler:
     MODE_EXECUTE = 0
     MODE_LOOP = 1
     MODE_CROSSVAL = 2
-
+    MODE_IMAGE_LOOP = 3
+    
     def __init__(self, logger = None):
         self._initial_image: np.ndarray = None
         self._processing_image: np.ndarray = None
@@ -122,7 +123,8 @@ class ImageProcessingHandler:
         self._initial_image = np.copy(image)
 
     def get_initial_image(self):
-        return self._initial_image
+        # returns a copy of the initial image
+        return deepcopy(self._initial_image)
 
     def get_processing_image(self):
         """
@@ -166,6 +168,7 @@ class ImageProcessingHandler:
                     (self.frame_visual_elements.shape[1], self.frame_visual_elements.shape[0]), 
                     color, 3)
         
+        show_vision_elements_in_output_image = True
 
         # Overlay vision elements on display frame
         self._display_frame = self.create_vision_element_overlay(self._display_frame, 
@@ -175,16 +178,17 @@ class ImageProcessingHandler:
         self._processed_image_overlay = deepcopy(self._display_frame)
 
         self._vision_results_dict["vision_results"] = self._vision_results_list
+        
+        initial_image = self.get_initial_image()
 
         # Handle `_initial_image` grayscale case
-        if len(self._initial_image.shape) < 3:
-            _initial_image = cv2.cvtColor(self._initial_image, cv2.COLOR_GRAY2BGR)
-        else:
-            _initial_image = self._initial_image
+        if len(initial_image) < 3:
+            initial_image = cv2.cvtColor(initial_image, cv2.COLOR_GRAY2BGR)
+
 
         # Ensure `_display_frame` is initialized
         if self._display_frame is None:
-            self._display_frame = _initial_image.copy()
+            self._display_frame = initial_image.copy()
             return
 
         # Ensure `_display_frame` is also 3-channel BGR
@@ -192,18 +196,22 @@ class ImageProcessingHandler:
             self._display_frame = cv2.cvtColor(self._display_frame, cv2.COLOR_GRAY2BGR)
 
         # Ensure same width before vconcat
-        if _initial_image.shape[1] != self._display_frame.shape[1]:
+        if initial_image.shape[1] != self._display_frame.shape[1]:
             self.logger.warning("Resizing images to match width.")
 
         # Ensure same data type
-        if _initial_image.dtype != self._display_frame.dtype:
-            self._display_frame = self._display_frame.astype(_initial_image.dtype)
+        if initial_image.dtype != self._display_frame.dtype:
+            self._display_frame = self._display_frame.astype(initial_image.dtype)
 
+        if show_vision_elements_in_output_image:
+            initial_image = self.create_vision_element_overlay(initial_image, 
+                                                                self.frame_visual_elements, 
+                                                                self.logger)
         # Concatenate safely
         if self.show_input_and_output_image:
-            self._display_frame = cv2.vconcat([_initial_image, self._display_frame])
+            self._display_frame = cv2.vconcat([initial_image, self._display_frame])
 
-        self._final_image = self.get_display_image()
+        self._final_image = deepcopy(self._display_frame)
         
         # Sort results if there are any
         self._sort_results()
