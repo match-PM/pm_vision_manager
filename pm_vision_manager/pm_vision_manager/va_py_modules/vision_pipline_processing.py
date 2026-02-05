@@ -97,9 +97,23 @@ def roi(image_processing_handler: ImageProcessingHandler,
   else:
     image_processing_handler.set_vision_ok(False)
 
-def canny(image_processing_handler: ImageProcessingHandler, threshold1, threshold2, aperatureSize, L2gradient:str,logger = None):
+def canny(image_processing_handler: ImageProcessingHandler, 
+          threshold1, 
+          threshold2, 
+          aperatureSize, 
+          L2gradient:str,logger = None):
+  
   frame_processed = image_processing_handler.get_processing_image()
+
   frame_processed = cv2.Canny(frame_processed, threshold1, threshold2, aperatureSize)
+
+  border = 3  # or 3
+
+  frame_processed[:border, :] = 0
+  frame_processed[-border:, :] = 0
+  frame_processed[:, :border] = 0
+  frame_processed[:, -border:] = 0
+
   image_processing_handler.set_processing_image(frame_processed)
    
 def visionOkOverride(image_processing_handler: ImageProcessingHandler, 
@@ -137,8 +151,8 @@ def selectHomogenousArea(image_processing_handler: ImageProcessingHandler,
   labels = label(frame_processed, connectivity=2)
   regions = regionprops(labels)
   
-  if logger:
-    logger.warn(f"{len(regions)}")
+  # if logger:
+  #   logger.warn(f"{len(regions)}")
     
   def horizontal_run_lengths(mask):
     runs = []
@@ -200,8 +214,8 @@ def selectHomogenousArea(image_processing_handler: ImageProcessingHandler,
   if not region_scores:
       return
 
-  if logger:
-    logger.warn(f"{region_scores}")
+  # if logger:
+  #   logger.warn(f"{region_scores}")
   # Find lowest std in the image
     
   # --------------------------------------------------
@@ -263,6 +277,7 @@ def fill_area(image_processing_handler: ImageProcessingHandler,
     }
     if method not in method_map:
         raise ValueError("Invalid method: " + method)
+    
     method_val = method_map[method]
 
     # Get the processed image
@@ -1402,15 +1417,19 @@ def process_image(vision_node: Node,
           
           case "CircleDetection":
             active = function_parameter['active']
+            circle_fit_mode = function_parameter['circle_fit_mode']
             mode = function_parameter['mode']
             minRadius = function_parameter['minRadius']
             maxRadius = function_parameter['maxRadius']
             p_draw_circles = function_parameter['draw_circles']
+            fit_single_circle = function_parameter['fit_single_circle']
             if active:
               circleDetection(image_processing_handler=image_processing_handler,
                               max_radius=maxRadius,
                               min_radius=minRadius,
+                              circle_fit_mode=circle_fit_mode,
                               mode=mode,
+                              fit_single_circle=fit_single_circle,
                               draw_circles=p_draw_circles,
                               logger=vision_node.get_logger())
 

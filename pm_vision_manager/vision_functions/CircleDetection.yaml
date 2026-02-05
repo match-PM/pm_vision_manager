@@ -21,7 +21,7 @@ params:
     default: true
     type: "bool"
 
-  - param_name: "mode"
+  - param_name: "circle_fit_mode"
     description: "Select the method to be used for the fitting algorithm."
     type: "string_list"
     values: 
@@ -50,3 +50,20 @@ params:
     description: "Draw the detected circles on the image. This has no effect on the output of the function."
     type: "bool"
     default_val: true
+
+
+  - param_name: "fit_single_circle"
+    description: "Use all the points of the current image to fit a circle. This is useful when only one circle is expected in the image."
+    type: "bool"
+    default_val: false
+
+  - param_name: "mode"
+    description: "Contour retrieval mode. Defines how contours and their hierarchy are extracted (e.g., only outer contours, all contours, or hierarchical structure)."
+    type: "string_list"
+    values: 
+      - "RETR_EXTERNAL"   # retrieves only the outermost contours
+      - "RETR_LIST"       # retrieves all contours without establishing hierarchy
+      - "RETR_CCOMP"      # retrieves all contours and organizes them into two levels (outer and hole contours)
+      - "RETR_TREE"       # retrieves all contours and reconstructs the full hierarchy
+    default_val: "RETR_EXTERNAL"
+
