@@ -8,8 +8,7 @@ from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
 from threading import Thread 
 import sys
-#from ros_sequential_action_programmer.submodules.action_classes.RecomGenerator import RecomGenerator
-from ros_sequential_action_programmer.submodules.RsapApp_submodules.AppTextWidget import AppTextOutput
+from pm_vision_manager.va_py_modules.vision_app_modules.AppTextWidget import AppTextOutput
 import yaml
 from ament_index_python.packages import PackageNotFoundError
 from functools import partial
