@@ -798,29 +798,25 @@ class VisionProcessClass:
     
     @staticmethod
     def create_process_file(directory: str, process_name: str, logger: RcutilsLogger = None):
-        try:
-            # Generate default metadata and determine file paths
-            default_process_file_metadata_dict = VisionProcessClass.create_default_process_dict(process_name)
-            process_lib_dir = VisionProcessClass.get_process_database_path(logger)
-            file_dir = os.path.join(process_lib_dir, directory)
-            process_file_path = os.path.join(file_dir, f"{process_name}.json")
+        # Generate default metadata and determine file paths
+        default_process_file_metadata_dict = VisionProcessClass.create_default_process_dict(process_name)
+        process_lib_dir = VisionProcessClass.get_process_database_path(logger)
+        file_dir = os.path.join(process_lib_dir, directory)
+        process_file_path = os.path.join(file_dir, f"{process_name}.json")
 
-            # Create folder if it doesn't exist
-            if not os.path.exists(file_dir):
-                Path(file_dir).mkdir(parents=True, exist_ok=True)
-                if logger is not None:
-                    logger.info(f"Process folder '{file_dir}' created!")
-
-            # Create JSON file only if it doesn't exist
-            if not os.path.exists(process_file_path):
-                with open(process_file_path, "w") as outputfile:
-                    json.dump(default_process_file_metadata_dict, outputfile, indent=4)
-                if logger is not None:
-                    logger.info(f"Process file '{process_file_path}' created!")
-
-        except Exception as e:
+        # Create folder if it doesn't exist
+        if not os.path.exists(file_dir):
+            Path(file_dir).mkdir(parents=True, exist_ok=True)
             if logger is not None:
-                logger.error(f"Error creating process file: {str(e)}")
+                logger.info(f"Process folder '{file_dir}' created!")
+
+        # Create JSON file only if it doesn't exist
+        if not os.path.exists(process_file_path):
+            with open(process_file_path, "w") as outputfile:
+                json.dump(default_process_file_metadata_dict, outputfile, indent=4)
+            if logger is not None:
+                logger.info(f"Process file '{process_file_path}' created!")
+
                 
     @staticmethod
     def get_process_database_path(logger=None)->str:
