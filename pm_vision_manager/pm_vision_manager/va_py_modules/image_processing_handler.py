@@ -11,6 +11,7 @@ from geometry_msgs.msg import Point
 
 import pm_vision_manager.va_py_modules.vision_utils as vu
 import pm_vision_interfaces.msg as pvimsg 
+from pm_vision_manager.va_py_modules.camera_ros_interfaces import CamaeraSetPropertiesResponse
 
 class ImageNotGrayScaleError(Exception):
     def __init__(self, message="Processing image is not gray scale. Convert to gray scale before calling this function!"):
@@ -281,29 +282,29 @@ class ImageProcessingHandler:
         #self.frame_buffer.append(self._processing_image)
         self._display_frame=self.adaptImagewithROI(self._display_frame, np.copy(self._processing_image))
 
-    def set_camera_exposure_time(self, value)->bool:
+    def set_camera_exposure_time(self, value)->CamaeraSetPropertiesResponse:
         """
         This function should be overwritten from in the vision assistant_class
         """
-        pass
-
-    def set_camera_coax_light_bool(self, set_state)->bool:
-        """
-        This function should be overwritten from in the vision assistant_class
-        """
-        pass
+        return CamaeraSetPropertiesResponse(success=False, has_changed=False)
     
-    def set_camera_coax_light(self, value)->bool:
+    def set_camera_coax_light_bool(self, set_state)->CamaeraSetPropertiesResponse:
         """
         This function should be overwritten from in the vision assistant_class
         """
-        pass
+        return CamaeraSetPropertiesResponse(success=False, has_changed=False)
+    
+    def set_camera_coax_light(self, value)->CamaeraSetPropertiesResponse:
+        """
+        This function should be overwritten from in the vision assistant_class
+        """
+        return CamaeraSetPropertiesResponse(success=False, has_changed=False)
 
-    def set_ring_light(self, bool_list, rgb_list)->bool:
+    def set_ring_light(self, bool_list, rgb_list)->CamaeraSetPropertiesResponse:
         """
         This function should be overwritten from in the vision assistant_class
         """
-        pass
+        return CamaeraSetPropertiesResponse(success=False, has_changed=False)
     
     def disable_all_lights(self)->bool:
         """

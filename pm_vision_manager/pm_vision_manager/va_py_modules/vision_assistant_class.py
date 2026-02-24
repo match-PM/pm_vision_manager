@@ -277,7 +277,6 @@ class VisionProcessClass:
     
     def execute_vision(self):
         self._start_vision_subscription()
-        time.sleep(0.5)
         
         image_name = f"{self.process_UID}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
 
@@ -292,7 +291,6 @@ class VisionProcessClass:
             self.image_processing_handler.visionOK = False
             return
 
-
         image = self._get_current_camera_image()
 
         while (self.timer_active and image is None):
@@ -306,8 +304,7 @@ class VisionProcessClass:
             #     self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
             #     time.sleep(0.5)
             #     continue
-                        
-    
+        
         self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
         self.image_processing_handler.set_initial_image(image)
 

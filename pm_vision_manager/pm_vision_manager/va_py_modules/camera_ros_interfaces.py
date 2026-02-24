@@ -24,6 +24,10 @@ def percentage_to_value(percentage, min_value, max_value):
     return value
 
 
+class CamaeraSetPropertiesResponse():
+    def __init__(self, success:bool = False, has_changed:bool = False):
+        self.success = success
+        self.has_changed = has_changed
 class CameraExposureTimeInterface:
     def __init__(self, node:Node):
         self.available = False
@@ -76,7 +80,7 @@ class CameraExposureTimeInterface:
             else:
                 self.node.get_logger().info("Camera exposure time interface is available!")
 
-    def set_camera_exposure_time(self, exposure_value_percent)->bool:
+    def set_camera_exposure_time(self, exposure_value_percent)->CamaeraSetPropertiesResponse:
         if self.available:
             # Convert the percentage to a actual exposue time value
             exposure_time = percentage_to_value(exposure_value_percent,
@@ -95,24 +99,27 @@ class CameraExposureTimeInterface:
                             value_key = _key
                     if value_key is None:
                         self.node.get_logger().error(f"No field of type 'double' found in service request of type '{self.srv_type_exposure_time}'.")
-                        return False
+                        return CamaeraSetPropertiesResponse(success=False, has_changed=False)
                     setattr(service_request, value_key, exposure_time)
                     if not self.client_exposure_time.wait_for_service(timeout_sec=1.0):
                         self.node.get_logger().error("Camera exposure service not available!")
+                        return CamaeraSetPropertiesResponse(success=False, has_changed=False)
                     response = self.client_exposure_time.call(service_request)
 
                     self.camera_exposure_time_set_value = exposure_value_percent
                     self.node.get_logger().info(f"Camera exposure time set to '{exposure_time}'!")
-                    time.sleep(2)
+                    #time.sleep(2)
                     # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
-                return True
+                    return CamaeraSetPropertiesResponse(success=True, has_changed=True)
+                else:
+                    return CamaeraSetPropertiesResponse(success=True, has_changed=False)
             
             else:
                 self.node.get_logger().error("Camera exposure time not set! Invalid bounds!")
-                return False
+                return CamaeraSetPropertiesResponse(success=False, has_changed=False)
         else:
             self.node.get_logger().warn("Camera exposure time not available!")
-            return False
+            return CamaeraSetPropertiesResponse(success=False, has_changed=False)
 
 class CameraSetCoaxLightBoolInterface:
     def __init__(self, node:Node):
@@ -162,7 +169,7 @@ class CameraSetCoaxLightBoolInterface:
             else:
                 self.node.get_logger().info("Camera set coax light bool interface is available!")
 
-    def set_coax_light(self, set_value)->bool:
+    def set_coax_light(self, set_value)->CamaeraSetPropertiesResponse:
         if self.available:
                 
             if self.coax_light_state != set_value:
@@ -176,20 +183,22 @@ class CameraSetCoaxLightBoolInterface:
                         value_key = _key
                 if value_key is None:
                     self.node.get_logger().error(f"No field of type 'bool' found in service request of type '{self.srv_type_set_coax_light}'.")
-                    return False
+                    return CamaeraSetPropertiesResponse(success=False, has_changed=False)
                 setattr(service_request, value_key, set_value)
                 if not self.client_set_coax_light.wait_for_service(timeout_sec=1.0):
                     self.node.get_logger().error("Camera set coax light service not available!")
+                    return CamaeraSetPropertiesResponse(success=False, has_changed=False)
                 response = self.client_set_coax_light.call(service_request)
 
                 self.coax_light_state = set_value
                 self.node.get_logger().info(f"Camera coax light state set to '{set_value}'!")
-                time.sleep(2)
-            return True
+                #time.sleep(2)
+                return CamaeraSetPropertiesResponse(success=True, has_changed=True)
+            return CamaeraSetPropertiesResponse(success=True, has_changed=False)
         
         else:
             self.node.get_logger().warn("Camera set coaxlight bool not available!")
-            return False
+            return CamaeraSetPropertiesResponse(success=False, has_changed=False)
         
 
 
@@ -244,7 +253,7 @@ class CameraSetCoaxLightInterface:
             else:
                 self.node.get_logger().info("Camera set coax interface is available!")
 
-    def set_coax_light(self, value_percent: int)->bool:
+    def set_coax_light(self, value_percent: int)->CamaeraSetPropertiesResponse:
         if self.available:
             # Convert the percentage to a actual exposue time value
             value = percentage_to_value(value_percent,
@@ -289,15 +298,17 @@ class CameraSetCoaxLightInterface:
 
                     # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
                     time.sleep(2.5)
-                return True
+                    return CamaeraSetPropertiesResponse(success=True, has_changed=True)
+                else:                 
+                    return CamaeraSetPropertiesResponse(success=True, has_changed=False)
                                         
             else:
                 self.node.get_logger().error("Camera coax light value not set! Invalid bounds!")
-                return False
+                return CamaeraSetPropertiesResponse(success=False, has_changed=False)
     
         else:
             self.node.get_logger().warn("Camera set coax light int not available!")
-            return False
+            return CamaeraSetPropertiesResponse(success=False, has_changed=False)
         
 class CameraRingLightInterface:
     def __init__(self, node:Node):
@@ -347,7 +358,7 @@ class CameraRingLightInterface:
             else:
                 self.node.get_logger().info("Camera set ring light interface is available!")
 
-    def set_ring_light(self, bool_list: list[bool], rgb_list:list[float]):
+    def set_ring_light(self, bool_list: list[bool], rgb_list:list[float])->CamaeraSetPropertiesResponse:
         if self.available:
             
             if self.set_value_bools != bool_list or self.set_value_rgb != rgb_list:
@@ -384,13 +395,14 @@ class CameraRingLightInterface:
 
                 self.node.get_logger().info(f"Camera ring light set to '{bool_list}' with intensity of {rgb_list}!")
                 # This needs to be set so that in 'Execute Vision' the callback gets another image with the new exposure time
-                time.sleep(2)
-
-            return True
+                #time.sleep(2)
+                return CamaeraSetPropertiesResponse(success=True, has_changed=True) 
+            else:
+                return CamaeraSetPropertiesResponse(success=True, has_changed=False)
         else:
             self.node.get_logger().warn("Camera ring light int not available!")
-            return False
-
+            return CamaeraSetPropertiesResponse(success=False, has_changed=False)
+        
 class CameraRosInterfaces:
     def __init__(self,node:Node):
         self.node = node

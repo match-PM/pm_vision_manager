@@ -1273,6 +1273,7 @@ def set_camera_parameters(vision_node:Node,
                   pipeline_dict_list:list[dict]) -> bool:
   
   #vision_node.get_logger().error("Starting setting parameters")
+  has_changed = False
 
   for list_item in pipeline_dict_list:
 
@@ -1286,11 +1287,14 @@ def set_camera_parameters(vision_node:Node,
           #if active and not image_processing_handler.cross_val_running:
           #ision_node.get_logger().error(f"{active}, {value}")
           if active:
-            has_been_set = image_processing_handler.set_camera_exposure_time(value)  
+            set_response = image_processing_handler.set_camera_exposure_time(value)  
             #vision_node.get_logger().error("Test0")
 
-            if not has_been_set:
+            if not set_response.success:
               return False
+            
+            if set_response.has_changed:
+              has_changed = True
             # Break the for loop
         
         case "SetCoAxLightBool":
@@ -1298,23 +1302,29 @@ def set_camera_parameters(vision_node:Node,
           set_state = function_parameter['set_state']
           #if active and not image_processing_handler.cross_val_running:
           if active:
-            has_been_set = image_processing_handler.set_camera_coax_light_bool(set_state)
+            set_response = image_processing_handler.set_camera_coax_light_bool(set_state)
             #vision_node.get_logger().error("Test1")
 
-            if not has_been_set:
+            if not set_response.success:
               return False
+        
+            if set_response.has_changed:
+              has_changed = True
         
         case "SetCoAxLight":
           active = function_parameter['active']
           value = function_parameter['value']
           #if active and not image_processing_handler.cross_val_running:
           if active:
-            has_been_set = image_processing_handler.set_camera_coax_light(value)  
+            set_response = image_processing_handler.set_camera_coax_light(value)  
             #vision_node.get_logger().error("Test2")
 
-            if not has_been_set:
+            if not set_response.success:
               return False
 
+            if set_response.has_changed:
+              has_changed = True
+        
         case "SetRingLight":
           active = function_parameter['active']
 
@@ -1329,15 +1339,20 @@ def set_camera_parameters(vision_node:Node,
                 
           #if active and not image_processing_handler.cross_val_running:
           if active:
-            has_been_set = image_processing_handler.set_ring_light(bool_list, rgb_list)  
+            set_response = image_processing_handler.set_ring_light(bool_list, rgb_list)  
             #vision_node.get_logger().error("Test3")
-            if not has_been_set:
+            if not set_response.success:
               return False
             
+            if set_response.has_changed:
+              has_changed = True
+  
   #vision_node.get_logger().error("Ending setting parameters")
+  if has_changed:
+    time.sleep(1.0) # Sleep for a short time to ensure that the camera has applied the new settings before starting the image processing
 
   return True
-  
+
 def process_image(vision_node: Node, 
                   image_processing_handler: ImageProcessingHandler, 
                   pipeline_dict_list:list[dict]):
