@@ -304,7 +304,16 @@ class VisionProcessClass:
             #     self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
             #     time.sleep(0.5)
             #     continue
-        
+
+        if image is None:
+            self.vision_node.get_logger().error(
+                f"No image received from camera topic '{self.camera_subscription_topic}', aborting execute_vision."
+            )
+            self.image_processing_handler.visionOK = False
+            self.image_processing_handler.vision_routine_done = True
+            self._stop_vision_subscription()
+            return
+
         self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
         self.image_processing_handler.set_initial_image(image)
 
@@ -487,7 +496,16 @@ class VisionProcessClass:
             self.cross_validation.current_image_name = os.path.splitext(current_image_file)[0]
 
             image = self.cross_validation.get_image_by_filename(current_image_file)    
-            
+
+            if image is None:
+                self.vision_node.get_logger().error(
+                    f"Could not load cross-validation image '{current_image_file}', skipping."
+                )
+                self.cross_validation.visionOK = False
+                self.cross_validation.append_to_failed_images(current_image_file)
+                self.cross_validation.counter_error += 1
+                continue
+
             image_name = f"{self.cross_validation.current_image_name}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
             self.image_processing_handler_cross_val.set_image_metatdata(self.process_db_path, image_name)
             self.image_processing_handler_cross_val.set_initial_image(image)

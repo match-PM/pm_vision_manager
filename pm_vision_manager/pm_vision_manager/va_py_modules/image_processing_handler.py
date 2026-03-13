@@ -126,6 +126,11 @@ class ImageProcessingHandler:
         self.show_input_and_output_image = show_input_and_output_image
 
     def set_initial_image(self, image):
+        if image is None or not isinstance(image, np.ndarray) or image.ndim < 2:
+            raise ValueError(
+                f"set_initial_image received an invalid image: type={type(image)}, "
+                f"shape={getattr(image, 'shape', 'N/A')}"
+            )
         self._initial_image = np.copy(image)
 
     def get_initial_image(self):
