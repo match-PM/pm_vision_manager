@@ -1,6 +1,6 @@
 {
     "vision_process_name": "test_pipeline",
-    "process creation": "2026-03-07 19:58:28",
+    "process creation": "2026-01-30 17:04:48",
     "vision_pipeline": [
         {
             "BGR2GRAY": {
@@ -40,14 +40,6 @@
             "Draw_Grid": {
                 "active": false,
                 "grid_spacing": 200
-            }
-        },
-        {
-            "Save_Image": {
-                "active": false,
-                "with_vision_elements": false,
-                "save_in_cross_val": false,
-                "prefix": "c"
             }
         }
     ]

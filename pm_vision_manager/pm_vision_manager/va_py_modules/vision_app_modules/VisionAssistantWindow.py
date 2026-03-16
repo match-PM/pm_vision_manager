@@ -1,12 +1,12 @@
 import sys
 from functools import partial
 from typing import Optional
-
+from pathlib import Path
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QTabWidget, QTabBar)
-from PyQt6.QtGui import QCloseEvent, QGuiApplication
-from PyQt6.QtCore import Qt, QThreadPool, QRunnable, QObject, pyqtSignal, pyqtSlot, QTimer
-
+from PyQt6.QtGui import QCloseEvent, QGuiApplication, QIcon, QPixmap
+from PyQt6.QtCore import Qt, QThreadPool, QRunnable, QObject, pyqtSignal, pyqtSlot, QTimer, QDir, QSize
+from ament_index_python.packages import get_package_share_directory
 import numpy as np
 from rclpy.node import Node
 
@@ -107,20 +107,21 @@ class VisionAssistantWindow(QMainWindow):
     def _init_ui(self):
         """Initialize the user interface."""
         self.setWindowTitle("Vision Assistant")
-        
-        # Central widget
+
+
+        # ---- Central widget ----
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        
-        # Main layout
+
+        # ---- Main layout ----
         self.main_layout = QVBoxLayout(central_widget)
-        
-        # Tab widget
+
+        # ---- Tab widget ----
         self.tab_widget = QTabWidget()
         self.tab_widget.setTabsClosable(True)
         self.main_layout.addWidget(self.tab_widget)
-        
-        # Main menu tab
+
+        # ---- Main menu tab ----
         self.main_menu = MainMenuWidget(self.ros_node)
         self._add_tab(self.main_menu, "Main", closable=False)
     
