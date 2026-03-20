@@ -587,7 +587,7 @@ def houghLinesP(image_processing_handler: ImageProcessingHandler, threshold, min
       
     image_processing_handler.apply_visual_elements_canvas(canvas)
     HoughLinesP_results_dict={"Lines": HoughLinesP_results_list}
-    image_processing_handler.append_to_results(HoughLinesP_results_dict)
+    # image_processing_handler.append_to_results(HoughLinesP_results_dict)
                   
   else:
     image_processing_handler.set_vision_ok(False)
@@ -1153,9 +1153,8 @@ def saveImage(image_processing_handler: ImageProcessingHandler,
 
   cv2.imwrite(image_name, image_to_save)
   
-  Save_image_results_dict={"Image saved:": image_name} # image_processing_handler.
-  image_processing_handler.append_to_results(Save_image_results_dict)
-
+  # append saved image name to results for logging
+  image_processing_handler.get_vision_response().results.saved_images.append(image_name)
 
 def reduce_saturation(image_processing_handler: ImageProcessingHandler, 
                       HueMin: int, HueMax: int, f_reduce_s: int):
@@ -1257,7 +1256,7 @@ def example_function(image_processing_handler: ImageProcessingHandler):
   # Create a key for the results
   example_results_dict={"Example_Results_Key(e.a. Point)": example_results}
   # append to results list
-  image_processing_handler.append_to_results(example_results_dict)
+  #image_processing_handler.append_to_results(example_results_dict)
   
   # One you have drawn on the canvas, you can apply it to the display frame
   image_processing_handler.apply_visual_elements_canvas(canvas)
@@ -1355,7 +1354,7 @@ def set_camera_parameters(vision_node:Node,
 
 def process_image(vision_node: Node, 
                   image_processing_handler: ImageProcessingHandler, 
-                  pipeline_dict_list:list[dict]):
+                  pipeline_dict_list:list[dict])->np.ndarray:
   
   image_processing_handler.init_begin()
   try:
@@ -1849,7 +1848,7 @@ def process_image(vision_node: Node,
   
   #finally: 
   image_processing_handler.init_results()
-  return image_processing_handler.get_display_image(), image_processing_handler.get_results()
+  return image_processing_handler.get_display_image()
   
 
 if __name__ == '__main__':

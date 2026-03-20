@@ -5,7 +5,8 @@ from math import pi
 import math
 from copy import copy, deepcopy
 from typing import Union
-
+from rosidl_runtime_py.convert import message_to_ordereddict, get_message_slot_types
+import json
 from geometry_msgs.msg import Point
 
 
@@ -47,7 +48,6 @@ class ImageProcessingHandler:
         self.visionOK = True
 
         self._vision_results_dict = {}
-        self._vision_results_list = []
 
         self._debug_log_list = []
 
@@ -169,7 +169,6 @@ class ImageProcessingHandler:
         self.frame_buffer.clear()
 
         # clear vision results
-        self._vision_results_list.clear()       # delete this in the future
         self.clear_vision_results()
 
     def init_results(self):
@@ -188,7 +187,7 @@ class ImageProcessingHandler:
 
         self._processed_image_overlay = deepcopy(self._display_frame)
 
-        self._vision_results_dict["vision_results"] = self._vision_results_list
+        self._vision_results_dict = json.loads(json.dumps(message_to_ordereddict(self.get_vision_response())))
         
         initial_image = self.get_initial_image()
 
@@ -228,8 +227,8 @@ class ImageProcessingHandler:
         self._sort_results()
             # resize display frame
             #self._display_frame=vu.image_resize(self._display_frame, height = (self.screen_height-100))
-
-    def get_results(self)->dict:
+    
+    def get_results_as_dict(self)->dict:
         return self._vision_results_dict
     
     def get_display_image(self):
@@ -474,9 +473,6 @@ class ImageProcessingHandler:
 
     def set_quality_scores(self, function_name:str, quality_dict:dict):
         self._quality_scores_dict[function_name] = quality_dict
-
-    def append_to_results(self, result:dict):
-        self._vision_results_list.append(result)
 
     def append_vision_process_debug(self, log_str: str):
         self._debug_log_list.append(log_str)

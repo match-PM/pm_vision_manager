@@ -318,7 +318,7 @@ class VisionProcessClass:
         self.image_processing_handler.set_initial_image(image)
 
         #display_image = process_image(self, image, self.process_pipeline_list)
-        display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
+        display_image = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
         final_image = self.image_processing_handler.get_final_image()
         
         # save to json file
@@ -509,7 +509,7 @@ class VisionProcessClass:
             image_name = f"{self.cross_validation.current_image_name}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
             self.image_processing_handler_cross_val.set_image_metatdata(self.process_db_path, image_name)
             self.image_processing_handler_cross_val.set_initial_image(image)
-            display_image, _ = process_image(self.vision_node, self.image_processing_handler_cross_val, self.process_pipeline_list)
+            display_image = process_image(self.vision_node, self.image_processing_handler_cross_val, self.process_pipeline_list)
             
             self.save_vision_results()
 
@@ -530,7 +530,7 @@ class VisionProcessClass:
         self._load_process_file()
         self.image_processing_handler.set_initial_image(image)
         self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name)
-        display_image, _ = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
+        display_image = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
         _results = self.save_vision_results()
         self.results_signal.signal.emit(self.image_processing_handler.get_final_image(), _results)
     
@@ -713,10 +713,12 @@ class VisionProcessClass:
         #result_dict = self.construct_results_metadata2(result_dict)
         result_dict = self.ordered_dict_to_dict(message_to_ordereddict(self.construct_results_metadata(self.image_processing_handler.get_vision_response())))
 
-        # Set path for results dict
+        # if cross validation is running
         if not self.cross_validation.check_cross_val_running():
             vision_results_path = f"{self.process_library_path}{Path(self.process_file_path).stem}_results_{self.camera_id}.json"
             self.vision_results_path = (vision_results_path)  # needed for the service response
+        
+        # for cross not running
         else:
             #default
             results_folder_path = f"{self.vision_database_path}{self.process_filename.split('.json')[0]}/{self.camera_id}" # default
@@ -725,6 +727,9 @@ class VisionProcessClass:
             #results_folder_path = f"{self.process_library_path}{self.process_filename.split('Chromosom')[0]}"
             #vision_results_path = f"{results_folder_path}/results_{str(self.crossval_image_name)}.json"
             """"""
+
+        # save the results to file
+        #self.vision_node.get_logger().info(f"Path for saving results: '{vision_results_path}'")
 
         ## Maybe we need this anymore
 
