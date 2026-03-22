@@ -24,108 +24,6 @@ class MainMenuWidget(QWidget):
         self.node = node
         self.initUI()
         self.update_files()
-    
-    ######!!!!!!!!!!!!!!!!!!!!!#####
-    ######!!!!!!!!!!!!!!!!!!!!!#####
-    # This Ui code has been changed for clairity and better structure.
-    # The old code is still here in case of missing information.
-    ######!!!!!!!!!!!!!!!!!!!!!#####
-    ######!!!!!!!!!!!!!!!!!!!!!#####
-
-
-    # def initUI(self):
-    #     # Grid layout
-    #     self.main_layout = QGridLayout()
-    #     #self.running_assistans_widget = QListWidget()
-    #     #self.vision_processes_widget = QListWidget()
-    #     self.vision_processes_widget = DraggableTreeWidget(logger=self.node.get_logger())
-
-    #     self.camera_configs_widget = QListWidget()
-    #     # add button
-    #     #self.stop_assistant_button = QPushButton("Stop Vision Assistant")
-
-    #     self.start_assistant_button = QPushButton ("Start VisionAssistant")
-    #     #self.start_assistant_button.clicked.connect(self.start_vision_assistant)
-        
-    #     #self.referesh_running_assistant_button = QPushButton("Refresh Assistants")
-    #     self.new_process_button = QPushButton("Create New Process")
-    #     self.new_process_button.clicked.connect(self.create_new_process_file)
-
-    #     #benutz bereits bestehende funktion zum updaten
-    #     self.refresh_dtbs_button = QPushButton("Refresh databases")
-    #     self.refresh_dtbs_button.clicked.connect(self.update_files)
-
-    #     label_processes = QLabel("Vision Processes:")
-    #     label_cameras = QLabel("Camera Configs:")
-    #     #label_assistants = QLabel("Running Assistants:")
-    #     label_text_output = QLabel("Log Output:")
-    #     # add a text output box
-    #     self.text_output = AppTextOutput()
-    #     self.main_layout.addWidget(self.new_process_button, 0, 0)
-    #     self.main_layout.addWidget(self.refresh_dtbs_button, 1, 0)
-    #     self.main_layout.addWidget(self.start_assistant_button, 0, 1)
-    #     self.main_layout.addWidget(label_processes, 2, 0)
-    #     self.main_layout.addWidget(self.vision_processes_widget,3,0)
-    #     self.main_layout.addWidget(label_cameras,1,1)
-    #     self.main_layout.addWidget(self.camera_configs_widget,2,1)
-    #     #self.main_layout.addWidget(label_assistants,3,0)
-    #     #self.main_layout.addWidget(self.running_assistans_widget, 4, 0, 1, 2)
-    #     #self.main_layout.addWidget(self.stop_assistant_button, 5, 0)
-    #     #self.main_layout.addWidget(self.referesh_running_assistant_button, 5, 1)
-    #     self.main_layout.addWidget(label_text_output, 3, 0)
-    #     self.main_layout.addWidget(self.text_output, 4, 0, 1, 2)
-    #     self.setGeometry(100, 100, 1000, 800)
-    #     self.setLayout(self.main_layout)
-
-    # def initUI(self):
-
-    #     # Main layout - Grid provides precise control over widget placement
-    #     self.main_layout = QGridLayout()
-        
-    #     # =============== WIDGET DEFINITIONS ===============
-    #     # File management widgets
-    #     self.vision_processes_widget = DraggableTreeWidget(logger=self.node.get_logger())
-    #     self.camera_configs_widget = QListWidget()
-        
-    #     # Action buttons
-    #     self.start_assistant_button = QPushButton("Start Vision Assistant")
-    #     self.new_process_button = QPushButton("Create New Process")
-    #     self.refresh_dtbs_button = QPushButton("Refresh Databases")
-        
-    #     # Log output
-    #     self.text_output = AppTextOutput()
-        
-    #     # Labels for section headers
-    #     label_processes = QLabel("Vision Processes:")
-    #     label_cameras = QLabel("Camera Configs:")
-    #     label_text_output = QLabel("Log Output:")
-        
-    #     # =============== CONNECT SIGNALS ===============
-    #     self.new_process_button.clicked.connect(self.create_new_process_file)
-    #     self.refresh_dtbs_button.clicked.connect(self.update_files)
-        
-    #     # =============== LAYOUT ORGANIZATION ===============
-    #     # Row 0: Primary actions
-    #     self.main_layout.addWidget(self.new_process_button, 0, 0)
-    #     self.main_layout.addWidget(self.start_assistant_button, 0, 1)
-        
-    #     # Row 1: Secondary actions
-    #     self.main_layout.addWidget(self.refresh_dtbs_button, 1, 0)
-    #     self.main_layout.addWidget(label_cameras, 1, 1)
-        
-    #     # Row 2-3: File management section
-    #     self.main_layout.addWidget(label_processes, 2, 0)
-    #     self.main_layout.addWidget(self.vision_processes_widget, 3, 0)
-    #     self.main_layout.addWidget(self.camera_configs_widget, 2, 2, 2, 1)  # Spans rows 2-3, column 2
-        
-    #     # Row 4-5: Log output section
-    #     self.main_layout.addWidget(label_text_output, 4, 0)
-    #     self.main_layout.addWidget(self.text_output, 5, 0, 2, 3)  # Spans 2 rows, 3 columns
-        
-    #     # =============== FINALIZE LAYOUT ===============
-    #     self.setGeometry(100, 100, 2000, 1600)
-    #     self.setLayout(self.main_layout)
-
 
     def initUI(self):
         """
@@ -366,12 +264,7 @@ class MainMenuWidget(QWidget):
             self.text_output.append_green_text(f"Successfully created process file: {process_name}")
             self.update_files()
 
-    # def get_selected_process(self):
-    #     selected_process = self.vision_processes_widget.currentItem()
-    #     if selected_process:
-    #         return selected_process.text()
-    #     else:
-    #         return None
+
         
     def get_selected_process(self):
         item = self.vision_processes_widget.currentItem()

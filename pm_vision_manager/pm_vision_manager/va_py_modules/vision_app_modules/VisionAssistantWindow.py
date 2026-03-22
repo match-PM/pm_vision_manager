@@ -105,9 +105,9 @@ class VisionAssistantWindow(QMainWindow):
     # ============================================================================
     
     def _init_ui(self):
-        """Initialize the user interface."""
+        
         self.setWindowTitle("Vision Assistant")
-
+        #self.setWindowIcon( ### accidentally deleted the icon path ###
 
         # ---- Central widget ----
         central_widget = QWidget()

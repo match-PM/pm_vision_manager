@@ -145,8 +145,9 @@ class VisionCrossvalidation:
         """
         return self.current_image_index, self.get_total_number_images()
     
+
 class VisionResultsSignal(QObject):
-    signal = pyqtSignal(np.ndarray, dict)
+    signal = pyqtSignal(np.ndarray, np.ndarray, dict)  # original, processed, results
 
 class SetCrossValResultsSignal(QObject):
     signal = pyqtSignal(list)
@@ -296,28 +297,25 @@ class VisionProcessClass:
         image = self._get_current_camera_image()
 
         while (self.timer_active and image is None):
-            
             image = self._get_current_camera_image()
             self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
             time.sleep(0.5)
             continue
 
-            # if image is None:
-            #     self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
-            #     time.sleep(0.5)
-            #     continue
-                        
-    
-        self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
-        self.image_processing_handler.set_initial_image(image)
+        original_image = image.copy()  # Original sichern vor Verarbeitung
 
-        #display_image = process_image(self, image, self.process_pipeline_list)
+        self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name)
+        self.image_processing_handler.set_initial_image(image)
         display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
-        final_image = self.image_processing_handler.get_final_image()
-        
-        # save to json file
+        #final_image = self.image_processing_handler.get_final_image()
+        final_image = self.image_processing_handler.get_processed_image_overlay()
         _results = self.save_vision_results()
-        self.results_signal.signal.emit(final_image, _results)
+        #self.results_signal.signal.emit(original_image, final_image, _results)
+        self.results_signal.signal.emit(
+            original_image,
+            final_image,
+            _results
+        )
 
         # run this when the execution is finished     
         if self.run_cross_validation:
@@ -510,15 +508,18 @@ class VisionProcessClass:
         self.cross_validation.stop_cross_val()
 
     def _process_image_for_widget(self, image:np.ndarray, image_name:str=""):
-        # this is only used in the vision assistant mode
-        
         self._load_process_file()
+        original_image = image.copy()  # Original sichern vor Verarbeitung
         self.image_processing_handler.set_initial_image(image)
         self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name)
         display_image, _ = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
         _results = self.save_vision_results()
-        self.results_signal.signal.emit(self.image_processing_handler.get_final_image(), _results)
-    
+        #self.results_signal.signal.emit(original_image, self.image_processing_handler.get_final_image(), _results) 
+        self.results_signal.signal.emit(
+            original_image,
+            self.image_processing_handler.get_processed_image_overlay(),  # ← nur processed, kein vconcat
+            _results
+        )
 
     def load_path_config(self) -> bool:
         try:
