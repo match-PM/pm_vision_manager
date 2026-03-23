@@ -29,6 +29,27 @@ class ImageNotColorError(Exception):
         self.message = message
         super().__init__(self.message)
 
+class DisplayImages():
+    def __init__(self):
+        self._original_image = None
+        self._final_image = None
+    
+    def get_original_image(self):
+        if self._original_image is None:
+            raise ValueError("Original image is not set!")
+        return self._original_image
+    
+    def get_final_image(self):
+        if self._final_image is None:
+            raise ValueError("Final image is not set!")
+        return self._final_image
+
+    def set_original_image(self, image: np.ndarray):
+        self._original_image = copy(image)
+
+    def set_final_image(self, image: np.ndarray):
+        self._final_image = copy(image)
+
 class ImageProcessingHandler:
 
     MODE_EXECUTE = 0
@@ -40,7 +61,6 @@ class ImageProcessingHandler:
         self._initial_image: np.ndarray = None
         self._processing_image: np.ndarray = None
         self._display_frame: np.ndarray = None
-        self._final_image: np.ndarray = None
         self._processed_image_overlay: np.ndarray = None
         self.frame_visual_elements = None
         self.frame_buffer = []
@@ -72,7 +92,7 @@ class ImageProcessingHandler:
         text_scale = 5 # scale of written text in the images
         line_scale = 2 # scale of lines in the images
         self.vision_routine_done = False
-
+        self.display_image_cls = DisplayImages()
         # Init for camera clients
         self.client_exposure_time = None
         self.srv_client_exposure_time = None
@@ -212,16 +232,16 @@ class ImageProcessingHandler:
         # Ensure same data type
         if initial_image.dtype != self._display_frame.dtype:
             self._display_frame = self._display_frame.astype(initial_image.dtype)
-
+        
         if show_vision_elements_in_output_image:
             initial_image = self.create_vision_element_overlay(initial_image, 
                                                                 self.frame_visual_elements, 
                                                                 self.logger)
         # Concatenate safely
-        if self.show_input_and_output_image:
-            self._display_frame = cv2.vconcat([initial_image, self._display_frame])
 
-        self._final_image = deepcopy(self._display_frame)
+        self.display_image_cls.set_original_image(initial_image)
+
+        self.display_image_cls.set_final_image(self._display_frame)
         
         # Sort results if there are any
         self._sort_results()
@@ -359,14 +379,7 @@ class ImageProcessingHandler:
 
     def get_vision_ok(self)->bool:
         return self.visionOK
-    
-    def get_final_image(self):
-        """
-        Returns the final image of the vision process.
-        This image is not deleted when a new run starts.
-        """
-        return np.copy(self._final_image)
-    
+        
     def set_roi_settings(self, top_left_x:int, top_left_y:int, bottom_right_x:int, bottom_right_y:int):
         self.ROI_CS_CV_top_left_x = top_left_x
         self.ROI_CS_CV_top_left_y = top_left_y

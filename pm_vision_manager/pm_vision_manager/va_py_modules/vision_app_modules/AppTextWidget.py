@@ -29,3 +29,8 @@ class AppTextOutput(QTextEdit):
     def append_black_text(self, text:str) -> None:
         self.setTextColor(QColor("black"))
         self.append(text)
+    
+    def append_white_text(self, text:str) -> None:
+        self.setTextColor(QColor("white"))
+        self.append(text)
+        self.setTextColor(QColor("black"))

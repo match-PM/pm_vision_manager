@@ -34,7 +34,7 @@ from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
 
 import pm_vision_interfaces.msg as pvimsg 
 from pm_vision_manager.va_py_modules.camera_ros_interfaces import CameraRosInterfaces
-
+from pm_vision_manager.va_py_modules.image_processing_handler import DisplayImages
 SUPPORTED_TYPES = [".png", ".jpg", ".jpeg", ".bmp"]
 
 class VisionCrossvalidation:
@@ -146,7 +146,7 @@ class VisionCrossvalidation:
         return self.current_image_index, self.get_total_number_images()
     
 class VisionResultsSignal(QObject):
-    signal = pyqtSignal(np.ndarray, dict)
+    signal = pyqtSignal(DisplayImages, dict)  # original, processed, results
 
 class SetCrossValResultsSignal(QObject):
     signal = pyqtSignal(list)
@@ -319,18 +319,24 @@ class VisionProcessClass:
 
         #display_image = process_image(self, image, self.process_pipeline_list)
         display_image = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
-        final_image = self.image_processing_handler.get_final_image()
-        
+
         # save to json file
         _results = self.save_vision_results()
-        self.results_signal.signal.emit(final_image, _results)
+
+        self.results_signal.signal.emit(
+            self.image_processing_handler.display_image_cls,
+            _results
+            )
 
         # run this when the execution is finished     
         if self.run_cross_validation:
             self.execute_crossvalidation()
             # reinitilize the results after crossvalidation has been executed
             _results = self.save_vision_results()
-            self.results_signal.signal.emit(final_image, _results)
+            self.results_signal.signal.emit(
+                self.image_processing_handler.display_image_cls,
+                _results
+                )
         
         self.image_processing_handler.vision_routine_done = True
 
@@ -393,49 +399,6 @@ class VisionProcessClass:
             #self.vision_node.get_logger().error("No current frame available!")
             return None
 
-
-    # def topic_cbk(self, data):
-    #     self.subscription_active = True
-    #     self.topic_available = True
-    #     self.image_processing_handler.stop_vision_execution = True
-    #     self._load_process_file()
-
-    #     self.vision_node.get_logger().info("Receiving video frame")
-    #     # Convert ROS Image message to OpenCV image
-    #     received_frame = self.br.imgmsg_to_cv2(data)
-
-    #     #self.vision_node.get_logger().warn(f"{len(received_frame.shape)}")
-        
-    #     # if image is not a greyscale image
-    #     if not len(received_frame.shape) == 2:
-
-    #         if received_frame.shape[2] == 4: # Check if it has an alpha channel - This is for unity
-    #             received_frame = cv2.cvtColor(received_frame, cv2.COLOR_RGBA2BGR)
-
-    #     if self.launch_as_assistant:
-    #         image_name = f"{self.process_UID}"
-    #     else:
-    #         image_name = f"{self.process_UID}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
-
-    #     self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
-    #     self.image_processing_handler.set_initial_image(received_frame)
-
-    #     #display_image = process_image(self, received_frame, self.process_pipeline_list)
-    #     display_image, vision_results = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
-    #     final_image = self.image_processing_handler.get_final_image()
-    #     # save to json file
-    #     _results = self.save_vision_results()
-    #     self.results_signal.signal.emit(final_image, _results)
-
-    #     # this only runs in execution mode and when the execution is finished
-    #     if not self.launch_as_assistant and self.image_processing_handler.stop_vision_execution:   # self.stop_vision_execution may be overwritten in process_image function
-    #         if self.run_cross_validation:
-    #             self.execute_crossvalidation()
-    #             # reinitilize the results after crossvalidation has been executed
-    #             _results = self.save_vision_results()
-    #             self.results_signal.signal.emit(final_image, _results)
-    #         self._stop_vision_subscription()
-    #         self.image_processing_handler.vision_routine_done = True
 
     def vision_assistant_loop(self):
 
@@ -532,7 +495,7 @@ class VisionProcessClass:
         self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name)
         display_image = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
         _results = self.save_vision_results()
-        self.results_signal.signal.emit(self.image_processing_handler.get_final_image(), _results)
+        self.results_signal.signal.emit(self.image_processing_handler.display_image_cls, _results)
     
 
     def load_path_config(self) -> bool:

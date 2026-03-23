@@ -11,6 +11,9 @@ from sensor_msgs.msg import Image # Image is the message type
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
 import cv2 # OpenCV library
 from pm_vision_interfaces.srv import DemoSetExposure
+
+import time
+
 class ImagePublisher(Node):
   """
   Create an ImagePublisher class, which is a subclass of the Node class.
@@ -25,9 +28,14 @@ class ImagePublisher(Node):
     # Create the publisher. This publisher will publish an Image
     # to the video_frames topic. The queue size is 10 messages.
     self.publisher_ = self.create_publisher(Image, 'video_frames', 10)
-      
+  
+    self.frame_count = 0
+    self.last_time = time.time()
+        
+
     # We will publish a message every 0.1 seconds
-    timer_period = 0.1  # seconds
+    timer_period = 0.030  # ~30 fps
+    self.timer = self.create_timer(timer_period, self.timer_callback)
       
     # Create the timer
     self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -35,8 +43,16 @@ class ImagePublisher(Node):
 
     # Create a VideoCapture object
     # The argument '0' gets the default webcam.
-    self.cap = cv2.VideoCapture(0)
-         
+    self.cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
+        
+    self.cap.set(cv2.CAP_PROP_FPS, 60)
+    self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+    self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
+    if not self.cap.isOpened():
+      self.get_logger().error("❌ Cannot open webcam!")
+      raise RuntimeError("Cannot open camera")
+
     # Used to convert between ROS and OpenCV images
     self.br = CvBridge()
      
@@ -54,16 +70,27 @@ class ImagePublisher(Node):
     # This method returns True/False as well
     # as the video frame.
     ret, frame = self.cap.read()
-          
-    if ret == True:
-      # Publish the image.
-      # The 'cv2_to_imgmsg' method converts an OpenCV
-      # image to a ROS 2 image message
-      self.publisher_.publish(self.br.cv2_to_imgmsg(frame))
- 
-    # Display the message on the console
-    self.get_logger().info('Publishing video frame')
-  
+    
+    if ret:
+      try:
+        # Convert to ROS message and publish
+        img_msg = self.br.cv2_to_imgmsg(frame, encoding="bgr8")
+        self.publisher_.publish(img_msg)
+        
+        # FPS calculation
+        self.frame_count += 1
+        current_time = time.time()
+        if current_time - self.last_time >= 2.0:
+          fps = self.frame_count / (current_time - self.last_time)
+          self.get_logger().info(f'Publishing at {fps*2:.1f} FPS')
+          self.frame_count = 0
+          self.last_time = current_time
+              
+      except Exception as e:
+        self.get_logger().error(f'Error: {str(e)}')
+    else:
+      self.get_logger().warning('Failed to capture frame')
+
 def main(args=None):
   
   # Initialize the rclpy library
