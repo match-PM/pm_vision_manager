@@ -14,6 +14,7 @@ data_files=   [
     ('share/' + package_name, ['config/vision_assistant_path_config.yaml']),  
     ('share/' + package_name, ['config/vision_assistant_config.yaml']),
     ('share/' + package_name, ['config/app_icon.png']),
+    ('share/' + package_name, ['config/match_Logo_cut.png']),
     ('share/' + package_name + '/launch', ['launch/pm_vision.launch.py']),
     ]
 

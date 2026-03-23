@@ -137,7 +137,7 @@ class VisionNode(Node):
             return response
 
         # attach the vision instance to the main window
-        self.main_window.start_execution_widget_signal.signal.emit(vision_instance,request.image_display_time)
+        self.main_window.start_execution_signal.signal.emit(vision_instance,request.image_display_time)
         
         vision_instance.execute_vision()
 
@@ -152,7 +152,7 @@ class VisionNode(Node):
         
         if not response.success:
             self.get_logger().error("Vision execution failed! An instance of the vision assistant will be opened")
-            self.main_window.start_vision_assistant_wiget_signal.signal.emit(request.camera_config_filename, 
+            self.main_window.start_execution_signal.signal.emit(request.camera_config_filename, 
                                                                             request.process_filename)
         
         return response

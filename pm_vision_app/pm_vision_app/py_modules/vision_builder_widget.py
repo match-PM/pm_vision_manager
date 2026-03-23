@@ -95,20 +95,15 @@ class VisionBuilderWidget(QWidget):
         layout.addWidget(open_action_menu_button, 1, 0)
 
         # Add combobox for vision pipline building
-        self.checkbox_list = ReorderableCheckBoxListWidget()
+        self.checkbox_list = ReorderableCheckBoxListWidget(delete_callback=self.delete_function_from_pipeline)
         self.checkbox_list.itemClicked.connect(self.create_function_parameters_layout)
         self.checkbox_list.itemChanged.connect(self.set_function_states)
         self.checkbox_list.CustDragSig.connect(self.on_drop)
         layout.addWidget(self.checkbox_list, 2, 0)
 
-        # add button for deleting selected vision function
-        delete_button = QPushButton("Delete Selected")
-        delete_button.clicked.connect(self.delete_function_from_pipeline)
-        layout.addWidget(delete_button, 3, 0)
-
         # add textbox for string output
         self.text_output = AppTextOutput()
-        layout.addWidget(self.text_output, 4, 0, 1, 2)
+        layout.addWidget(self.text_output, 3, 0, 1, 2)
 
         # create sub layout for the function parameter widgetd
         self.sub_layout = QVBoxLayout()
@@ -569,13 +564,26 @@ class AppTextOutput(QTextEdit):
 class ReorderableCheckBoxListWidget(QListWidget):
     CustDragSig = QtCore.pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, delete_callback=None):
         super(ReorderableCheckBoxListWidget, self).__init__()
         self.setAcceptDrops(True)
         self.setDragEnabled(True)
         self.setAcceptDrops(True)
         self.setDropIndicatorShown(True)
         self.setDragDropMode(QListWidget.DragDropMode.InternalMove)
+        self.delete_callback = delete_callback
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    def show_context_menu(self, position):
+        """Show context menu on right-click"""
+        context_menu = QMenu(self)
+        delete_action = context_menu.addAction("Delete")
+        action = context_menu.exec(self.mapToGlobal(position))
+        
+        if action == delete_action:
+            if self.delete_callback:
+                self.delete_callback()
 
     def get_widget_list_names(self):
         name_list = []

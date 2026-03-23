@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QScrollArea, QMenuBar, QMessageBox, QMenu, QDialog, QHBoxLayout, QInputDialog, QTreeWidget, QTreeWidgetItem, QApplication, QGridLayout, QFrame, QMainWindow, QListWidget, QListWidgetItem, QDoubleSpinBox, QWidget, QVBoxLayout, QPushButton, QCheckBox, QLineEdit, QComboBox, QTextEdit,QLabel,QSlider, QSpinBox, QFontDialog, QFileDialog
+from PyQt6.QtWidgets import QScrollArea, QMenuBar, QMessageBox, QMenu, QDialog, QHBoxLayout, QInputDialog, QTreeWidget, QTreeWidgetItem, QApplication, QGridLayout, QFrame, QMainWindow, QListWidget, QListWidgetItem, QDoubleSpinBox, QWidget, QVBoxLayout, QPushButton, QCheckBox, QLineEdit, QComboBox, QTextEdit,QLabel,QSlider, QSpinBox, QFontDialog, QFileDialog, QSizePolicy
 import os
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont, QAction, QPixmap
@@ -42,14 +42,15 @@ class MainMenuWidget(QWidget):
         top_layout.setContentsMargins(10, 0, 10, 0)
 
         package_share_dir = get_package_share_directory('pm_vision_manager')
-        icon_path = os.path.join(package_share_dir, 'match.jpg')
+        icon_path = os.path.join(package_share_dir, 'match_Logo_cut.png')
 
         pixmap = QPixmap(icon_path)
         if not pixmap.isNull():
             image_label = QLabel()
-            # Scale to wider size (e.g., 120 width, keep aspect ratio)
-            pixmap = pixmap.scaled(200, 60, Qt.AspectRatioMode.KeepAspectRatio)
-            image_label.setPixmap(pixmap)
+            # Scale to fit GUI with smooth transformation
+            pixmap = pixmap.scaled(800, 100, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            image_label.setPixmap(pixmap)            
+            top_layout.addStretch(1)  # Add stretch to push logo to the right            
             top_layout.addWidget(image_label)
             top_layout.addSpacing(10)  # Add some space after logo
 
@@ -79,8 +80,8 @@ class MainMenuWidget(QWidget):
         
         vision_buttons_layout = QHBoxLayout()
         
-        self.start_assistant_button = QPushButton("Start Vision Assistant")
-        self.new_process_button = QPushButton("Create New Process")
+        self.start_assistant_button = QPushButton("▶")
+        self.new_process_button = QPushButton("+")
         self.refresh_dtbs_button = QPushButton("↻")
         self.refresh_dtbs_button.setStyleSheet("""
             QPushButton {
@@ -89,31 +90,48 @@ class MainMenuWidget(QWidget):
                 font-weight: bold;
             }
         """)
+        self.new_process_button.setStyleSheet("""
+            QPushButton {
+                color: green;
+                font-size: 20px;
+                font-weight: bold;
+            }
+        """)
+        self.start_assistant_button.setStyleSheet("""
+            QPushButton {
+                color: blue;
+                font-size: 20px;
+                font-weight: bold;
+            }
+        """)
 
-        self.start_assistant_button.setFixedWidth(200)
-        self.new_process_button.setFixedWidth(200)
+        self.start_assistant_button.setFixedWidth(50)
+        self.start_assistant_button.setFixedHeight(40)
+        self.refresh_dtbs_button.setFixedWidth(50)
+        self.refresh_dtbs_button.setFixedHeight(40)
+        self.new_process_button.setFixedWidth(50)
+        self.new_process_button.setFixedHeight(40)
 
         self.start_assistant_button.clicked.connect(self.start_vision_assistant)
         self.new_process_button.clicked.connect(self.create_new_process_file)
         self.refresh_dtbs_button.clicked.connect(self.update_files)
         self.refresh_dtbs_button.setToolTip("Refresh vision processes and camera configs")
+        self.new_process_button.setToolTip("Create new vision process")
 
         vision_buttons_layout.addWidget(vision_label)
         vision_buttons_layout.addWidget(self.refresh_dtbs_button)
-        vision_buttons_layout.addStretch(1)  # Push buttons to the left
-
         vision_buttons_layout.addWidget(self.new_process_button)
-        vision_buttons_layout.addWidget(self.start_assistant_button)
+        vision_buttons_layout.addStretch(1)  # Push buttons to the left
 
         
 
         self.vision_processes_widget = DraggableTreeWidget(logger=self.node.get_logger())
-        self.vision_processes_widget.setMinimumHeight(600)
-        self.vision_processes_widget.setMinimumWidth(800)
+        self.vision_processes_widget.setMinimumHeight(100)
+        self.vision_processes_widget.setMinimumWidth(600)
         
         #vision_layout.addWidget(vision_label)
         vision_layout.addLayout(vision_buttons_layout)
-        vision_layout.addWidget(self.vision_processes_widget)
+        vision_layout.addWidget(self.vision_processes_widget, 1)  # Add stretch factor
         vision_frame.setLayout(vision_layout)
         
         # ----- Section 4: Camera Configs -----
@@ -134,21 +152,53 @@ class MainMenuWidget(QWidget):
         camera_label.setFont(camera_label_font)
         camera_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         
-        self.camera_configs_widget = QListWidget()
-        self.camera_configs_widget.setMinimumHeight(600)
-        self.camera_configs_widget.setMinimumWidth(400)
+        camera_buttons_layout = QHBoxLayout()
         
-        camera_layout.addWidget(camera_label)
-        camera_layout.addWidget(self.camera_configs_widget)
+        camera_refresh_button = QPushButton("↻")
+        camera_refresh_button.setStyleSheet("""
+            QPushButton {
+                color: green;
+                font-size: 20px;
+                font-weight: bold;
+            }
+        """)
+        camera_refresh_button.setFixedWidth(50)
+        camera_refresh_button.setFixedHeight(40)
+        camera_refresh_button.clicked.connect(self.update_files)
+        camera_refresh_button.setToolTip("Refresh vision processes and camera configs")
+        
+        camera_buttons_layout.addWidget(camera_label)
+        camera_buttons_layout.addWidget(camera_refresh_button)
+        camera_buttons_layout.addStretch(1)
+        
+        self.camera_configs_widget = QListWidget()
+        self.camera_configs_widget.setMinimumHeight(100)
+        self.camera_configs_widget.setMinimumWidth(600)
+        
+        camera_layout.addLayout(camera_buttons_layout)
+        camera_layout.addWidget(self.camera_configs_widget, 1)  # Add stretch factor
         camera_frame.setLayout(camera_layout)
         
         # Add sections to middle layer
-        middle_layer_layout.addWidget(vision_frame)
-        middle_layer_layout.addWidget(camera_frame)
+        middle_layer_layout.addWidget(vision_frame, 1)  # Add stretch factor
+        
+        # Create center widget for start assistant button
+        center_widget = QWidget()
+        center_layout = QVBoxLayout(center_widget)
+        center_layout.addStretch(1)
+        center_layout.addWidget(self.start_assistant_button)
+        center_layout.addStretch(1)
+        center_layout.setContentsMargins(10, 0, 10, 0)
+        middle_layer_layout.addWidget(center_widget)
+        
+        middle_layer_layout.addWidget(camera_frame, 1)  # Add stretch factor
         
         # Create middle layer widget
         middle_layer_widget = QWidget()
         middle_layer_widget.setLayout(middle_layer_layout)
+        
+        # Set size policy to expand
+        middle_layer_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
         # =============== BOTTOM LAYER: LOG OUTPUT ===============
         log_frame = QFrame()
@@ -169,7 +219,8 @@ class MainMenuWidget(QWidget):
         log_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         
         self.text_output = AppTextOutput()
-        self.text_output.setMinimumHeight(300)
+        self.text_output.setMinimumHeight(80)
+        self.text_output.setMaximumHeight(150)
         
         log_layout.addWidget(log_label)
         log_layout.addWidget(self.text_output)
@@ -177,14 +228,15 @@ class MainMenuWidget(QWidget):
         
         # =============== ASSEMBLE MAIN LAYOUT ===============
         # Add all layers to main layout
-        main_layout.addWidget(top_bar)
-        main_layout.addWidget(middle_layer_widget)
-        main_layout.addWidget(log_frame)
-        main_layout.addStretch(1)  # Small stretch at bottom
+        main_layout.addWidget(top_bar, 0)  # No stretch, fixed height
+        main_layout.addWidget(middle_layer_widget, 1)  # High stretch factor to expand
+        main_layout.addWidget(log_frame, 0)  # No stretch, fixed height
+        main_layout.setStretchFactor(middle_layer_widget, 1)
         
         # =============== SET WINDOW PROPERTIES ===============
-        self.setGeometry(100, 100, 2000, 1600)
         self.setLayout(main_layout)
+        # Set size policy to expand
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def update_files(self):
         self.node.get_logger().info("Updating files...")

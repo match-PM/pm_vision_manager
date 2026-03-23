@@ -276,6 +276,9 @@ class VisionProcessClass:
         self.vision_assistant_loop()
     
     def execute_vision(self):
+        
+        self.vision_node.get_logger().warn("Executing vision process...")
+
         self._start_vision_subscription()
         
         image_name = f"{self.process_UID}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
