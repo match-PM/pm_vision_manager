@@ -28,11 +28,11 @@ def check_for_valid_path_config(logger=None)->bool:
             logger.error(f"Error opening path config file: {str(e)}")
 
 
-def set_process_library_path(process_libary_path:str,logger=None):
-    _set_path_config_value(process_libary_path, "process_library_path", logger)
+def set_process_library_path(process_library_path:str,logger=None):
+    _set_path_config_value(process_library_path, "process_library_path", logger)
 
-def set_function_library_path(function_libary_path:str,logger=None):
-    _set_path_config_value(function_libary_path, "function_libary_path", logger)
+def set_function_library_path(function_library_path:str,logger=None):
+    _set_path_config_value(function_library_path, "function_library_path", logger)
 
 def set_vision_database_path(vision_database_path:str,logger=None):
     _set_path_config_value(vision_database_path, "vision_database_path", logger)

@@ -1,6 +1,6 @@
 {
     "vision_process_name": "test_pipeline",
-    "process creation": "2025-09-30 16:44:14",
+    "process creation": "2026-04-03 18:59:40",
     "vision_pipeline": [
         {
             "BGR2GRAY": {
@@ -31,9 +31,20 @@
             "CircleDetection": {
                 "active": true,
                 "draw_circles": true,
+                "fit_single_circle": false,
+                "circle_fit_mode": "standardLSQ",
                 "mode": "standardLSQ",
                 "minRadius": 200.0,
                 "maxRadius": 2500.0
+            }
+        },
+        {
+            "Canny": {
+                "active": true,
+                "L2gradient": "nothing",
+                "aperatureSize": 1,
+                "threshold1": 500.5,
+                "threshold2": 500.5
             }
         }
     ]

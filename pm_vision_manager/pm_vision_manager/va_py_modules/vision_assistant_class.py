@@ -818,7 +818,7 @@ class VisionProcessClass:
         return process_library_path
 
     @staticmethod
-    def get_camera_libary_path(logger=None)->str:
+    def get_camera_library_path(logger=None)->str:
         config_file_path = f"{get_package_share_directory('pm_vision_manager')}/vision_assistant_path_config.yaml"
         camera_library_path = None
         with open(str(config_file_path), "r") as file:
@@ -851,7 +851,7 @@ class VisionProcessClass:
 
     @staticmethod
     def correct_camera_pixel_per_um(camera_file_name: str, multiplicator:float, logger: RcutilsLogger = None)->bool:
-        file_path = VisionProcessClass.get_camera_libary_path(logger) + camera_file_name
+        file_path = VisionProcessClass.get_camera_library_path(logger) + camera_file_name
 
         try:
             with open(file_path, "r") as file:
@@ -885,7 +885,7 @@ class VisionProcessClass:
 
     @staticmethod
     def correct_camera_angle(camera_file_name: str, angle_diff:float, logger: RcutilsLogger = None)->bool:
-        file_path = VisionProcessClass.get_camera_libary_path(logger) + camera_file_name
+        file_path = VisionProcessClass.get_camera_library_path(logger) + camera_file_name
 
         try:
             with open(file_path, "r") as file:

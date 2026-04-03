@@ -12,16 +12,16 @@ import pm_vision_app.py_modules.type_classes as TC
 
 class VisionFunctionsLoader():
     def __init__(self, lib_path) -> None:
-        self.libary_path = lib_path
+        self.library_path = lib_path
         self.vision_functions: list[VisionFunction] = []
-        self.load_vision_functions_libary_from_path()
+        self.load_vision_functions_library_from_path()
 
-    def load_vision_functions_libary_from_path(self):
+    def load_vision_functions_library_from_path(self):
         self.yaml_data = []
         self.init_output = []
-        for filename in os.listdir(self.libary_path):
+        for filename in os.listdir(self.library_path):
             if filename.endswith(".yaml") or filename.endswith(".yml"):
-                file_path = os.path.join(self.libary_path, filename)
+                file_path = os.path.join(self.library_path, filename)
                 with open(file_path, 'r') as file:
                     try:
                         function_file_content = yaml.load(file, Loader=yaml.FullLoader)
@@ -119,25 +119,31 @@ class VisionFunctionsLoader():
         # Return False if function not found
         return None
 
-    def create_vision_libary(self):
-        self.vision_libary = []
+    def create_vision_library(self):
+        # Sammeln
+        self.vision_library = []
         for category in VisionFunction.SUPPORTED_CATEGORYS:
-            self.vision_libary.append({category: []})
+            self.vision_library.append({category: []})
+        
         for function in self.vision_functions:
-            # match function.category:
-            for category in self.vision_libary:
+            for category in self.vision_library:
                 if function.category == list(category.keys())[0]:
                     category[function.category].append(function.vision_function_name)
+        
+        # Sortieren 
+        for category_dict in self.vision_library:
+            for func_list in category_dict.values():
+                func_list.sort()  
 
-    def return_vision_libary(self):
-        self.create_vision_libary()
-        return self.vision_libary
+    def return_vision_library(self):
+        self.create_vision_library()
+        return self.vision_library
     
 if __name__ == '__main__':
-    # functions_libary = VisionFunctionsLoader("/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_functions")
-    # functions_libary.list_all_vision_functions()
-    # functions_libary.list_all_function_dictionarys()
-    # print(functions_libary.vision_functions_names)
+    # functions_library = VisionFunctionsLoader("/home/niklas/ros2_ws/src/pm_vision_manager/pm_vision_manager/vision_functions")
+    # functions_library.list_all_vision_functions()
+    # functions_library.list_all_function_dictionarys()
+    # print(functions_library.vision_functions_names)
     pass
 
 

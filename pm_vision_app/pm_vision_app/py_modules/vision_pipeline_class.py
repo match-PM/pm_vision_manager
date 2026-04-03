@@ -14,16 +14,16 @@ import pm_vision_app.py_modules.type_classes as TC
 # from py_modules.vision_functions_loader import VisionFunctionsLoader
 
 class VisionPipeline():
-    def __init__(self, vision_yaml_libary_path) -> None:
+    def __init__(self, vision_yaml_library_path) -> None:
         self.vision_functions: list[VisionFunction] = []
         self.process_name = None
         self.process_dict = {}
         self.vision_pipeline_json_dir = None
         self.vision_process_json_name_tag = 'vision_process_name'
         self.vision_process_json_pipeline_tag = 'vision_pipeline'
-        self.vison_functions_libary = VisionFunctionsLoader(vision_yaml_libary_path)
-        #self.vison_functions_libary.list_all_vision_functions()
-        #self.vison_functions_libary.list_all_function_dictionarys()
+        self.vision_functions_library = VisionFunctionsLoader(vision_yaml_library_path)
+        #self.vision_functions_library.list_all_vision_functions()
+        #self.vision_functions_library.list_all_function_dictionarys()
 
     def remove_function_by_name(self, function_name):
         for index, function in enumerate(self.vision_functions):
@@ -45,10 +45,10 @@ class VisionPipeline():
         print(self.process_dict)
 
     def return_available_functions(self):
-        self.vison_functions_libary.list_all_vision_functions()
+        self.vision_functions_library.list_all_vision_functions()
     
     def append_vision_funciton_by_name(self, function_name) -> None:
-        new_function = copy.deepcopy(self.vison_functions_libary.return_by_name(function_name))
+        new_function = copy.deepcopy(self.vision_functions_library.return_by_name(function_name))
         if new_function is not None:
             self.vision_functions.append(new_function)
         else:
@@ -81,8 +81,8 @@ class VisionPipeline():
                 for function in file_data[self.vision_process_json_pipeline_tag]:
 
                     function_found = False
-                    # Check for match of function within the internal function libary
-                    for lib_fun in self.vison_functions_libary.vision_functions:
+                    # Check for match of function within the internal function library
+                    for lib_fun in self.vision_functions_library.vision_functions:
                         if lib_fun.vision_function_name == next(iter(function)) and not function_found:
                             function_to_append = copy.deepcopy(lib_fun)
                             function_found = True                         

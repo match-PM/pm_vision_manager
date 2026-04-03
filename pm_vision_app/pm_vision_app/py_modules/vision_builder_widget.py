@@ -63,7 +63,7 @@ class VisionBuilderWidget(QWidget):
         self.initUI()
         self.save_as = False  # This is a helper bool used for saving files
         self.print_available_functions()
-        self.vision_libary = self.current_vision_pipeline.vison_functions_libary.return_vision_libary()
+        self.vision_library = self.current_vision_pipeline.vision_functions_library.return_vision_library()
 
         # Load an initial file if given in startup.
         if initial_pipeline_file is not None:
@@ -82,7 +82,7 @@ class VisionBuilderWidget(QWidget):
         # Add vision functions combo box
         # self.vision_functions_combo_box = QComboBox()
         # self.vision_functions_combo_box.addItems(
-        #     self.current_vision_pipeline.vison_functions_libary.names
+        #     self.current_vision_pipeline.vison_functions_library.names
         # )
 
         # self.vision_functions_combo_box.activated.connect(
@@ -118,7 +118,7 @@ class VisionBuilderWidget(QWidget):
 
     def show_vision_action_menu(self):
         self.contextMenu = QMenu()
-        self.create_menu_from_data(self.contextMenu, self.vision_libary)
+        self.create_menu_from_data(self.contextMenu, self.vision_library)
         self.contextMenu.exec(self.cursor().pos())
 
     def create_menu_from_dict(self, menu, menu_dict):
@@ -145,7 +145,7 @@ class VisionBuilderWidget(QWidget):
     def open_process_file(self, file_path_load=None):
         if self.current_vision_pipeline.vision_pipeline_json_dir == None:
             self.current_vision_pipeline.vision_pipeline_json_dir = (
-                self.default_process_libary_path
+                self.default_process_library_path
             )
 
         if not file_path_load:
@@ -181,7 +181,7 @@ class VisionBuilderWidget(QWidget):
         self.create_new_file()
 
     def print_available_functions(self):
-        for fun in self.current_vision_pipeline.vison_functions_libary.init_output:
+        for fun in self.current_vision_pipeline.vision_functions_library.init_output:
             self.text_output.append(str(fun))
 
     def set_function_states(self):
@@ -204,7 +204,7 @@ class VisionBuilderWidget(QWidget):
         try:
             if self.current_vision_pipeline.vision_pipeline_json_dir == None:
                 self.current_vision_pipeline.vision_pipeline_json_dir = (
-                    self.default_process_libary_path
+                    self.default_process_library_path
                 )
 
             # Set the file filters to show only JSON files
@@ -249,7 +249,7 @@ class VisionBuilderWidget(QWidget):
         selected_function = self.vision_functions_combo_box.currentText()
 
         if selected_function:
-            if self.current_vision_pipeline.vison_functions_libary.return_by_name(
+            if self.current_vision_pipeline.vision_functions_library.return_by_name(
                 selected_function
             ):
                 # Add function to the vision pipeline
@@ -270,7 +270,7 @@ class VisionBuilderWidget(QWidget):
         selected_function = function_name
 
         if selected_function:
-            if self.current_vision_pipeline.vison_functions_libary.return_by_name(
+            if self.current_vision_pipeline.vision_functions_library.return_by_name(
                 selected_function
             ):
                 # Add function to the vision pipeline
@@ -548,8 +548,8 @@ class VisionBuilderWidget(QWidget):
             f = open(vision_manager_path_config_path)
             FileData = yaml.load(f, Loader=SafeLoader)
             config = FileData["vision_assistant_path_config"]
-            self.functions_library_path = config["function_libary_path"]
-            self.default_process_libary_path = config["process_library_path"]
+            self.functions_library_path = config["function_library_path"]
+            self.default_process_library_path = config["process_library_path"]
             f.close()
         except:
             print(f"Error opening {vision_manager_path_config_path}!")
