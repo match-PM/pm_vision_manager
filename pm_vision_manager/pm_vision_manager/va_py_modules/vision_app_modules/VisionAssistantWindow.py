@@ -1,17 +1,20 @@
+from locale import normalize
 import sys
 from functools import partial
 from typing import Optional
 from pathlib import Path
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                            QTabWidget, QTabBar)
+                            QTabWidget, QTabBar, QLineEdit)
 from PyQt6.QtGui import QCloseEvent, QGuiApplication, QIcon, QPixmap
 from PyQt6.QtCore import Qt, QThreadPool, QRunnable, QObject, pyqtSignal, pyqtSlot, QTimer, QDir, QSize
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
 from rclpy.node import Node
 
+
+
 from pm_vision_manager.va_py_modules.vision_app_modules.ImageDisplayWidget import ImageDisplayWidget
-from pm_vision_manager.va_py_modules.vision_app_modules.MainMenuWidget import MainMenuWidget
+from pm_vision_manager.va_py_modules.vision_app_modules.MainMenuWidget import MainMenuWidget, QInputDialog
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
 
 # ============================================================================
@@ -117,6 +120,7 @@ class VisionAssistantWindow(QMainWindow):
 
         # ---- Tab widget ----
         self.tab_widget = QTabWidget()
+        self.tab_widget.tabBar().tabBarDoubleClicked.connect(self._rename_tab)
         self.tab_widget.setTabsClosable(True)
         self.main_layout.addWidget(self.tab_widget)
 
@@ -153,29 +157,117 @@ class VisionAssistantWindow(QMainWindow):
     
     def _add_tab(self, widget: QWidget, title: str, closable: bool = True):
         """Add a new tab to the tab widget."""
-        index = self.tab_widget.addTab(widget, title)
+        # Check for existing tabs with the same title
+        existing_titles = [self.tab_widget.tabText(i) for i in range(self.tab_widget.count())]
+        
+        if title not in existing_titles:
+            unique_title = title
+        else:
+            # Find the smallest available number
+            numbers = []
+            for existing in existing_titles:
+                if existing.startswith(title + " "):
+                    try:
+                        num = int(existing.split()[-1])
+                        numbers.append(num)
+                    except ValueError:
+                        pass
+            
+            counter = 2
+            while counter in numbers:
+                counter += 1
+            unique_title = f"{title} {counter}"
+        
+        # Add tab with unique title
+        index = self.tab_widget.addTab(widget, unique_title)
+        
+        tab_bar = self.tab_widget.tabBar()
+        
+        # Remove close button if tab is not closable
         if not closable:
-            self.tab_widget.tabBar().setTabButton(index, QTabBar.ButtonPosition.RightSide, None)
+            tab_bar.setTabButton(index, QTabBar.ButtonPosition.RightSide, None)
+        
+        # Set tooltip
+        tab_bar.setTabToolTip(index, f"Double-click to rename\nCurrent: {unique_title}")
+        
         self.tab_widget.setCurrentIndex(index)
         return index
-    
+
+    def _rename_tab(self, index: int):
+        """Rename a tab via inline edit dialog."""
+        # Validate index
+        if index < 0 or index >= self.tab_widget.count():
+            return
+        
+        current_title = self.tab_widget.tabText(index)
+        
+        # Show input dialog
+        new_title, ok = QInputDialog.getText(
+            self, 
+            "Rename Tab", 
+            "Enter new tab name:", 
+            QLineEdit.EchoMode.Normal, 
+            current_title
+        )
+        
+        # Apply new name if valid
+        if ok and new_title and new_title.strip():
+            new_title = new_title.strip()
+            self.tab_widget.setTabText(index, new_title)
+            
+            # Update tooltip with new name
+            self.tab_widget.tabBar().setTabToolTip(index, f"Double-click to rename\nCurrent: {new_title}")
+            
+            # Optional: Emit signal that tab was renamed
+            widget = self.tab_widget.widget(index)
+            if hasattr(widget, 'tab_renamed_signal'):
+                widget.tab_renamed_signal.emit(index, new_title)
+
     def _close_tab(self, index: int):
-        """Close a tab at the specified index."""
+        """Close a tab at the specified index (connected to tabCloseRequested)."""
+        # Validate index
+        if index < 0 or index >= self.tab_widget.count():
+            return
+            
         widget = self.tab_widget.widget(index)
         if widget:
-            # Emit exit signal if widget supports it
+            # Emit exit signal if widget supports it (checking for proper signal)
             if hasattr(widget, 'exit_assistant_signal'):
-                widget.exit_assistant_signal.signal.emit()
+                # Check if it's a Qt signal or a custom object
+                if hasattr(widget.exit_assistant_signal, 'emit'):
+                    widget.exit_assistant_signal.emit()
+                elif hasattr(widget.exit_assistant_signal, 'signal'):
+                    # If it's wrapped in a signal object
+                    widget.exit_assistant_signal.signal.emit()
             widget.deleteLater()
         self.tab_widget.removeTab(index)
-    
+
     def _close_tab_by_name(self, title: str):
         """Close tab by its title."""
         for i in range(self.tab_widget.count()):
             if self.tab_widget.tabText(i) == title:
                 self._close_tab(i)
                 return
-    
+
+    def _close_all_tabs(self):
+        """Close all tabs (optional utility method)."""
+        for i in range(self.tab_widget.count() - 1, -1, -1):
+            self._close_tab(i)
+
+    def _get_current_tab_title(self) -> str:
+        """Get title of currently selected tab."""
+        current_index = self.tab_widget.currentIndex()
+        if current_index >= 0:
+            return self.tab_widget.tabText(current_index)
+        return ""
+
+    def _get_tab_by_title(self, title: str) -> tuple:
+        """Get index and widget of tab by title."""
+        for i in range(self.tab_widget.count()):
+            if self.tab_widget.tabText(i) == title:
+                return i, self.tab_widget.widget(i)
+        return -1, None
+        
     # ============================================================================
     # VISION ASSISTANT MANAGEMENT
     # ============================================================================
@@ -204,7 +296,7 @@ class VisionAssistantWindow(QMainWindow):
                 display_widget.vision_builder_widget.open_process_file(vision_process.process_file_path)
             
             # Add to tabs
-            tab_title = self._generate_tab_title(process_file, camera_file)
+            tab_title = self.combine_labels(process_file, camera_file, 4) #int here for max words in title
             self._add_tab(display_widget, tab_title)
             
             # Start worker thread
@@ -291,12 +383,64 @@ class VisionAssistantWindow(QMainWindow):
             display_widget.set_vision_ok_for_images
         )
     
-    def _generate_tab_title(self, process_file: str, camera_file: str) -> str:
-        """Generate a tab title from process and camera file names."""
-        process_name = process_file.replace('.json', '')
-        camera_name = camera_file.replace('.yaml', '')
-        return f"VA_{process_name}_{camera_name}"
-    
+    # def _generate_tab_title(self, process_file: str, camera_file: str) -> str:
+    #     process_name = process_file.replace('.json', '')
+    #     camera_name = camera_file.replace('.yaml', '')
+    #     try:
+    #         from abbreviate import abbreviate
+    #         abbreviated_process = abbreviate(process_name, max_length=10)
+    #         abbreviated_camera = abbreviate(camera_name, max_length=10)
+    #         return f"VA_{abbreviated_process}_{abbreviated_camera}"
+        
+    #     except Exception as e:
+    #         self.ros_logger.error(f"Failed to generate shortened tab title: {e}")
+    #         return f"VA_{process_name}_{camera_name}"
+
+    def combine_labels(self, name1: str, name2: str, max_words: int) -> str:
+        # Combine two technical filenames into one clean UI label.
+        def normalize_filename_tokens(name: str) -> list:
+            """Internal: normalize a single filename into meaningful tokens."""
+            redundant = {"ufc", "paper", "pm", "robot", "basler", "helper"}
+            abbr = {"mes": "Meas", "cam": "Cam", "num": "Num"}
+            generic = {"a", "an", "the", "of", "for", "with"}
+                
+            # Split and clean
+            words = name.replace('_', ' ').split()
+            words = [w for w in words if w.lower() not in redundant]
+            words = [abbr.get(w.lower(), w) for w in words]
+            words = [w for w in words if w.isdigit() or len(w) > 1 or w.lower() not in generic]
+            return words
+
+        def clean_name(name: str) -> str:
+            import re
+            # Remove file extension
+            name = name.split('.')[0]
+            # Remove parentheses and their contents
+            name = re.sub(r'\([^)]*\)', '', name)
+            return name.strip()
+        
+        tokens1 = clean_name(name1)
+        tokens1 = normalize_filename_tokens(tokens1)
+        tokens2 = clean_name(name2)
+        tokens2 = normalize_filename_tokens(tokens2)
+        # Combine tokens, avoiding duplicates
+        combined = tokens1[:]
+        for t in tokens2:
+            if not any(t.lower() == existing.lower() for existing in combined):
+                combined.append(t)
+
+        # Keep numbers at the end if present
+        numbers = [w for w in combined if w.isdigit()]
+        words = [w for w in combined if not w.isdigit()]
+        combined = (words + numbers)[-max_words:]
+        
+        # Capitalize and join
+        final_title = ' '.join(w.capitalize() if not w.isdigit() else w for w in combined)
+        return final_title
+
+
+
+
     def _start_vision_worker(self, vision_process: VisionProcessClass):
         """Start a worker thread for vision processing."""
         worker = VisionAssistantWorker(vision_process)
