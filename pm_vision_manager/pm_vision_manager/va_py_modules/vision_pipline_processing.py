@@ -116,11 +116,19 @@ def canny(image_processing_handler: ImageProcessingHandler,
 
   image_processing_handler.set_processing_image(frame_processed)
    
-def visionOkOverride(image_processing_handler: ImageProcessingHandler, 
+def visionOkOverride(image_processing_handler: ImageProcessingHandler,
                     override_vision_ok:bool,
                     logger = None):
-  
+
   image_processing_handler.set_vision_ok(override_vision_ok)
+
+  if override_vision_ok:
+    point = image_processing_handler.new_vision_point_result()
+    point.axis_value_1 = 0.0
+    point.axis_value_2 = 0.0
+    point.axis_suffix_1 = image_processing_handler.camera_axis_1
+    point.axis_suffix_2 = image_processing_handler.camera_axis_2
+    image_processing_handler.append_vision_obj_to_results(point)
 
 def selectHomogenousArea(image_processing_handler: ImageProcessingHandler, 
                         max_area: float,
