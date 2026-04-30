@@ -1,0 +1,24 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from pm_vision_interfaces/msg/VisionResponse.msg
+// generated code does not contain a copyright notice
+
+#include "pm_vision_interfaces/msg/CrossValidation.idl"
+#include "pm_vision_interfaces/msg/VisionResults.idl"
+
+module pm_vision_interfaces {
+  module msg {
+    struct VisionResponse {
+      boolean vision_ok;
+
+      string process_name;
+
+      string process_uid;
+
+      string exec_timestamp;
+
+      pm_vision_interfaces::msg::CrossValidation cross_validation;
+
+      pm_vision_interfaces::msg::VisionResults results;
+    };
+  };
+};

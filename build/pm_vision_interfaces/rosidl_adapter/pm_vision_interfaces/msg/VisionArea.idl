@@ -1,0 +1,12 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from pm_vision_interfaces/msg/VisionArea.msg
+// generated code does not contain a copyright notice
+
+
+module pm_vision_interfaces {
+  module msg {
+    struct VisionArea {
+      uint8 structure_needs_at_least_one_member;
+    };
+  };
+};

@@ -1,0 +1,28 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from pm_vision_interfaces/srv/ExecuteVision.srv
+// generated code does not contain a copyright notice
+
+#include "pm_vision_interfaces/msg/VisionResponse.idl"
+
+module pm_vision_interfaces {
+  module srv {
+    struct ExecuteVision_Request {
+      string process_filename;
+
+      string camera_config_filename;
+
+      string process_uid;
+
+      int64 image_display_time;
+
+      boolean run_cross_validation;
+    };
+    struct ExecuteVision_Response {
+      boolean success;
+
+      string results_path;
+
+      pm_vision_interfaces::msg::VisionResponse vision_response;
+    };
+  };
+};

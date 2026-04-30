@@ -1,0 +1,22 @@
+function_name: "EqualizeHist"
+description: >
+  Improves global image contrast by equalizing the histogram of a
+  single-channel (grayscale) image.
+
+  Histogram equalization redistributes pixel intensities so that the
+  full available intensity range is used more effectively. This
+  enhances contrast in images with poor or uneven lighting conditions.
+
+  The operation is applied to the currently processed grayscale image
+  or channel. The output image has the same dimensions and data type
+  as the input.
+
+function_category: "Image Processing"
+
+params:
+  - param_name: "active"
+    description: >
+      Enables or disables the EqualizeHist function.
+      When disabled, the input image is passed through unchanged.
+    type: "bool"
+    default: true

@@ -1,0 +1,45 @@
+function_name: "FillSelectedArea"
+description: Detects contours in a grayscale or binary image using the specified retrieval mode and approximation method. Contours are filtered by area relative to the image or ROI, and only those within [min_area, max_area] are filled to produce a clean binary mask.
+function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Enable or disable execution of this function."
+    type: "bool"
+
+  - param_name: "mode"
+    description: "Contour retrieval mode. Defines how contours and their hierarchy are extracted (e.g., only outer contours, all contours, or hierarchical structure)."
+    type: "string_list"
+    values: 
+      - "RETR_LIST"       # retrieves all contours without establishing hierarchy
+      - "RETR_EXTERNAL"   # retrieves only the outermost contours
+      - "RETR_CCOMP"      # retrieves all contours and organizes them into two levels (outer and hole contours)
+      - "RETR_TREE"       # retrieves all contours and reconstructs the full hierarchy
+
+  - param_name: "use_roi_percent"
+    description: "If True, interprets min_area and max_area as percentages of the ROI size instead of the full image size."
+    type: "bool"
+    default_val: False
+
+  - param_name: "method"
+    description: "Contour approximation method. Controls the level of detail stored for contour points."
+    type: "string_list"
+    values: 
+      - "CHAIN_APPROX_SIMPLE"   # compresses horizontal, vertical, and diagonal segments, leaving only endpoints
+      - "CHAIN_APPROX_NONE"     # stores all contour points
+      - "CHAIN_APPROX_TC89_L1"  # applies the Teh-Chin chain approximation (L1 metric)
+      - "CHAIN_APPROX_TC89_KCOS" # applies the Teh-Chin chain approximation (k-cosine metric)
+
+  - param_name: "max_area"
+    description: "Maximum allowed contour area as a percentage of the selected reference (image or ROI)."
+    type: "float"
+    min_val: 0.1
+    max_val: 100.0
+    default_val: 100.0
+    
+  - param_name: "min_area"
+    description: "Minimum allowed contour area as a percentage of the selected reference (image or ROI)."
+    type: "float"
+    min_val: 0.1
+    max_val: 100.0
+    default_val: 0.1

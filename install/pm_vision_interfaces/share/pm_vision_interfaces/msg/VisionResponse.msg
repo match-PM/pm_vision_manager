@@ -1,0 +1,6 @@
+bool vision_ok
+string process_name
+string process_uid
+string exec_timestamp
+CrossValidation cross_validation
+VisionResults results

@@ -1,6 +1,6 @@
 {
     "vision_process_name": "test_pipeline",
-    "process creation": "2026-04-20 14:13:45",
+    "process creation": "2026-04-30 12:36:15",
     "vision_pipeline": [
         {
             "BGR2GRAY": {
@@ -10,26 +10,26 @@
         {
             "Threshold": {
                 "active": true,
-                "thresh": 0,
+                "thresh": 127,
                 "maxval": 255,
-                "type": "THRESH_OTSU"
+                "type": "THRESH_BINARY"
             }
         },
         {
             "Morphology_Ex_Opening": {
-                "active": true,
+                "active": false,
                 "kernelsize": 5
             }
         },
         {
             "Morphology_Ex_Closing": {
-                "active": true,
+                "active": false,
                 "kernelsize": 5
             }
         },
         {
             "CircleDetection": {
-                "active": true,
+                "active": false,
                 "draw_circles": true,
                 "fit_single_circle": false,
                 "circle_fit_mode": "standardLSQ",
@@ -40,11 +40,21 @@
         },
         {
             "Canny": {
-                "active": true,
+                "active": false,
                 "L2gradient": "nothing",
                 "aperatureSize": 1,
-                "threshold1": 500.5,
+                "threshold1": 200.0,
                 "threshold2": 500.5
+            }
+        },
+        {
+            "AdaptiveThreshold": {
+                "active": true,
+                "adaptiveMethod": "ADAPTIVE_THRESH_MEAN_C",
+                "thresholdType": "THRESH_BINARY",
+                "blockSize": 3,
+                "maxValue": 127.5,
+                "C": 0.0
             }
         }
     ]

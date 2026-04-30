@@ -1,0 +1,59 @@
+// generated from rosidl_generator_c/resource/idl__struct.h.em
+// with input from pm_vision_interfaces:srv/DemoSetExposure.idl
+// generated code does not contain a copyright notice
+
+#ifndef PM_VISION_INTERFACES__SRV__DETAIL__DEMO_SET_EXPOSURE__STRUCT_H_
+#define PM_VISION_INTERFACES__SRV__DETAIL__DEMO_SET_EXPOSURE__STRUCT_H_
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+
+// Constants defined in the message
+
+/// Struct defined in srv/DemoSetExposure in the package pm_vision_interfaces.
+typedef struct pm_vision_interfaces__srv__DemoSetExposure_Request
+{
+  double target_value;
+} pm_vision_interfaces__srv__DemoSetExposure_Request;
+
+// Struct for a sequence of pm_vision_interfaces__srv__DemoSetExposure_Request.
+typedef struct pm_vision_interfaces__srv__DemoSetExposure_Request__Sequence
+{
+  pm_vision_interfaces__srv__DemoSetExposure_Request * data;
+  /// The number of valid items in data
+  size_t size;
+  /// The number of allocated items in data
+  size_t capacity;
+} pm_vision_interfaces__srv__DemoSetExposure_Request__Sequence;
+
+
+// Constants defined in the message
+
+/// Struct defined in srv/DemoSetExposure in the package pm_vision_interfaces.
+typedef struct pm_vision_interfaces__srv__DemoSetExposure_Response
+{
+  bool success;
+} pm_vision_interfaces__srv__DemoSetExposure_Response;
+
+// Struct for a sequence of pm_vision_interfaces__srv__DemoSetExposure_Response.
+typedef struct pm_vision_interfaces__srv__DemoSetExposure_Response__Sequence
+{
+  pm_vision_interfaces__srv__DemoSetExposure_Response * data;
+  /// The number of valid items in data
+  size_t size;
+  /// The number of allocated items in data
+  size_t capacity;
+} pm_vision_interfaces__srv__DemoSetExposure_Response__Sequence;
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  // PM_VISION_INTERFACES__SRV__DETAIL__DEMO_SET_EXPOSURE__STRUCT_H_

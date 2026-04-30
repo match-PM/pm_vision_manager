@@ -1,0 +1,5 @@
+string process_filename
+string camera_config_filename
+string process_uid
+int64 image_display_time
+bool run_cross_validation

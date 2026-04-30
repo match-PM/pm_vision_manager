@@ -1,0 +1,8 @@
+function_name: "Bitwise_Not"
+description: Performs a bitwise NOT operation on each pixel, inverting all bits. Produces a photographic negative of the image.
+function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+
+params:
+  - param_name: "active"
+    description: "Parameter to activate or deactivate this function."
+    type: "bool"

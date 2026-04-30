@@ -1,34 +1,7 @@
 {
     "vision_process_name": "test_pipeline (copy)",
-    "process creation": "2026-04-20 17:08:32",
+    "process creation": "2026-04-30 12:40:44",
     "vision_pipeline": [
-        {
-            "ROI": {
-                "active": true,
-                "ROI_center_x": 0.0,
-                "ROI_center_y": 0.0,
-                "ROI_height": 90.0,
-                "ROI_width": 90.0
-            }
-        },
-        {
-            "BGR2GRAY": {
-                "active": true
-            }
-        },
-        {
-            "EqualizeHist": {
-                "active": true
-            }
-        },
-        {
-            "Threshold": {
-                "active": true,
-                "thresh": 0,
-                "maxval": 255,
-                "type": "THRESH_OTSU"
-            }
-        },
         {
             "Morphology_Ex_Closing": {
                 "active": true,
@@ -62,6 +35,34 @@
                 "mode": "prattSVD",
                 "minRadius": 1980.0,
                 "maxRadius": 2420.0
+            }
+        },
+        {
+            "AdaptiveThreshold": {
+                "active": true,
+                "adaptiveMethod": "ADAPTIVE_THRESH_MEAN_C",
+                "thresholdType": "THRESH_BINARY",
+                "blockSize": 3,
+                "maxValue": 127.5,
+                "C": 0.0
+            }
+        },
+        {
+            "Blur": {
+                "active": true,
+                "gaus_std": 5,
+                "type": "GaussianBlur",
+                "kernelsize": 1
+            }
+        },
+        {
+            "AdaptiveThreshold": {
+                "active": true,
+                "adaptiveMethod": "ADAPTIVE_THRESH_MEAN_C",
+                "thresholdType": "THRESH_BINARY",
+                "blockSize": 3,
+                "maxValue": 127.5,
+                "C": 0.0
             }
         }
     ]

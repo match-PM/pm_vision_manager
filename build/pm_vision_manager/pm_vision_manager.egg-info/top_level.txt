@@ -1,0 +1,5 @@
+pm_vision_manager
+pm_vision_manager/va_py_modules
+pm_vision_manager/va_py_modules/feature_detect_functions
+pm_vision_manager/va_py_modules/image_modification_functions
+pm_vision_manager/va_py_modules/vision_app_modules

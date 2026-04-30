@@ -1,39 +1,41 @@
 function_name: "AdaptiveThreshold"
-description: Applies adaptive thresholding by computing a threshold for each pixel based on the local neighborhood, then subtracting constant C. Supports mean or Gaussian weighted methods.
-function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image conversion'
+description: "Applies adaptive thresholding by computing a threshold for each pixel based on the local neighborhood, then subtracting constant C.\n\nSupports mean or Gaussian weighted methods."
+# image: "vision_functions_example_imgs/AdaptiveThreshold.jpg"
+
+function_category: "Image Processing"
 
 params:
   - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
   - param_name: "blockSize"
-    description: "type: int. Representing size of the pixelneighborhood used to calculate the threshold value."
+    description: "Type: kernel.\nSize of the pixel neighborhood used to calculate the threshold value.\nMust be an odd number."
     type: "kernel"
     min_val: 3
     max_val: 999
 
   - param_name: "maxValue"
-    description: "A variable of double type representing the value that is to be given if pixel value is more than the threshold value."
+    description: "Type: float.\nValue assigned to pixels that meet the threshold condition."
     type: "float"
     min_val: 0.0
     max_val: 255.0
 
   - param_name: "C"
-    description: "A variable of double type representing the constant used in the both methods (subtracted from the mean or weighted mean)."
+    description: "Type: float.\nConstant subtracted from the mean or weighted mean.\nCan be negative or positive."
     type: "float"
     min_val: "-inf"
     max_val: "inf"
 
   - param_name: "adaptiveMethod"
-    description: "A variable of integer the type representing the adaptive method to be used."
+    description: "Type: dropdown.\nAdaptive method to use for threshold calculation."
     type: "string_list"
     values: 
       - "ADAPTIVE_THRESH_MEAN_C"
       - "ADAPTIVE_THRESH_GAUSSIAN_C"
 
   - param_name: "thresholdType"
-    description: "tbd"
+    description: "Type: dropdown.\nType of thresholding to apply."
     type: "string_list"
     values: 
       - "THRESH_BINARY"
