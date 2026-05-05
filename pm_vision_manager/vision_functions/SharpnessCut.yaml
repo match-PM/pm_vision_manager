@@ -1,70 +1,29 @@
-function_name: "SharpnessCut"
-description: >
-  Extracts sharp (in-focus) regions from a grayscale image using a
-  fast, block-based Sobel gradient method.
-
-  The image is divided into square blocks. For each block, the average
-  Sobel gradient magnitude is computed as a sharpness score. Blocks
-  whose score lies above a configurable percentile threshold are
-  classified as sharp and retained, while the remaining regions are
-  suppressed.
-
-  The output is a binary mask:
-    - Sharp regions are set to white (255)
-    - Unsharp regions are set to black (0)
-
-  This method is robust to noise, efficient for high-resolution images,
-  and suitable for real-time vision pipelines.
-
+function_name: "Sharpness Cut"
+description: "Extracts sharp (in-focus) regions from a grayscale image using a fast, block-based Sobel gradient method.\n\nThe image is divided into square blocks. For each block, the average Sobel gradient magnitude is computed as a sharpness score. Blocks whose score lies above a configurable percentile threshold are classified as sharp and retained (white), while unsharp regions are suppressed (black).\n\nOutputs a binary mask where sharp regions = white (255), unsharp regions = black (0).\n\nDependencies:\n- Input should be a grayscale image (use BGR2GRAY first if needed)\n- Robust to noise and efficient for high-resolution images\n- Suitable for real-time vision pipelines"
+# image: "vision_functions_example_imgs/SharpnessCut.jpg"
 function_category: "Image Processing"
 
 params:
-  - param_name: "active"
-    description: >
-      Enables or disables the SharpnessCut function.
-      When disabled, the input image is passed through unchanged.
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline.\nWhen disabled, the input image passes through unchanged."
     type: "bool"
     default: true
 
-  - param_name: "blur"
-    description: >
-      Applies a Gaussian blur before computing Sobel gradients.
-      This reduces noise and prevents false edge responses in
-      low-texture regions.
-
-      Recommended: enabled for real-world camera images.
+  - param_name: "Apply Blur"
+    description: "Type: bool.\nApplies Gaussian blur before computing Sobel gradients.\nReduces noise and prevents false edge responses in low-texture regions.\nRecommended: enabled for real-world camera images.\nDefault: true"
     type: "bool"
     default: true
 
-  - param_name: "block_size"
-    description: >
-      Size (in pixels) of the square blocks used for sharpness evaluation.
-      Larger blocks produce smoother, more stable sharp regions but
-      reduce spatial precision. Smaller blocks increase detail but may
-      introduce noise.
-
-      Typical values:
-        - 8–16  : fine detail, higher sensitivity
-        - 16–32 : balanced (recommended)
-        - 32+   : coarse, very stable regions
+  - param_name: "Block Size"
+    description: "Type: int (1 - 255).\nSize of square blocks used for sharpness evaluation [pixels].\nLarger blocks: smoother, more stable regions but lower spatial precision.\nSmaller blocks: more detail but may introduce noise.\n8-16: Fine detail, higher sensitivity.\n16-32: Balanced (recommended).\n32+: Coarse, very stable regions.\nDefault: 10"
     type: "unsigned_int"
     min_val: 1
     max_val: 255
-    default_val: 10
+    default: 10
 
-  - param_name: "percentile"
-    description: >
-      Percentile threshold used to classify blocks as sharp.
-
-      Blocks whose sharpness score lies above this percentile are
-      retained. Higher values result in fewer, more strictly focused
-      regions; lower values retain more of the image.
-
-      Typical values:
-        - 40–50 : permissive (keeps more regions)
-        - 60–70 : balanced (recommended)
-        - 80+   : very strict focus selection
+  - param_name: "Percentile Threshold"
+    description: "Type: float (0.0 - 100.0).\nPercentile threshold for classifying blocks as sharp.\nHigher values = fewer, more strictly focused regions.\nLower values = retains more of the image.\n40-50: Permissive (keeps more regions).\n60-70: Balanced (recommended).\n80+: Very strict focus selection.\nDefault: 50.0"
     type: "float"
     min_val: 0.0
     max_val: 100.0
-    default_val: 50.0
+    default: 50.0

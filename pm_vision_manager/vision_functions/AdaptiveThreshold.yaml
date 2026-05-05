@@ -1,41 +1,41 @@
 function_name: "AdaptiveThreshold"
-description: "Applies adaptive thresholding by computing a threshold for each pixel based on the local neighborhood, then subtracting constant C.\n\nSupports mean or Gaussian weighted methods."
+description: "Applies adaptive thresholding by computing a threshold for each pixel based on the local neighborhood, then subtracting a constant.\n\nSupports mean or Gaussian weighted methods."
 # image: "vision_functions_example_imgs/AdaptiveThreshold.jpg"
 
 function_category: "Image Processing"
 
 params:
-  - param_name: "active"
+  - param_name: "Active"
     description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-  - param_name: "blockSize"
-    description: "Type: kernel.\nSize of the pixel neighborhood used to calculate the threshold value.\nMust be an odd number."
+  - param_name: "Block Size"
+    description: "Type: kernel (3 - 999).\nSize of the pixel neighborhood used to calculate the threshold value.\nMust be an odd number.\nLarger values = smoother results but slower processing."
     type: "kernel"
     min_val: 3
     max_val: 999
 
-  - param_name: "maxValue"
-    description: "Type: float.\nValue assigned to pixels that meet the threshold condition."
+  - param_name: "Maximum Value"
+    description: "Type: float (0.0 - 255.0).\nMaximum value assigned to pixels that pass the threshold.\nTypically set to 255 for white output."
     type: "float"
     min_val: 0.0
     max_val: 255.0
 
-  - param_name: "C"
-    description: "Type: float.\nConstant subtracted from the mean or weighted mean.\nCan be negative or positive."
+  - param_name: "Constant Offset"
+    description: "Type: float (no limits).\nConstant subtracted from the calculated threshold.\nPositive values make thresholding stricter (darker result).\nNegative values make thresholding looser (brighter result)."
     type: "float"
     min_val: "-inf"
     max_val: "inf"
 
-  - param_name: "adaptiveMethod"
-    description: "Type: dropdown.\nAdaptive method to use for threshold calculation."
+  - param_name: "Adaptive Method"
+    description: "Type: dropdown.\nAlgorithm for calculating the local threshold.\nMean C: Uses average of neighborhood.\nGaussian C: Uses weighted average (better for varying lighting)."
     type: "string_list"
     values: 
       - "ADAPTIVE_THRESH_MEAN_C"
       - "ADAPTIVE_THRESH_GAUSSIAN_C"
 
-  - param_name: "thresholdType"
-    description: "Type: dropdown.\nType of thresholding to apply."
+  - param_name: "Threshold Type"
+    description: "Type: dropdown.\nHow to apply the threshold.\nBinary: Pixels above threshold become Maximum Value.\nBinary Inverted: Pixels above threshold become 0."
     type: "string_list"
     values: 
       - "THRESH_BINARY"

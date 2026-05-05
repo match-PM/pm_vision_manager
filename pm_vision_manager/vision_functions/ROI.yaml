@@ -1,38 +1,37 @@
-function_name: "ROI"
-description: Defines and extracts a rectangular region of interest (ROI) from the image based on center offsets and relative width/height percentages. Be careful with the ROI size to avoid cropping out important features or including features that are not relevant.
-function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Region of Interest (ROI)"
+description: "Defines and extracts a rectangular region of interest (ROI) from the image based on center offsets and relative size percentages.\n\nOutputs a cropped image containing only the selected region.\n\nUseful for focusing analysis on specific areas and ignoring irrelevant image regions.\n\nDependencies:\n- Works on any image type\n- ROI coordinates are calculated relative to image center\n- Be careful with ROI size to avoid cropping out important features or including irrelevant content"
+# image: "vision_functions_example_imgs/ROI.jpg"
+function_category: "Image Processing"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-  - param_name: "ROI_center_x"
-    description: "Distance of the center of the ROI to the center of the camera image in percent of the image width/2"
+  - param_name: "ROI Center X Offset"
+    description: "Type: float (-100.0 to 100.0).\nHorizontal offset of ROI center from image center, as percentage of half the image width.\n-100% = left edge, 0% = center, +100% = right edge.\nDefault: 0.0"
     type: "float"
     min_val: -100.0
     max_val: 100.0
-    default_val: 0.0
+    default: 0.0
     
-  - param_name: "ROI_center_y"
-    description: "Distance of the center of the ROI to the center of the camera image in percent of the image hight/2."
+  - param_name: "ROI Center Y Offset"
+    description: "Type: float (-100.0 to 100.0).\nVertical offset of ROI center from image center, as percentage of half the image height.\n-100% = top edge, 0% = center, +100% = bottom edge.\nDefault: 0.0"
     type: "float"
     min_val: -100.0
     max_val: 100.0
-    default_val: 0.0
+    default: 0.0
 
-  - param_name: "ROI_height"
-    description: "In percent of the image height."
+  - param_name: "ROI Height"
+    description: "Type: float (1.0 to 100.0).\nHeight of the ROI as percentage of total image height.\nDefault: 50.0 (half the image height)"
     type: "float"
     min_val: 1.0
     max_val: 100.0
-    default_val: 50.0
+    default: 50.0
 
-  - param_name: "ROI_width"
-    description: "In percent of the image width."
+  - param_name: "ROI Width"
+    description: "Type: float (1.0 to 100.0).\nWidth of the ROI as percentage of total image width.\nDefault: 50.0 (half the image width)"
     type: "float"
     min_val: 1.0
     max_val: 100.0
-    default_val: 50.0
-
-  
+    default: 50.0

@@ -1,32 +1,34 @@
 function_name: "Canny"
-description: "BlaBla"
-function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+description: "Detects edges in an image using the Canny edge detection algorithm.\n\nFinds strong and weak edges based on two threshold values, producing a binary edge map.\n\nDependencies:\n- Input image should be grayscale (use BGR2GRAY first if needed)\n- Works best with some noise reduction applied beforehand (use Blur or GaussianBlur)"
+# image: "vision_functions_example_imgs/Canny.jpg"
+function_category: "Image Processing"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-  - param_name: "threshold1"
-    description: "tbd"
+  - param_name: "Low Threshold"
+    description: "Type: float (1.0 - 1000.0).\nLower threshold for edge detection.\nEdges with gradient below this value are rejected.\nLower values detect more edges but may include noise."
     type: "float"
     min_val: 1.0
     max_val: 1000.0
 
-  - param_name: "threshold2"
-    description: "tbd"
+  - param_name: "High Threshold"
+    description: "Type: float (1.0 - 1000.0).\nUpper threshold for edge detection.\nEdges with gradient above this value are always detected.\nHigher values detect only strong edges."
     type: "float"
     min_val: 1.0
     max_val: 1000.0
 
-  - param_name: "aperatureSize"
-    description: "tbd"
+  - param_name: "Aperture Size"
+    description: "Type: kernel (1 - 10000).\nSize of the Sobel kernel used for gradient calculation.\nMust be an odd number.\nLarger sizes smooth edges but may miss fine details."
     type: "kernel"
     min_val: 1
     max_val: 10000
 
-  - param_name: "L2gradient"
-    description: "tbd"
+  - param_name: "Use L2 Gradient"
+    description: "Type: dropdown.\nMethod for calculating gradient magnitude.\nFalse: Uses L1 norm (faster, less accurate).\nTrue: Uses L2 norm (slower, more accurate)."
     type: "string_list"
     values:
-      - "nothing"
+      - "False"
+      - "True"

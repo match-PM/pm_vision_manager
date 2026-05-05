@@ -1,14 +1,15 @@
-function_name: "FitLine"
-description: Fits a straight line to a set of 2D points (e.g., contour or edge points) using the chosen selection side and search accuracy, then returns line parameters.
-function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Fit Line"
+description: "Fits a straight line to a set of 2D points (e.g., contour or edge points) from a specified image edge.\n\nReturns line parameters (slope, intercept, angle) for the detected line.\n\nUseful for measuring straight edges, alignment verification, and angle measurements.\n\nDependencies:\n- Input should be a binary image with clear straight edge features\n- Line selection determines which edge of the image to analyze\n- Works best when the line is roughly parallel to the selected edge"
+# image: "vision_functions_example_imgs/FitLine.jpg"
+function_category: "Machine Vision"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-  - param_name: "line selection"
-    description: "tbd"
+  - param_name: "Line Selection"
+    description: "Type: dropdown.\nWhich edge of the image to use for line detection.\ntop: Analyze upper edge\nbottom: Analyze lower edge\nleft: Analyze left edge\nright: Analyze right edge"
     type: "string_list"
     values:
       - "top"
@@ -16,8 +17,8 @@ params:
       - "left"
       - "right"
 
-  - param_name: "search accuracy"
-    description: "tbd"
+  - param_name: "Search Accuracy"
+    description: "Type: dropdown.\nPrecision level for line detection.\ncoarse: Fastest, lowest precision (good for rough estimates).\nfine: Balanced speed and precision (recommended).\nfinest: High precision, slower.\nmax_limit: Maximum precision, slowest."
     type: "string_list"
     values:
       - "coarse"
@@ -25,22 +26,20 @@ params:
       - "finest"
       - "max_limit"
 
-  - param_name: "minLineLength"
-    description: "in microns"
+  - param_name: "Minimum Line Length"
+    description: "Type: float (0.1 - no limit).\nMinimum length of line segment to detect [micrometers].\nLower values detect shorter lines.\nHigher values ignore short segments (reduces false detections)."
     type: "float"
     min_val: 0.1
     max_val: "inf"
 
-  # - param_name: "rho"
-  #   description: "Accuracy"
+  # - param_name: "Rho Accuracy"
+  #   description: "Type: float (0.001 - 2.0).\nDistance resolution of the Hough accumulator in pixels.\nSmaller values = higher precision (slower).\nLarger values = lower precision (faster)."
   #   type: "float"
   #   min_val: 0.001
   #   max_val: 2.0
 
-  # - param_name: "theta"
-  #   description: "tbd"
+  # - param_name: "Theta Accuracy"
+  #   description: "Type: int (180 - 3600).\nAngle resolution of the Hough accumulator in degrees.\n180 = 1 degree resolution.\n3600 = 0.05 degree resolution.\nHigher values = more precision but slower."
   #   type: "unsigned_int"
   #   min_val: 180
   #   max_val: 3600
-
-

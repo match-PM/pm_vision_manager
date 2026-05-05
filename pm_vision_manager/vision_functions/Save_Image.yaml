@@ -1,40 +1,28 @@
-function_name: "Save_Image"
-description: >
-  Saves the current processing image to disk. The image is stored in the
-  process database directory using a timestamp-based filename. Optionally,
-  vision elements (overlays) can be drawn on the image, and the initial
-  reference image can also be saved for later inspection or debugging.
+function_name: "Save Image"
+description: "Saves the current processing image to disk with timestamp-based filename.\n\nImages are stored in the process database directory for later inspection or debugging.\n\nUseful for capturing processing results, debugging pipeline issues, and documenting output.\n\nDependencies:\n- Saves to process database directory\n- Filename includes timestamp for uniqueness\n- Optionally includes visual overlays (axes, frames, detections)"
+# image: "vision_functions_example_imgs/Save_Image.jpg"
+function_category: "Image Tools"
 
-function_category: "Image Tools"   # supported:
+			# supported:
                                   # 'Image Processing', 'Machine Vision',
                                   # 'Camera Tools', 'Image Analysis',
                                   # 'Image Tools', 'Image Conversion'
 
 params:
-  - param_name: "active"
-    description: >
-      Enables or disables execution of this function. If set to false,
-      no image will be saved.
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline.\nWhen disabled, no image will be saved."
     type: "bool"
 
-  - param_name: "prefix"
-    description: >
-      Optional suffix added to the image filename. This can be used to
-      distinguish images from different processing stages or tools.
+  - param_name: "Filename Prefix"
+    description: "Type: string.\nOptional prefix added to the image filename.\nUseful for distinguishing images from different processing stages or tools.\nExample: 'processed', 'debug', 'output'"
     type: "string"
 
-  - param_name: "with_vision_elements"
-    description: >
-      If true, the saved image will include visual overlays such as frames,
-      axes, planes, or other vision elements. If false, the raw processing
-      image is saved without overlays.
+  - param_name: "Include Vision Elements"
+    description: "Type: bool.\nIf enabled, saved image includes visual overlays (frames, axes, planes, detections).\nIf disabled, saves raw processing image without overlays.\nDefault: true"
     type: "bool"
-    default_val: true
+    default: true
 
-  - param_name: "save_initial_image"
-    description: >
-      If true, an additional image of the initial input image is saved.
-      This image includes vision element overlays and is marked with
-      '_INITIAL' in the filename.
+  - param_name: "Save Initial Image"
+    description: "Type: bool.\nIf enabled, also saves the initial input image with '_INITIAL' suffix.\nIncludes vision element overlays for comparison.\nUseful for debugging and validating preprocessing steps.\nDefault: true"
     type: "bool"
-    default_val: true
+    default: true

@@ -1,49 +1,48 @@
-function_name: "FindInnerOuterCircle"
-description: tbd
-function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Find Inner/Outer Circle" #Hough Circle Transform might also work, needs study to implement or if already in use @Terei
+description: "Detects concentric circles (inner and outer) using RANSAC-based circle fitting.\n\nUseful for finding washer-shaped objects, ring patterns, or circular targets with inner and outer boundaries.\n\nOutputs center coordinates and radii for both inner and outer circles.\n\nDependencies:\n- Input should be a binary (black and white) image with clear circular features\n- Works best when circles are roughly concentric\n- Recommend using FillArea or morphological operations first to clean up the image"
+# image: "vision_functions_example_imgs/FindInnerOuterCircle.jpg"
+function_category: "Machine Vision"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
-    default: true
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
+    default: true
 
-  - param_name: "min_samples"
-    description: "tbd"
+  - param_name: "Minimum Samples"
+    description: "Type: int (0 - 255).\nMinimum number of points required to fit a circle.\nHigher values require more evidence (more robust but slower).\nLower values may detect false circles.\nDefault: 10"
     type: "unsigned_int"
     min_val: 0
     max_val: 255
-    default_val: 10
+    default: 10
 
-  - param_name: "residual_threshold"
-    description: "tbd"
+  - param_name: "Residual Threshold"
+    description: "Type: float (0.0 - 50.0).\nMaximum allowed distance from a point to the circle to be considered an inlier [pixels].\nSmaller values = stricter circle fitting (higher precision).\nLarger values = more tolerant fitting (includes more points).\nDefault: 2.0"
     type: "float"
     min_val: 0.0
     max_val: 50.0
-    default_val: 2.0
+    default: 2.0
 
-
-  - param_name: "max_trials"
-    description: "TDB"
-    description: "tbd"
+  - param_name: "Maximum Trials"
+    description: "Type: int (0 - 3000).\nNumber of RANSAC iterations to attempt.\nHigher values = more accurate but slower.\nLower values = faster but may miss circles.\nDefault: 1000"
     type: "unsigned_int"
     min_val: 0
     max_val: 3000
-    default_val: 1000
+    default: 1000
 
-  - param_name: "minRadius"
-    description: "Minimum radius of the circle to be detected [um]."
+  - param_name: "Minimum Radius"
+    description: "Type: float (0.0 - no limit).\nSmallest circle radius to detect [micrometers]."
     type: "float"
     min_val: 0.0
     max_val: "inf"
 
-  - param_name: "maxRadius"
-    description: "Maximum radius of the circle to be detected [um]."
+  - param_name: "Maximum Radius"
+    description: "Type: float (0.001 - no limit).\nLargest circle radius to detect [micrometers]."
     type: "float"
     min_val: 0.001
     max_val: "inf"
 
-  - param_name: "draw_circles"
-    description: "Draw the detected circles on the image. This has no effect on the output of the function."
+  - param_name: "Draw Detected Circles"
+    description: "Type: bool.\nDraw detected circles on the image for visualization.\nHas no effect on function output values.\nDefault: true"
     type: "bool"
-    default_val: true
+    default: true

@@ -1,74 +1,51 @@
-function_name: "SelectHomogenousArea"
+function_name: "Select Homogeneous Area"
+description: "Identifies and selects the most homogeneous connected white regions in a binary image.\n\nEvaluates homogeneity using pixel-wise run-length statistics in horizontal and/or vertical directions.\n\nOutputs a binary mask containing only the best-ranked homogeneous areas.\n\nDependencies:\n- Input MUST be a binary (black and white) image\n- Regions are ranked by uniformity (pixel structure consistency)\n- Only regions within min/max area bounds are considered"
+# image: "vision_functions_example_imgs/SelectHomogenousArea.jpg"
 function_category: "Image Processing"
 
-description: >
-  Identifies and selects the most homogeneous connected white regions in a binary image.
-  Homogeneity is evaluated using pixel-wise run-length statistics in the horizontal
-  and/or vertical direction. Only regions whose pixel area lies within the specified
-  bounds are considered. The selected regions are returned as a binary mask containing
-  the best-ranked homogeneous areas.
-
 params:
-  - param_name: "active"
-    description: >
-      Enables or disables the execution of this function.
-      When set to False, the function is skipped and the image remains unchanged.
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline.\nWhen disabled, the image remains unchanged."
     type: "bool"
     default: true
 
-  - param_name: "use_roi_percent"
-    description: >
-      If True, the minimum and maximum area thresholds are interpreted as percentages
-      of the current ROI size. If False, they are interpreted as percentages of the
-      full image size.
+  - param_name: "Use ROI Percentage"
+    description: "Type: bool.\nIf enabled, area thresholds are percentages of ROI size.\nIf disabled, thresholds are percentages of full image size.\nDefault: false"
     type: "bool"
-    default_val: false
+    default: false
 
-  - param_name: "max_area"
-    description: >
-      Maximum allowed connected region area, expressed as a percentage of the selected
-      reference area (image or ROI). Regions larger than this threshold are ignored.
+  - param_name: "Maximum Area"
+    description: "Type: float (0.1 - 100.0).\nMaximum allowed connected region area as percentage of selected reference (image or ROI).\nRegions larger than this are ignored.\nDefault: 100.0"
     type: "float"
     min_val: 0.1
     max_val: 100.0
-    default_val: 100.0
+    default: 100.0
 
-  - param_name: "min_area"
-    description: >
-      Minimum allowed connected region area, expressed as a percentage of the selected
-      reference area (image or ROI). Regions smaller than this threshold are ignored.
+  - param_name: "Minimum Area"
+    description: "Type: float (0.1 - 100.0).\nMinimum allowed connected region area as percentage of selected reference (image or ROI).\nRegions smaller than this are ignored (removes small noise).\nDefault: 5.0"
     type: "float"
     min_val: 0.1
     max_val: 100.0
-    default_val: 5.0
+    default: 5.0
 
-  - param_name: "analyse_horizontal"
-    description: >
-      If True, horizontal homogeneity is evaluated using the standard deviation of
-      horizontal run-lengths of white pixels within each region.
+  - param_name: "Analyze Horizontal"
+    description: "Type: bool.\nIf enabled, evaluates horizontal homogeneity using standard deviation of horizontal run-lengths of white pixels.\nDefault: true"
     type: "bool"
-    default_val: true
+    default: true
 
-  - param_name: "analyse_vertical"
-    description: >
-      If True, vertical homogeneity is evaluated using the standard deviation of
-      vertical run-lengths of white pixels within each region.
+  - param_name: "Analyze Vertical"
+    description: "Type: bool.\nIf enabled, evaluates vertical homogeneity using standard deviation of vertical run-lengths of white pixels.\nDefault: false"
     type: "bool"
-    default_val: false
+    default: false
 
-  - param_name: "num_of_areas"
-    description: >
-      Number of homogeneous regions to keep after ranking. Regions are sorted by
-      homogeneity score, and the top N regions are selected. If the value exceeds
-      the number of valid regions, all valid regions are kept.
+  - param_name: "Number of Areas"
+    description: "Type: int (1 - 10).\nNumber of homogeneous regions to keep after ranking.\nRegions are sorted by homogeneity score, top N are selected.\nIf value exceeds valid regions, all are kept.\nDefault: 1"
     type: "unsigned_int"
     min_val: 1
     max_val: 10
-    default_val: 1
+    default: 1
 
-  - param_name: "invert_order"
-    description: >
-      If False, regions with lower homogeneity scores (more uniform pixel structure)
-      are preferred. If True, regions with higher homogeneity scores are selected instead.
+  - param_name: "Invert Order"
+    description: "Type: bool.\nIf disabled (false): Prefers regions with lower scores (more uniform pixel structure).\nIf enabled (true): Prefers regions with higher scores.\nDefault: false"
     type: "bool"
-    default_val: false
+    default: false

@@ -1,69 +1,54 @@
-function_name: "CircleDetection"
-description: >-
-  A high-precision circle detector that identifies circles in a **binary image**.
-  It operates by finding object contours and then applying a least-squares
-  fitting algorithm to the contour points. This function is ideal for
-  accurately measuring the center and radius of circular objects in the image.
-  Set the `minRadius` and `maxRadius` span larger at first to ensure detection,
-  then narrow down the range for more precise results.
-
-  **WARNING:** This method is sensitive and will likely fail if the circles are
-  truncated by the image border. The fitting algorithm will be corrupted by the
-  non-circular points from the image edge. To handle such cases, a
-  `morphological_opening` or `morphological_closing` function **must** be applied to the binary image
-  *before* calling this function to detach the shape from the edges.
-
-function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Circle Detection"
+description: "Detects circles in a binary image using contour detection and least-squares fitting.\n\nOutputs circle center coordinates and radius measurements.\n\nDependencies:\n- Input MUST be a binary image (black and white)\n- Apply morphological opening or closing BEFORE this function to detach circles from image borders\n- Circles touching the image border will cause fitting failures\n\nNote: Set minRadius and maxRadius wide at first, then narrow down for precise results."
+# image: "vision_functions_example_imgs/CircleDetection.jpg"
+function_category: "Machine Vision"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
-    default: true
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
+    default: true
 
-  - param_name: "circle_fit_mode"
-    description: "Select the method to be used for the fitting algorithm."
+  - param_name: "Fitting Method"
+    description: "Type: dropdown.\nAlgorithm for circle fitting.\nstandardLSQ: Standard least squares.\nhyperLSQ: Hyperaccurate least squares.\nriemannSWFLa: Riemannian SWF La.\nprattSVD: Pratt SVD method.\ntaubinSVD: Taubin SVD method.\nhyperSVD: Hyper SVD method.\nkmh: KMH method."
     type: "string_list"
     values: 
       - "standardLSQ"
       - "hyperLSQ"
       - "riemannSWFLa"
-      #- "lm"
       - "prattSVD"
       - "taubinSVD"
       - "hyperSVD"
       - "kmh"
 
-  - param_name: "minRadius"
-    description: "Minimum radius of the circle to be detected [um]."
+  - param_name: "Minimum Radius"
+    description: "Type: float (0.0 - no limit).\nSmallest circle radius to detect [micrometers]."
     type: "float"
     min_val: 0.0
     max_val: "inf"
 
-  - param_name: "maxRadius"
-    description: "Maximum radius of the circle to be detected [um]."
+  - param_name: "Maximum Radius"
+    description: "Type: float (0.001 - no limit).\nLargest circle radius to detect [micrometers]."
     type: "float"
     min_val: 0.001
     max_val: "inf"
 
-  - param_name: "draw_circles"
-    description: "Draw the detected circles on the image. This has no effect on the output of the function."
+  - param_name: "Draw Detected Circles"
+    description: "Type: bool.\nDraw detected circles on the image for visualization.\nHas no effect on function output values."
     type: "bool"
-    default_val: true
+    default: true
 
-
-  - param_name: "fit_single_circle"
-    description: "Use all the points of the current image to fit a circle. This is useful when only one circle is expected in the image."
+  - param_name: "Fit Single Circle"
+    description: "Type: bool.\nUse all points in the image to fit a single circle.\nEnable when only one circle is expected in the image."
     type: "bool"
-    default_val: false
+    default: false
 
-  - param_name: "mode"
-    description: "Contour retrieval mode. Defines how contours and their hierarchy are extracted (e.g., only outer contours, all contours, or hierarchical structure)."
+  - param_name: "Contour Retrieval Mode"
+    description: "Type: dropdown.\nHow contours are extracted from the binary image.\nRETR_EXTERNAL: Only outermost contours (best for single circles).\nRETR_LIST: All contours without hierarchy.\nRETR_CCOMP: Two-level hierarchy (outer and holes).\nRETR_TREE: Full hierarchy (all contour relationships)."
     type: "string_list"
     values: 
-      - "RETR_EXTERNAL"   # retrieves only the outermost contours
-      - "RETR_LIST"       # retrieves all contours without establishing hierarchy
-      - "RETR_CCOMP"      # retrieves all contours and organizes them into two levels (outer and hole contours)
-      - "RETR_TREE"       # retrieves all contours and reconstructs the full hierarchy
-    default_val: "RETR_EXTERNAL"
-
+      - "RETR_EXTERNAL"
+      - "RETR_LIST"
+      - "RETR_CCOMP"
+      - "RETR_TREE"
+    default: "RETR_EXTERNAL"

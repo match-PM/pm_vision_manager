@@ -1,45 +1,46 @@
-function_name: "FillSelectedArea"
-description: Detects contours in a grayscale or binary image using the specified retrieval mode and approximation method. Contours are filtered by area relative to the image or ROI, and only those within [min_area, max_area] are filled to produce a clean binary mask.
-function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Fill Selected Area"
+description: "Fills only contours within a specified size range to produce a clean binary mask.\n\nDetects contours in a binary image, filters them by area (minimum and maximum), and fills only those that meet the criteria.\n\nUseful for removing small noise or excluding large irrelevant regions.\n\nDependencies:\n- Input should be a binary (black and white) image\n- Area can be calculated as percentage of full image or ROI"
+# image: "vision_functions_example_imgs/FillSelectedArea.jpg"
+function_category: "Image Processing"
 
 params:
-  - param_name: "active"
-    description: "Enable or disable execution of this function."
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-  - param_name: "mode"
-    description: "Contour retrieval mode. Defines how contours and their hierarchy are extracted (e.g., only outer contours, all contours, or hierarchical structure)."
+  - param_name: "Contour Retrieval Mode"
+    description: "Type: dropdown.\nHow contours are extracted from the image.\nRETR_EXTERNAL: Only outermost contours (recommended).\nRETR_LIST: All contours without hierarchy.\nRETR_CCOMP: Two-level hierarchy (outer and holes).\nRETR_TREE: Full hierarchy (all contour relationships)."
     type: "string_list"
     values: 
-      - "RETR_LIST"       # retrieves all contours without establishing hierarchy
-      - "RETR_EXTERNAL"   # retrieves only the outermost contours
-      - "RETR_CCOMP"      # retrieves all contours and organizes them into two levels (outer and hole contours)
-      - "RETR_TREE"       # retrieves all contours and reconstructs the full hierarchy
+      - "RETR_LIST"
+      - "RETR_EXTERNAL"
+      - "RETR_CCOMP"
+      - "RETR_TREE"
 
-  - param_name: "use_roi_percent"
-    description: "If True, interprets min_area and max_area as percentages of the ROI size instead of the full image size."
+  - param_name: "Use ROI Percentage"
+    description: "Type: bool.\nIf enabled, min and max area are calculated as percentages of the ROI size.\nIf disabled, areas are percentages of the full image size.\nDefault: False"
     type: "bool"
-    default_val: False
+    default: False
 
-  - param_name: "method"
-    description: "Contour approximation method. Controls the level of detail stored for contour points."
+  - param_name: "Contour Approximation Method"
+    description: "Type: dropdown.\nHow contours are compressed.\nCHAIN_APPROX_SIMPLE: Compresses segments, leaves only endpoints (most efficient, recommended).\nCHAIN_APPROX_NONE: Stores all contour points (slowest).\nCHAIN_APPROX_TC89_L1: Teh-Chin approximation (moderate).\nCHAIN_APPROX_TC89_KCOS: Teh-Chin approximation (moderate)."
     type: "string_list"
     values: 
-      - "CHAIN_APPROX_SIMPLE"   # compresses horizontal, vertical, and diagonal segments, leaving only endpoints
-      - "CHAIN_APPROX_NONE"     # stores all contour points
-      - "CHAIN_APPROX_TC89_L1"  # applies the Teh-Chin chain approximation (L1 metric)
-      - "CHAIN_APPROX_TC89_KCOS" # applies the Teh-Chin chain approximation (k-cosine metric)
+      - "CHAIN_APPROX_SIMPLE"
+      - "CHAIN_APPROX_NONE"
+      - "CHAIN_APPROX_TC89_L1"
+      - "CHAIN_APPROX_TC89_KCOS"
 
-  - param_name: "max_area"
-    description: "Maximum allowed contour area as a percentage of the selected reference (image or ROI)."
+  - param_name: "Maximum Area"
+    description: "Type: float (0.1 - 100.0).\nMaximum contour area as percentage of selected reference (image or ROI).\nContours larger than this are NOT filled.\nDefault: 100.0 (fill all sizes)"
     type: "float"
     min_val: 0.1
     max_val: 100.0
-    default_val: 100.0
+    default: 100.0
     
-  - param_name: "min_area"
-    description: "Minimum allowed contour area as a percentage of the selected reference (image or ROI)."
+  - param_name: "Minimum Area"
+    description: "Type: float (0.1 - 100.0).\nMinimum contour area as percentage of selected reference (image or ROI).\nContours smaller than this are NOT filled (removes noise).\nDefault: 0.1 (fill almost everything)"
     type: "float"
     min_val: 0.1
     max_val: 100.0
-    default_val: 0.1
+    default: 0.1

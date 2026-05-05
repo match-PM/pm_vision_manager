@@ -1,42 +1,43 @@
-function_name: "SetRingLight"
-description: "This function sets the ring light of the connected camera if the interface is available."
-function_category: "Camera Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Set Ring Light"
+description: "Controls the ring light of the connected camera, including quadrant selection and RGB intensity.\n\nRing lighting provides uniform, almost shadow-free illumination from around the camera lens.\n\nUseful for general inspection, reducing shadows, and providing even lighting across the field of view.\n\nDependencies:\n- May not be available for all cameras or lighting setups\n- Has no effect in cross validation mode\n- Quadrant enables allow directional lighting control"
+# image: "vision_functions_example_imgs/SetRingLight.jpg"
+function_category: "Camera Tools"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-  - param_name: "enable_Q1"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Enable Quadrant 1"
+    description: "Type: bool.\nEnable or disable the first quadrant of the ring light.\nUseful for directional lighting control."
     type: "bool"
 
-  - param_name: "enable_Q2"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Enable Quadrant 2"
+    description: "Type: bool.\nEnable or disable the second quadrant of the ring light.\nUseful for directional lighting control."
     type: "bool"
 
-  - param_name: "enable_Q3"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Enable Quadrant 3"
+    description: "Type: bool.\nEnable or disable the third quadrant of the ring light.\nUseful for directional lighting control."
     type: "bool"
 
-  - param_name: "enable_Q4"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Enable Quadrant 4"
+    description: "Type: bool.\nEnable or disable the fourth quadrant of the ring light.\nUseful for directional lighting control."
     type: "bool"
 
-  - param_name: "r_value"
-    description: "tbd"
+  - param_name: "Red Intensity"
+    description: "Type: int (0 - 100).\nIntensity of red LED in the ring light as percentage.\n0% = off, 100% = maximum brightness."
     type: "unsigned_int"
     min_val: 0
     max_val: 100
 
-  - param_name: "g_value"
-    description: "tbd"
+  - param_name: "Green Intensity"
+    description: "Type: int (0 - 100).\nIntensity of green LED in the ring light as percentage.\n0% = off, 100% = maximum brightness."
     type: "unsigned_int"
     min_val: 0
     max_val: 100
 
-  - param_name: "b_value"
-    description: "tbd"
+  - param_name: "Blue Intensity"
+    description: "Type: int (0 - 100).\nIntensity of blue LED in the ring light as percentage.\n0% = off, 100% = maximum brightness."
     type: "unsigned_int"
     min_val: 0
     max_val: 100

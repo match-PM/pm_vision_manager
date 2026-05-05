@@ -1,50 +1,51 @@
-function_name: "Extract_Color_Areas"
-description: Validates the input, converts the image to HSV, applies color range masks defined by the provided hue, saturation, and value boundaries, and extracts regions matching those criteria and updates the processing image in the handler."
-function_category: "Image Processing"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Extract Color Areas"
+description: "Extracts image regions that match specified color ranges using HSV color space filtering.\n\nConverts image from BGR to HSV, applies masks based on hue, saturation, and value boundaries, and outputs a binary image with the extracted regions.\n\nDependencies:\n- Input should be a color image (BGR format)\n- Output is a binary (black and white) image where white pixels match the color range\n- HSV color space separates color (hue) from intensity (value), making color detection more robust"
+# image: "vision_functions_example_imgs/Extract_Color_Areas.jpg"
+function_category: "Image Processing"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-  - param_name: "lower_hue"
-    description: "Lower boundary for the hue channel."
+  - param_name: "Min Hue"
+    description: "Type: int (0 - 255).\nLower boundary for the hue channel (color).\nHue represents the color type (red, green, blue, etc.).\n0 = red, 85 = green, 170 = blue (approximately)."
     type: "unsigned_int"
     min_val: 0
     max_val: 255
-    default_val: 0
+    default: 0
 
-  - param_name: "upper_hue"
-    description: "Upper boundary for the hue channel."
+  - param_name: "Max Hue"
+    description: "Type: int (0 - 255).\nUpper boundary for the hue channel (color).\nUse Min Hue and Max Hue to define a range for the target color."
     type: "unsigned_int"
     min_val: 0
     max_val: 255
-    default_val: 255
+    default: 255
 
-  - param_name: "lower_saturation"
-    description: "Lower boundary for the saturation channel."
+  - param_name: "Min Saturation"
+    description: "Type: int (0 - 255).\nLower boundary for the saturation channel (color intensity).\nHigher values = more vivid colors.\nLower values = more muted/grays.\nDefault 200: Extracts only vivid/saturated colors."
     type: "unsigned_int"
     min_val: 0
     max_val: 255
-    default_val: 200
+    default: 200
 
-  - param_name: "upper_saturation"
-    description: "Upper boundary for the saturation channel."
+  - param_name: "Max Saturation"
+    description: "Type: int (0 - 255).\nUpper boundary for the saturation channel.\nLower values include muted colors.\nHigher values restrict to vivid colors."
     type: "unsigned_int"
     min_val: 0
     max_val: 255
-    default_val: 255
+    default: 255
 
-  - param_name: "lower_value"
-    description: "Lower boundary for the value channel."
+  - param_name: "Min Value"
+    description: "Type: int (0 - 255).\nLower boundary for the value channel (brightness).\nHigher values = brighter pixels.\nLower values = darker pixels.\nDefault 200: Extracts only bright colored regions."
     type: "unsigned_int"
     min_val: 0
     max_val: 255
-    default_val: 200
+    default: 200
 
-  - param_name: "upper_value"
-    description: "Upper boundary for the value channel."
+  - param_name: "Max Value"
+    description: "Type: int (0 - 255).\nUpper boundary for the value channel.\nAllows filtering by brightness level.\n255 = include all brightness levels."
     type: "unsigned_int"
     min_val: 0
     max_val: 255
-    default_val: 255
+    default: 255

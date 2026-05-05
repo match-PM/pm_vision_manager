@@ -1,68 +1,28 @@
 {
     "vision_process_name": "test_pipeline (copy)",
-    "process creation": "2026-04-30 12:40:44",
+    "process creation": "2026-04-30 14:02:06",
     "vision_pipeline": [
         {
-            "Morphology_Ex_Closing": {
-                "active": true,
-                "kernelsize": 11
-            }
-        },
-        {
-            "Morphology_Ex_Opening": {
-                "active": true,
-                "kernelsize": 11
-            }
-        },
-        {
-            "FillArea": {
-                "active": true,
-                "draw_contours": false,
-                "white_padding_top": false,
-                "white_padding_left": false,
-                "white_padding_bottom": false,
-                "white_padding_right": false,
-                "mode": "RETR_EXTERNAL",
-                "method": "CHAIN_APPROX_SIMPLE"
-            }
-        },
-        {
-            "CircleDetection": {
-                "active": true,
-                "draw_circles": true,
-                "fit_single_circle": false,
-                "circle_fit_mode": "standardLSQ",
-                "mode": "prattSVD",
-                "minRadius": 1980.0,
-                "maxRadius": 2420.0
-            }
-        },
-        {
             "AdaptiveThreshold": {
-                "active": true,
-                "adaptiveMethod": "ADAPTIVE_THRESH_MEAN_C",
-                "thresholdType": "THRESH_BINARY",
-                "blockSize": 3,
-                "maxValue": 127.5,
-                "C": 0.0
+                "Active": false,
+                "Adaptive Method": "ADAPTIVE_THRESH_MEAN_C",
+                "Threshold Type": "THRESH_BINARY",
+                "Block Size": 3,
+                "Maximum Value": 127.5,
+                "Constant Offset": 0.0
             }
         },
         {
-            "Blur": {
-                "active": true,
-                "gaus_std": 5,
-                "type": "GaussianBlur",
-                "kernelsize": 1
+            "Equalize Histogram": {
+                "Active": false
             }
         },
         {
-            "AdaptiveThreshold": {
-                "active": true,
-                "adaptiveMethod": "ADAPTIVE_THRESH_MEAN_C",
-                "thresholdType": "THRESH_BINARY",
-                "blockSize": 3,
-                "maxValue": 127.5,
-                "C": 0.0
+            "CLAHE on V Channel": {
+                "Active": false,
+                "Tile Grid Size (Height)": 16,
+                "Tile Grid Size (Width)": 16,
+                "Clip Limit": 5.5
             }
         }
     ]

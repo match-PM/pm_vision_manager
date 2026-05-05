@@ -1,22 +1,10 @@
-function_name: "EqualizeHist"
-description: >
-  Improves global image contrast by equalizing the histogram of a
-  single-channel (grayscale) image.
-
-  Histogram equalization redistributes pixel intensities so that the
-  full available intensity range is used more effectively. This
-  enhances contrast in images with poor or uneven lighting conditions.
-
-  The operation is applied to the currently processed grayscale image
-  or channel. The output image has the same dimensions and data type
-  as the input.
-
+function_name: "Equalize Histogram"
+description: "Improves global image contrast by redistributing pixel intensities to use the full available intensity range.\n\nHistogram equalization enhances contrast in images with poor or uneven lighting conditions.\n\nOutput image has the same dimensions and data type as input.\n\nDependencies:\n- Input MUST be a single-channel (grayscale) image\n- Use BGR2GRAY first if working with color images\n- Works best on images with poor contrast or uneven lighting\n- May amplify noise in already well-lit images"
+# image: "vision_functions_example_imgs/EqualizeHist.jpg"
 function_category: "Image Processing"
 
 params:
-  - param_name: "active"
-    description: >
-      Enables or disables the EqualizeHist function.
-      When disabled, the input image is passed through unchanged.
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline.\nWhen disabled, the input image passes through unchanged."
     type: "bool"
     default: true

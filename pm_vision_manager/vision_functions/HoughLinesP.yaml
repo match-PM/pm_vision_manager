@@ -1,27 +1,27 @@
-function_name: "HoughLinesP"
-description: "BlaBla"
-function_category: "Machine Vision"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Hough Lines (Probabilistic)"
+description: "Detects line segments in a binary image using the Probabilistic Hough Transform.\n\nReturns start and end points for each detected line segment.\n\nUseful for finding straight edges, lines, and boundaries in images.\n\nDependencies:\n- Input should be a binary edge image (use Canny edge detection first)\n- Works best with clean, well-defined edges\n- Adjust parameters based on line thickness and image noise"
+# image: "vision_functions_example_imgs/HoughLinesP.jpg"
+function_category: "Machine Vision"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-  - param_name: "threshold"
-    description: "tbd"
+  - param_name: "Voting Threshold"
+    description: "Type: int (0 - 255).\nMinimum number of votes needed in the Hough accumulator to detect a line.\nHigher values detect only strong lines (reduces false positives).\nLower values detect more lines (may include noise).\nTypical range: 50 - 150."
     type: "unsigned_int"
     min_val: 0
     max_val: 255
 
-  - param_name: "minLineLength"
-    description: "tbd"
+  - param_name: "Minimum Line Length"
+    description: "Type: int (0 - no limit).\nShortest line segment to detect [pixels].\nShorter lines are ignored.\nHigher values filter out small line fragments.\nTypical range: 10 - 100."
     type: "unsigned_int"
     min_val: 0
-    max_val: 'inf'
+    max_val: "inf"
 
-  - param_name: "maxLineGap"
-    description: "tbd"
+  - param_name: "Maximum Line Gap"
+    description: "Type: int (0 - no limit).\nMaximum allowed gap between line segments to be connected into a single line [pixels].\nLarger values connect broken lines.\nSmaller values keep lines separate.\nTypical range: 5 - 20."
     type: "unsigned_int"
     min_val: 0
-    max_val: 'inf'
-
+    max_val: "inf"

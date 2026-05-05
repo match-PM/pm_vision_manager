@@ -1,15 +1,15 @@
-function_name: "SetCoAxLight"
-description: "This function sets the Coaxial light of the camera if the interface is available."
-function_category: "Camera Tools"   # supported 'Image Processing', 'Machine Vision', 'Camera Tools', 'Image Analysis', 'Image Tools', 'Image Conversion'
+function_name: "Set Coaxial Light"
+description: "Sets the coaxial light intensity of the camera for improved illumination of reflective surfaces.\n\nCoaxial lighting provides even, shadow-free illumination from the same direction as the camera view.\n\nUseful for inspecting shiny or reflective surfaces, PCBs, wafers, and flat objects.\n\nDependencies:\n- May not be available for all cameras or lighting setups\n- Has no effect in cross validation mode\n- Higher values produce brighter illumination"
+# image: "vision_functions_example_imgs/SetCoAxLight.jpg"
+function_category: "Camera Tools"
 
 params:
-  - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+  - param_name: "Active"
+    description: "Enable or disable this function in the pipeline."
     type: "bool"
 
-
-  - param_name: "value"
-    description: "Value of the coaxial light to be set in percent."
+  - param_name: "Light Intensity"
+    description: "Type: float (0.0 - 100.0).\nCoaxial light intensity as percentage of maximum.\n0% = off (darkest).\n100% = maximum brightness.\nAdjust based on surface reflectivity and desired contrast."
     type: "float"
     min_val: 0.0
     max_val: 100.0
