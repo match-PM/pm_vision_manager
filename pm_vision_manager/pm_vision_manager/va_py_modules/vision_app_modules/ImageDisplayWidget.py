@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QGridLayout, QTreeWidget, QTreeWidgetItem
+from PyQt6.QtWidgets import QMenu, QWidget, QFileDialog, QVBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QGridLayout, QTreeWidget, QTreeWidgetItem
 from PyQt6.QtGui import QColor, QImage, QPixmap
 from pm_vision_manager.va_py_modules.vision_utils import get_screen_resolution
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QTimer, QRectF
@@ -8,7 +8,6 @@ from pm_vision_app.py_modules.vision_builder_widget import VisionBuilderWidget
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene
 from pm_vision_manager.va_py_modules.image_processing_handler import DisplayImages
-
 class ImageSelectSignal(QObject):
     signal = pyqtSignal(str)
 
@@ -83,7 +82,7 @@ class ZoomableImageView(QGraphicsView):
         # Connect scrollbars to sync peer on change
         self.horizontalScrollBar().valueChanged.connect(self._on_scroll)
         self.verticalScrollBar().valueChanged.connect(self._on_scroll)
-
+        self._current_pixmap: QPixmap | None = None
         # Overlay tooltip label
         self._tooltip = QLabel(self)
         self._tooltip.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -170,6 +169,7 @@ class ZoomableImageView(QGraphicsView):
         new_size = (pixmap.width(), pixmap.height())
         size_changed = new_size != self._last_image_size
 
+        self._current_pixmap = pixmap   
         self._scene.clear()
         self._pixmap_item = self._scene.addPixmap(pixmap)
 
@@ -246,7 +246,34 @@ class ZoomableImageView(QGraphicsView):
         if self._fit_mode:
             self._resize_timer.start()
 
+    def contextMenuEvent(self, event):
+        menu = QMenu(self)
 
+        save_action = menu.addAction("💾 Save image...")
+        action = menu.exec(event.globalPos())
+
+        if action == save_action:
+            self._save_image()
+
+
+    def _save_image(self):
+        if self._current_pixmap is None:
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Image",
+            "",
+            "PNG Image (*.png);;JPEG Image (*.jpg);;All Files (*)"
+        )
+
+        if not file_path:
+            return
+        
+        if not file_path.lower().endswith((".png", ".jpg", ".jpeg")):
+            file_path += ".png"
+            
+        self._current_pixmap.save(file_path)
 # ---------------------------------------------------------------------------
 # ImageDisplayWidget
 # ---------------------------------------------------------------------------
