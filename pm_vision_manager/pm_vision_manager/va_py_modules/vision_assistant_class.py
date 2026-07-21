@@ -317,7 +317,7 @@ class VisionProcessClass:
             self._stop_vision_subscription()
             return
 
-        self.image_processing_handler.set_image_metatdata(self.process_db_path,image_name)
+        self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name, self.process_file_path)
         self.image_processing_handler.set_initial_image(image)
 
         #display_image = process_image(self, image, self.process_pipeline_list)
@@ -473,7 +473,7 @@ class VisionProcessClass:
                 continue
 
             image_name = f"{self.cross_validation.current_image_name}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
-            self.image_processing_handler_cross_val.set_image_metatdata(self.process_db_path, image_name)
+            self.image_processing_handler_cross_val.set_image_metatdata(self.process_db_path, image_name, self.process_file_path)
             self.image_processing_handler_cross_val.set_initial_image(image)
             display_image = process_image(self.vision_node, self.image_processing_handler_cross_val, self.process_pipeline_list)
             
@@ -495,7 +495,7 @@ class VisionProcessClass:
         
         self._load_process_file()
         self.image_processing_handler.set_initial_image(image)
-        self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name)
+        self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name, self.process_file_path)
         display_image = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
         _results = self.save_vision_results()
         self.results_signal.signal.emit(self.image_processing_handler.display_image_cls, _results)
@@ -513,6 +513,8 @@ class VisionProcessClass:
             package_share_dir = get_package_share_directory("pm_vision_manager")
             self.vision_assistant_config_path = f"{package_share_dir}/vision_assistant_config.yaml"
             self.process_file_path = self.process_library_path + self.process_filename
+            self.image_processing_handler.set_process_file_path(self.process_file_path)
+            self.image_processing_handler_cross_val.set_process_file_path(self.process_file_path)
             self.vision_node.get_logger().info("Vision assistant path config loaded!")
             return True
         

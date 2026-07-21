@@ -56,7 +56,9 @@
         {
             "CircleDetection": {
                 "active": true,
-                "mode": "prattSVD",
+                "circle_fit_mode": "prattSVD",
+                "mode": "RETR_EXTERNAL",
+                "fit_single_circle": false,
                 "minRadius": 1980.0,
                 "maxRadius": 2420.0,
                 "draw_circles": true

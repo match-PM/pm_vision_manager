@@ -9,7 +9,8 @@ from pm_vision_manager.va_py_modules.vision_utils import rotate_image
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError, ImageNotColorError
 from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec import fitLine, cornerDetection
 from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec_sub_pixel import cornerDetectionSubPixel
-from pm_vision_manager.va_py_modules.feature_detect_functions.circle_detect import circleDetection
+from pm_vision_manager.va_py_modules.feature_detect_functions.circle_detect import circleDetection, normalize_circle_detection_modes
+from pm_vision_manager.va_py_modules.feature_detect_functions.picture_reference_matcher import picture_reference_matcher, PictureReferenceMatcherError
 from pm_vision_manager.va_py_modules.image_modification_functions.extraction_functions import extract_color_areas
 import time
 from skimage.measure import ransac, CircleModel, label, regionprops
@@ -1496,12 +1497,15 @@ def process_image(vision_node: Node,
           
           case "CircleDetection":
             active = function_parameter['active']
-            circle_fit_mode = function_parameter['circle_fit_mode']
-            mode = function_parameter['mode']
+            circle_fit_mode, mode = normalize_circle_detection_modes(
+              function_parameter.get('circle_fit_mode'),
+              function_parameter.get('mode'),
+              logger=vision_node.get_logger()
+            )
             minRadius = function_parameter['minRadius']
             maxRadius = function_parameter['maxRadius']
-            p_draw_circles = function_parameter['draw_circles']
-            fit_single_circle = function_parameter['fit_single_circle']
+            p_draw_circles = function_parameter.get('draw_circles', True)
+            fit_single_circle = function_parameter.get('fit_single_circle', False)
             if active:
               circleDetection(image_processing_handler=image_processing_handler,
                               max_radius=maxRadius,
@@ -1511,6 +1515,30 @@ def process_image(vision_node: Node,
                               fit_single_circle=fit_single_circle,
                               draw_circles=p_draw_circles,
                               logger=vision_node.get_logger())
+
+          case "PictureReferenceMatcher" | "CoarseFineChamferMatcher":
+            active = function_parameter.get('active')
+            if active:
+              picture_reference_matcher(
+                image_processing_handler=image_processing_handler,
+                pyramid_levels=function_parameter.get('pyramid_levels', 3),
+                canny_low=function_parameter.get('canny_low', 50),
+                canny_high=function_parameter.get('canny_high', 150),
+                max_template_points=function_parameter.get('max_template_points', 1500),
+                edge_mode=function_parameter.get('edge_mode', 'gradient'),
+                edge_percentile=function_parameter.get('edge_percentile', 92.0),
+                ignore_border=function_parameter.get('ignore_border', 2),
+                coarse_angle_min=function_parameter.get('coarse_angle_min', -45.0),
+                coarse_angle_max=function_parameter.get('coarse_angle_max', 45.0),
+                coarse_angle_step=function_parameter.get('coarse_angle_step', 5.0),
+                refine_angle_window=function_parameter.get('refine_angle_window', 5.0),
+                refine_angle_step=function_parameter.get('refine_angle_step', 1.0),
+                fine_angle_window=function_parameter.get('fine_angle_window', 1.0),
+                fine_angle_step=function_parameter.get('fine_angle_step', 0.2),
+                draw_match=function_parameter.get('draw_match', True),
+                verbose=function_parameter.get('verbose', False),
+                logger=vision_node.get_logger()
+              )
 
           case "HoughLinesP":
             active = function_parameter['active']
@@ -1774,16 +1802,16 @@ def process_image(vision_node: Node,
 
           case "SharpnessCut":
             active = function_parameter.get('active')
-            blur = function_parameter.get('blur')
-            percentile = function_parameter.get('percentile')
-            block_size = function_parameter.get('block_size')
+            p_blur = function_parameter.get('blur', True)
+            percentile = function_parameter.get('percentile', 65.0)
+            block_size = function_parameter.get('block_size', 32)
 
             
             if active:
               sharpness_cut(image_processing_handler=image_processing_handler,
                             percentile=percentile,
                             block_size=block_size,
-                            blur=blur,
+                            blur=p_blur,
                             logger = vision_node.get_logger()
               )
 
@@ -1850,6 +1878,11 @@ def process_image(vision_node: Node,
     vision_node.get_logger().error(str(e))
     image_processing_handler.set_vision_ok(False)
 
+  except PictureReferenceMatcherError as e:
+    vision_node.get_logger().error(str(e))
+    image_processing_handler.append_vision_process_debug(str(e))
+    image_processing_handler.set_vision_ok(False)
+
   except Exception as e:
     vision_node.get_logger().fatal("Fatal Error in vision function! Contact maintainer!")
     vision_node.get_logger().fatal(str(e))
@@ -1861,4 +1894,3 @@ def process_image(vision_node: Node,
 
 if __name__ == '__main__':
   pass
-

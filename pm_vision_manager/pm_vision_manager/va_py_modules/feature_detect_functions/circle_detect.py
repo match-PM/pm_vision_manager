@@ -8,6 +8,58 @@ from pm_vision_manager.va_py_modules.image_processing_handler import ImageProces
 
 from circle_fit import circle_fit
 
+DEFAULT_CIRCLE_FIT_MODE = "standardLSQ"
+DEFAULT_CONTOUR_RETRIEVAL_MODE = "RETR_EXTERNAL"
+
+CIRCLE_FIT_MODES = {
+    "standardLSQ",
+    "hyperLSQ",
+    "riemannSWFLa",
+    "lm",
+    "prattSVD",
+    "taubinSVD",
+    "hyperSVD",
+    "kmh",
+}
+
+CONTOUR_RETRIEVAL_MODE_MAP = {
+    "RETR_EXTERNAL": cv2.RETR_EXTERNAL,
+    "RETR_LIST": cv2.RETR_LIST,
+    "RETR_CCOMP": cv2.RETR_CCOMP,
+    "RETR_TREE": cv2.RETR_TREE,
+    "RETR_FLOODFILL": cv2.RETR_FLOODFILL
+}
+
+
+def normalize_circle_detection_modes(circle_fit_mode: str | None,
+                                     mode: str | None,
+                                     logger = None) -> tuple[str, str]:
+    """
+    Normalize CircleDetection mode parameters.
+
+    Older saved processes used ``mode`` for the circle fitting algorithm. The
+    current schema separates ``circle_fit_mode`` from the OpenCV contour
+    retrieval ``mode``.
+    """
+    if mode in CIRCLE_FIT_MODES:
+        if circle_fit_mode in (None, "", DEFAULT_CIRCLE_FIT_MODE):
+            circle_fit_mode = mode
+        mode = DEFAULT_CONTOUR_RETRIEVAL_MODE
+        if logger:
+            logger.warn(
+                "CircleDetection parameter 'mode' contained a circle fit mode. "
+                f"Using circle_fit_mode='{circle_fit_mode}' and "
+                f"mode='{DEFAULT_CONTOUR_RETRIEVAL_MODE}'."
+            )
+
+    if circle_fit_mode in (None, ""):
+        circle_fit_mode = DEFAULT_CIRCLE_FIT_MODE
+    if mode in (None, ""):
+        mode = DEFAULT_CONTOUR_RETRIEVAL_MODE
+
+    return circle_fit_mode, mode
+
+
 def circleDetection(image_processing_handler: ImageProcessingHandler,
                     max_radius: float,
                     min_radius: float,  
@@ -24,17 +76,19 @@ def circleDetection(image_processing_handler: ImageProcessingHandler,
 
     canvas = image_processing_handler.get_visual_elements_canvas()
 
+    circle_fit_mode, mode = normalize_circle_detection_modes(
+        circle_fit_mode,
+        mode,
+        logger=logger
+    )
+
     # Select mode
-    mode_map = {
-        "RETR_EXTERNAL": cv2.RETR_EXTERNAL,
-        "RETR_LIST": cv2.RETR_LIST,
-        "RETR_CCOMP": cv2.RETR_CCOMP,
-        "RETR_TREE": cv2.RETR_TREE,
-        "RETR_FLOODFILL": cv2.RETR_FLOODFILL
-    }
-    if mode not in mode_map:
-        raise ValueError("Invalid mode: " + mode)
-    mode_val = mode_map[mode]
+    if mode not in CONTOUR_RETRIEVAL_MODE_MAP:
+        raise ValueError(f"Invalid contour retrieval mode: {mode}")
+    mode_val = CONTOUR_RETRIEVAL_MODE_MAP[mode]
+
+    if circle_fit_mode not in CIRCLE_FIT_MODES:
+        raise ValueError(f"Invalid circle fit mode: {circle_fit_mode}")
 
     # Select method
     method_map = {
@@ -233,5 +287,7 @@ def fit_circle(points, mode: str):
             return circle_fit.kmh(points)
         case 'hyperLSQ':
             return circle_fit.hyperLSQ(points)
-        case _:
+        case 'standardLSQ':
             return circle_fit.standardLSQ(points)
+        case _:
+            raise ValueError(f"Invalid circle fit mode: {mode}")

@@ -24,7 +24,7 @@ params:
       Enables or disables the SharpnessCut function.
       When disabled, the input image is passed through unchanged.
     type: "bool"
-    default: true
+    default_val: true
 
   - param_name: "blur"
     description: >
@@ -34,7 +34,7 @@ params:
 
       Recommended: enabled for real-world camera images.
     type: "bool"
-    default: true
+    default_val: true
 
   - param_name: "block_size"
     description: >

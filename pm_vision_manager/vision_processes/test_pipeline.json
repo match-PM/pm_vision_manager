@@ -31,7 +31,9 @@
             "CircleDetection": {
                 "active": true,
                 "draw_circles": true,
-                "mode": "standardLSQ",
+                "circle_fit_mode": "standardLSQ",
+                "mode": "RETR_EXTERNAL",
+                "fit_single_circle": false,
                 "minRadius": 200.0,
                 "maxRadius": 2500.0
             }

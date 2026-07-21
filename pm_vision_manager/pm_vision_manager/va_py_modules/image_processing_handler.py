@@ -74,6 +74,7 @@ class ImageProcessingHandler:
         self._quality_scores_dict = {}
 
         self.process_db_path = None
+        self.process_file_path = None
 
         self.pixelsize = None
         self.magnification = None
@@ -387,12 +388,17 @@ class ImageProcessingHandler:
         self.ROI_CS_CV_bottom_right_y = bottom_right_y
         self.roi_used = True
 
-    def set_image_metatdata(self, process_db_path:str, current_image_name:str):
+    def set_image_metatdata(self, process_db_path:str, current_image_name:str, process_file_path:str = None):
         self.current_image_name = current_image_name
         self.process_db_path = process_db_path
+        if process_file_path is not None:
+            self.process_file_path = process_file_path
 
     def set_process_db_path(self, process_db_path:str):
         self.process_db_path = process_db_path
+
+    def set_process_file_path(self, process_file_path:str):
+        self.process_file_path = process_file_path
 
     def CS_Conv_ROI_Pix_TO_Img_Pix(self, x_roi, y_roi):
         """

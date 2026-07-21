@@ -24,6 +24,7 @@ params:
   - param_name: "circle_fit_mode"
     description: "Select the method to be used for the fitting algorithm."
     type: "string_list"
+    default_val: "standardLSQ"
     values: 
       - "standardLSQ"
       - "hyperLSQ"
@@ -66,4 +67,3 @@ params:
       - "RETR_CCOMP"      # retrieves all contours and organizes them into two levels (outer and hole contours)
       - "RETR_TREE"       # retrieves all contours and reconstructs the full hierarchy
     default_val: "RETR_EXTERNAL"
-
