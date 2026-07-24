@@ -421,6 +421,7 @@ class ReferencePictureCreatorWidget(QWidget):
         self.open_button = QPushButton("Open Image")
         self.save_button = QPushButton("Save Reference")
         self.process_file_button = QPushButton("Browse")
+        self.load_metadata_button = QPushButton("Load from Metadata")
 
         self.rotation_spin = QDoubleSpinBox()
         self.rotation_spin.setRange(-180.0, 180.0)
@@ -450,6 +451,7 @@ class ReferencePictureCreatorWidget(QWidget):
         controls = QWidget()
         form = QFormLayout(controls)
         form.addRow(self.open_button)
+        form.addRow(self.load_metadata_button)
         form.addRow("Rotation [deg]", self.rotation_spin)
         form.addRow("ROI center x [px]", self.roi_x_spin)
         form.addRow("ROI center y [px]", self.roi_y_spin)
@@ -478,6 +480,7 @@ class ReferencePictureCreatorWidget(QWidget):
         self.open_button.clicked.connect(self.open_image_dialog)
         self.save_button.clicked.connect(self.save_reference)
         self.process_file_button.clicked.connect(self.select_vision_process_file)
+        self.load_metadata_button.clicked.connect(self.load_from_metadata_dialog)
         self.image_view.imageDropped.connect(self.load_image)
         self.image_view.roiCenterChanged.connect(self.set_roi_center)
         self.rotation_spin.valueChanged.connect(self.set_rotation)
@@ -559,6 +562,96 @@ class ReferencePictureCreatorWidget(QWidget):
         self._sync_controls_from_settings()
         self._refresh_preview()
         self.status_label.setText(f"Loaded {Path(path).name}")
+
+    def load_from_metadata_dialog(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Load reference metadata",
+            "",
+            "Metadata (*.json)",
+        )
+        if not path:
+            return
+        self.load_from_metadata(path)
+
+    def load_from_metadata(self, metadata_path: str):
+        metadata_file = Path(metadata_path)
+        if not metadata_file.is_file():
+            QMessageBox.warning(
+                self, "Metadata not found", f"Metadata file does not exist: {metadata_path}"
+            )
+            return
+
+        try:
+            with open(metadata_file, "r", encoding="utf-8") as file:
+                metadata = json.load(file)
+        except (OSError, json.JSONDecodeError) as exc:
+            QMessageBox.warning(self, "Could not read metadata", str(exc))
+            return
+
+        if "settings" not in metadata or not isinstance(metadata["settings"], dict):
+            QMessageBox.warning(
+                self,
+                "Invalid metadata",
+                "The selected file does not contain a 'settings' block.",
+            )
+            return
+
+        loaded_settings = ReferenceExtractionSettings(**metadata["settings"])
+
+        source_path_str = metadata.get("source_path") or loaded_settings.source_path
+        source_path = Path(source_path_str) if source_path_str else None
+
+        if source_path is None or not source_path.is_file():
+            prompt = "The recorded source image could not be found."
+            if source_path is not None:
+                prompt += f"\n\nExpected location:\n{source_path}"
+            prompt += "\n\nPlease select the correct source image."
+
+            QMessageBox.information(self, "Source image missing", prompt)
+            chosen, _ = QFileDialog.getOpenFileName(
+                self,
+                "Select source image",
+                str(source_path.parent) if source_path is not None else "",
+                "Images (*.bmp *.png *.jpg *.jpeg *.tif *.tiff)",
+            )
+            if not chosen:
+                self.status_label.setText(
+                    f"Metadata loaded from {metadata_file.name}, but source image was not provided."
+                )
+                return
+            source_path = Path(chosen)
+
+        try:
+            rotated = self.extractor.load_image(str(source_path))
+        except Exception as exc:
+            QMessageBox.warning(self, "Could not open image", str(exc))
+            return
+
+        # Apply loaded settings, then clamp against the actual rotated image shape.
+        self.settings = loaded_settings
+        if self.extractor.rotated_image is not None:
+            self.settings = self.extractor.clamped_settings(
+                self.settings, self.extractor.rotated_image.shape
+            )
+
+        self.image_view.set_image(rotated)
+        self._sync_controls_from_settings()
+        self._refresh_preview()
+
+        vision_process_path = metadata.get("vision_process_path")
+        if vision_process_path:
+            self.process_file_edit.setText(str(vision_process_path))
+
+        source_match = (
+            "source image OK"
+            if source_path == Path(source_path_str or "")
+            else "source image reassigned"
+        )
+        self.status_label.setText(
+            f"Loaded metadata {metadata_file.name} ({source_match}); "
+            f"image: {source_path.name}"
+        )
 
     def set_rotation(self, angle: float):
         if self._updating_controls or not self.extractor.has_image():
