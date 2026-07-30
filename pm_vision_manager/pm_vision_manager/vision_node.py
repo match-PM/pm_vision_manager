@@ -120,7 +120,8 @@ class VisionNode(Node):
             self.get_logger().error("Invalid input for process or camera config file!")
             response.success = False
             return response
-        
+
+        vision_instance = None
         try:
             vision_instance = VisionProcessClass(
                 self,
@@ -131,29 +132,43 @@ class VisionNode(Node):
                 run_cross_validation=request.run_cross_validation
             )
 
+            # attach the vision instance to the main window
+            self.main_window.start_execution_signal.signal.emit(vision_instance, request.image_display_time)
+            
+            vision_instance.execute_vision()
+
+            response.success = vision_instance.image_processing_handler.get_vision_ok()
+            response.vision_response = vision_instance.construct_results_metadata(
+                vision_instance.image_processing_handler.get_vision_response()
+            )
+            response.results_path = str(vision_instance.vision_results_path)
+
         except ValueError as e:
             self.get_logger().error(f"Error initializing vision instance: {str(e)}")
             response.success = False
-            return response
 
-        # attach the vision instance to the main window
-        self.main_window.start_execution_signal.signal.emit(vision_instance,request.image_display_time)
-        
-        vision_instance.execute_vision()
+        except Exception as e:
+            self.get_logger().error(f"Error executing vision: {str(e)}")
+            response.success = False
 
-        response.success = vision_instance.image_processing_handler.get_vision_ok()
-        response.vision_response = vision_instance.construct_results_metadata(vision_instance.image_processing_handler.get_vision_response())
-        response.results_path = str(vision_instance.vision_results_path)
-        
-        vision_instance.image_processing_handler.disable_all_lights()
-        
-        vision_instance.terminate_vision_class()
-        del vision_instance
+        finally:
+            if vision_instance is not None:
+                try:
+                    vision_instance.image_processing_handler.disable_all_lights()
+                except Exception as e:
+                    self.get_logger().error(f"Error disabling vision lights: {str(e)}")
+                try:
+                    vision_instance.terminate_vision_class()
+                except Exception as e:
+                    self.get_logger().error(f"Error terminating vision instance: {str(e)}")
+                del vision_instance
         
         if not response.success:
             self.get_logger().error("Vision execution failed! An instance of the vision assistant will be opened")
-            self.main_window.start_execution_signal.signal.emit(request.camera_config_filename, 
-                                                                            request.process_filename)
+            self.main_window.start_assistant_signal.signal.emit(
+                request.camera_config_filename,
+                request.process_filename
+            )
         
         return response
 
