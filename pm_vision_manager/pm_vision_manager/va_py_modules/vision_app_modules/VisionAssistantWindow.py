@@ -20,11 +20,15 @@ from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcess
 
 class StartExecutionSignal(QObject):
     """Signal to start vision execution."""
-    signal = pyqtSignal(VisionProcessClass, int)
+    signal = pyqtSignal(VisionProcessClass, object, dict, int)
 
 class StartVisionAssistantSignal(QObject):
     """Signal to start vision assistant."""
-    signal = pyqtSignal(str, str)
+    signal = pyqtSignal(str, str, bool)
+
+class CloseVisionExecutionSignal(QObject):
+    """Signal to close a vision execution result tab."""
+    signal = pyqtSignal(str)
 
 # ============================================================================
 # WORKER CLASSES
@@ -133,14 +137,25 @@ class VisionAssistantWindow(QMainWindow):
         """Initialize signal objects."""
         self.start_execution_signal = StartExecutionSignal()
         self.start_assistant_signal = StartVisionAssistantSignal()
+        self.close_execution_signal = CloseVisionExecutionSignal()
     
     def _init_connections(self):
         """Connect signals and slots."""
         self.tab_widget.tabCloseRequested.connect(self._close_tab)
         self.main_menu.start_assistant_button.clicked.connect(self._start_assistant_from_menu)
         
-        self.start_execution_signal.signal.connect(self.start_vision_execution)
-        self.start_assistant_signal.signal.connect(self.start_vision_assistant)
+        self.start_execution_signal.signal.connect(
+            self.start_vision_execution,
+            Qt.ConnectionType.BlockingQueuedConnection
+        )
+        self.start_assistant_signal.signal.connect(
+            self.start_vision_assistant,
+            Qt.ConnectionType.BlockingQueuedConnection
+        )
+        self.close_execution_signal.signal.connect(
+            self.close_vision_execution,
+            Qt.ConnectionType.BlockingQueuedConnection
+        )
     
     def _setup_window_geometry(self):
         """Set window size and position."""
@@ -158,6 +173,13 @@ class VisionAssistantWindow(QMainWindow):
             self.tab_widget.tabBar().setTabButton(index, QTabBar.ButtonPosition.RightSide, None)
         self.tab_widget.setCurrentIndex(index)
         return index
+
+    def _find_tab_by_name(self, title: str) -> int:
+        """Return the index of a tab by title, or -1 when it is not open."""
+        for i in range(self.tab_widget.count()):
+            if self.tab_widget.tabText(i) == title:
+                return i
+        return -1
     
     def _close_tab(self, index: int):
         """Close a tab at the specified index."""
@@ -171,8 +193,18 @@ class VisionAssistantWindow(QMainWindow):
     
     def _close_tab_by_name(self, title: str):
         """Close tab by its title."""
+        index = self._find_tab_by_name(title)
+        if index >= 0:
+            self._close_tab(index)
+
+    def close_vision_execution(self, process_uid: str):
+        """Close the execution result tab for a process UID."""
+        self._close_tab_by_name(f"Exec_{process_uid}")
+
+    def _close_tab_for_widget(self, widget: QWidget):
+        """Close a tab only if this exact widget is still present."""
         for i in range(self.tab_widget.count()):
-            if self.tab_widget.tabText(i) == title:
+            if self.tab_widget.widget(i) is widget:
                 self._close_tab(i)
                 return
     
@@ -181,10 +213,17 @@ class VisionAssistantWindow(QMainWindow):
     # ============================================================================
     
     def start_vision_assistant(self, camera_file: Optional[str] = None, 
-                            process_file: Optional[str] = None):
+                            process_file: Optional[str] = None,
+                            auto_start_worker: bool = True):
         """Start a new vision assistant instance."""
         if not camera_file or not process_file:
             self.ros_logger.error("Camera or Process file not selected")
+            return
+
+        tab_title = self._generate_tab_title(process_file, camera_file)
+        existing_tab_index = self._find_tab_by_name(tab_title)
+        if existing_tab_index >= 0:
+            self.tab_widget.setCurrentIndex(existing_tab_index)
             return
         
         try:
@@ -203,18 +242,25 @@ class VisionAssistantWindow(QMainWindow):
             if hasattr(display_widget, 'vision_builder_widget'):
                 display_widget.vision_builder_widget.open_process_file(vision_process.process_file_path)
             
-            # Add to tabs
-            tab_title = self._generate_tab_title(process_file, camera_file)
             self._add_tab(display_widget, tab_title)
             
-            # Start worker thread
-            self._start_vision_worker(vision_process)
+            if auto_start_worker:
+                self._start_vision_worker(vision_process)
             
         except Exception as e:
             self.ros_logger.error(f"Failed to start vision assistant: {e}")
 
-    def start_vision_execution(self, vision_instance: VisionProcessClass, tab_timeout: int):
-        """Start vision execution with timeout."""
+    def start_vision_execution(
+        self,
+        vision_instance: VisionProcessClass,
+        display_images,
+        result_dict: dict,
+        tab_timeout: int
+    ):
+        """Show a completed vision execution result with timeout."""
+        if tab_timeout <= 0:
+            return
+
         try:
             # Create display widget
             display_widget = self._create_display_widget(vision_instance)
@@ -232,18 +278,15 @@ class VisionAssistantWindow(QMainWindow):
             # Open process file in builder (ONCE, not twice)
             if hasattr(display_widget, 'vision_builder_widget'):
                 display_widget.vision_builder_widget.open_process_file(vision_instance.process_file_path)
-            
-            # Connect results signal
-            vision_instance.results_signal.signal.connect(display_widget.set_image_result)
-            vision_instance.set_crossval_results_signal.signal.connect(display_widget.set_vision_ok_for_images)
-            
-            # Add to tabs
+
             tab_title = f"Exec_{vision_instance.process_UID}"
+            self._close_tab_by_name(tab_title)
             self._add_tab(display_widget, tab_title)
-            
-            # Set auto-close timer
-            QTimer.singleShot(tab_timeout * 1000, 
-                            lambda: self._close_tab_by_name(tab_title))
+            display_widget.set_image_result(display_images, result_dict)
+            QTimer.singleShot(
+                tab_timeout * 1000,
+                lambda widget=display_widget: self._close_tab_for_widget(widget)
+            )
             
         except Exception as e:
             self.ros_logger.error(f"Failed to start vision execution: {e}")

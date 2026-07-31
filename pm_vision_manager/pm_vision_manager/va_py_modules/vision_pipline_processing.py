@@ -1536,6 +1536,12 @@ def process_image(vision_node: Node,
                 fine_angle_window=function_parameter.get('fine_angle_window', 1.0),
                 fine_angle_step=function_parameter.get('fine_angle_step', 0.2),
                 draw_match=function_parameter.get('draw_match', True),
+                draw_lines=function_parameter.get('draw_lines', True),
+                use_metadata_pose_prior=function_parameter.get('use_metadata_pose_prior', True),
+                metadata_pose_xy_window_px=function_parameter.get('metadata_pose_xy_window_px', 60.0),
+                metadata_pose_angle_window_deg=function_parameter.get('metadata_pose_angle_window_deg', 1.0),
+                medium_score_threshold=function_parameter.get('medium_score_threshold', 0.0005),
+                max_score_threshold=function_parameter.get('max_score_threshold', 0.0020),
                 verbose=function_parameter.get('verbose', False),
                 logger=vision_node.get_logger()
               )
@@ -1886,6 +1892,7 @@ def process_image(vision_node: Node,
   except Exception as e:
     vision_node.get_logger().fatal("Fatal Error in vision function! Contact maintainer!")
     vision_node.get_logger().fatal(str(e))
+    image_processing_handler.set_vision_ok(False)
   
   #finally: 
   image_processing_handler.init_results()

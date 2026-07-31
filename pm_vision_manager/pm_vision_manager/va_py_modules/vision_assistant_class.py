@@ -14,6 +14,7 @@ from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Imag
 from math import pi
 from rosidl_runtime_py.convert import message_to_ordereddict, get_message_slot_types
 import time
+from contextlib import nullcontext
 from pynput import keyboard
 from pathlib import Path
 import threading
@@ -234,6 +235,8 @@ class VisionProcessClass:
         self.processing_source = source
     
     def _image_topic_watchdog(self):
+        if not self.timer_active or not self.subscription_active:
+            return
         
         self.vision_node.get_logger().error("Timed out! Image topic not available! Exiting...")
         self._delete_this_object = True
@@ -262,10 +265,11 @@ class VisionProcessClass:
     
     def _stop_vision_subscription(self) -> bool:
         if self.subscription_active:
+            self.subscription_active = False
             self.vision_node.destroy_subscription(self.subscription)
             if not self.launch_as_assistant:
                 self.topic_timer.cancel()
-            self.subscription_active = False
+                self.timer_active = False
             return True
     
     def start_vision_assistant(self):
@@ -279,69 +283,58 @@ class VisionProcessClass:
         
         self.vision_node.get_logger().warn("Executing vision process...")
 
-        self._start_vision_subscription()
-        
-        image_name = f"{self.process_UID}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
-
-        self._load_process_file()
-
-        set_parameter_success = set_camera_parameters(self.vision_node, 
-                                                      self.image_processing_handler,
-                                                      self.process_pipeline_list)
-        
-        if not set_parameter_success:
-            self.image_processing_handler.vision_routine_done = True
-            self.image_processing_handler.visionOK = False
-            return
-
-        image = self._get_current_camera_image()
-
-        while (self.timer_active and image is None):
+        try:
+            self._clear_current_camera_image()
+            self._start_vision_subscription()
             
-            image = self._get_current_camera_image()
-            self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
-            time.sleep(0.5)
-            continue
+            image_name = f"{self.process_UID}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}"
 
-            # if image is None:
-            #     self.vision_node.get_logger().info(f"No image on topic '/{self.camera_subscription_topic}' available! Waiting...")
-            #     time.sleep(0.5)
-            #     continue
+            self._load_process_file()
 
-        if image is None:
-            self.vision_node.get_logger().error(
-                f"No image received from camera topic '{self.camera_subscription_topic}', aborting execute_vision."
-            )
-            self.image_processing_handler.visionOK = False
-            self.image_processing_handler.vision_routine_done = True
-            self._stop_vision_subscription()
-            return
+            set_parameter_success = set_camera_parameters(self.vision_node, 
+                                                        self.image_processing_handler,
+                                                        self.process_pipeline_list)
+            
+            if not set_parameter_success:
+                self.image_processing_handler.set_vision_ok(False)
+                return
 
-        self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name, self.process_file_path)
-        self.image_processing_handler.set_initial_image(image)
+            self._clear_current_camera_image()
+            image = self._wait_for_current_camera_image()
 
-        #display_image = process_image(self, image, self.process_pipeline_list)
-        display_image = process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
+            if image is None:
+                self.vision_node.get_logger().error(
+                    f"No image received from camera topic '{self.camera_subscription_topic}', aborting execute_vision."
+                )
+                self.image_processing_handler.set_vision_ok(False)
+                self._stop_vision_subscription()
+                return
 
-        # save to json file
-        _results = self.save_vision_results()
+            self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name, self.process_file_path)
+            self.image_processing_handler.set_initial_image(image)
 
-        self.results_signal.signal.emit(
-            self.image_processing_handler.display_image_cls,
-            _results
-            )
+            process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
 
-        # run this when the execution is finished     
-        if self.run_cross_validation:
-            self.execute_crossvalidation()
-            # reinitilize the results after crossvalidation has been executed
+            # save to json file
             _results = self.save_vision_results()
+
             self.results_signal.signal.emit(
                 self.image_processing_handler.display_image_cls,
                 _results
                 )
-        
-        self.image_processing_handler.vision_routine_done = True
+
+            # run this when the execution is finished     
+            if self.run_cross_validation:
+                self.execute_crossvalidation()
+                # reinitilize the results after crossvalidation has been executed
+                _results = self.save_vision_results()
+                self.results_signal.signal.emit(
+                    self.image_processing_handler.display_image_cls,
+                    _results
+                    )
+
+        finally:
+            self.image_processing_handler.vision_routine_done = True
 
     def close_vision_assistant(self):
         self._delete_this_object = True
@@ -402,6 +395,21 @@ class VisionProcessClass:
             #self.vision_node.get_logger().error("No current frame available!")
             return None
 
+    def _clear_current_camera_image(self):
+        self._current_frame = None
+
+    def _wait_for_current_camera_image(self) -> np.ndarray:
+        image = self._get_current_camera_image()
+
+        while self.timer_active and image is None:
+            self.vision_node.get_logger().info(
+                f"No image on topic '/{self.camera_subscription_topic}' available! Waiting..."
+            )
+            time.sleep(0.5)
+            image = self._get_current_camera_image()
+
+        return image
+
 
     def vision_assistant_loop(self):
 
@@ -413,25 +421,33 @@ class VisionProcessClass:
                 continue
 
             if (self.processing_source == self.camera_subscription_topic):
-                set_camera_parameter_success = set_camera_parameters(self.vision_node,
-                                                        self.image_processing_handler,
-                                                        self.process_pipeline_list)
-            
-                if not set_camera_parameter_success:
-                    self.vision_node.get_logger().error(f"Error occured. Camera parameter could not be set!")
-                    continue
+                camera_lock = getattr(self.vision_node, "_camera_operation_lock", None)
+                lock_context = camera_lock if camera_lock is not None else nullcontext()
 
-                image = self._get_current_camera_image()
+                with lock_context:
+                    set_camera_parameter_success = set_camera_parameters(self.vision_node,
+                                                            self.image_processing_handler,
+                                                            self.process_pipeline_list)
+
+                    if not set_camera_parameter_success:
+                        self.vision_node.get_logger().error(f"Error occured. Camera parameter could not be set!")
+                        continue
+
+                    image = self._get_current_camera_image()
+
+                    if image is not None:
+                        self._process_image_for_widget(image, os.path.splitext(self.processing_source)[0])
 
             else:
                 image = self.cross_validation.get_image_by_filename(self.processing_source)
-            
+                
+                if image is not None:
+                    self._process_image_for_widget(image, os.path.splitext(self.processing_source)[0])
+
             if image is None:
                 self.vision_node.get_logger().error(f"Image source '{self.processing_source}' is not available!")
                 time.sleep(0.5)
                 continue
-                        
-            self._process_image_for_widget(image, os.path.splitext(self.processing_source)[0])
             
             #time.sleep(0.5)
             #self.vision_node.get_logger().error("Looped!")

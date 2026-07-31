@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import time
 import os
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -23,7 +24,8 @@ class CoarseFineChamferMatcher:
                  edge_mode="gradient",
                  edge_percentile=92.0,
                  ignore_border=2,
-                 centered=True,
+                 centered=None,
+                 reference_keypoint=None,
                  coarse_angle_min=-45.0,
                  coarse_angle_max=45.0,
                  coarse_angle_step=5.0,
@@ -43,7 +45,8 @@ class CoarseFineChamferMatcher:
         self.edge_mode = edge_mode
         self.edge_percentile = edge_percentile
         self.ignore_border = ignore_border
-        self.centered = centered
+        self.centered = False
+        self.reference_keypoint = reference_keypoint
         self.coarse_angle_min = coarse_angle_min
         self.coarse_angle_max = coarse_angle_max
         self.coarse_angle_step = coarse_angle_step
@@ -781,28 +784,7 @@ class CoarseFineChamferMatcher:
             )
 
 
-        x, y, angle = pose
-
-        ih, iw = image.shape[:2]
-        cx_img, cy_img = iw / 2.0, ih / 2.0
-
-        if self.centered:
-            rx = float(x) - cx_img
-            ry = float(y) - cy_img
-        else:
-            rx = float(x)
-            ry = float(y)
-
-        result = {
-            "x": rx,
-            "y": ry,
-            "angle": float(angle),
-            "score": float(score),
-            "x_abs": float(x),
-            "y_abs": float(y),
-            "centered": bool(self.centered),
-            "image_size": (int(iw), int(ih)),
-        }
+        result = self._result_from_pose(pose, score, template, image)
 
         self.last_result = result
 
@@ -818,6 +800,179 @@ class CoarseFineChamferMatcher:
 
 
         return result
+
+
+    def match_near(self,
+                   center_x,
+                   center_y,
+                   angle,
+                   xy_window=100.0,
+                   angle_window=5.0,
+                   template=None,
+                   image=None):
+
+        if template is None:
+            template = self.template
+        if image is None:
+            image = self.image
+
+        if template is None or image is None:
+            raise ValueError(
+                "No images set. Call set_images() first, "
+                "or pass template and image to match_near()."
+            )
+
+        old_coarse_min = self.coarse_angle_min
+        old_coarse_max = self.coarse_angle_max
+        old_refine_window = self.refine_angle_window
+        old_fine_window = self.fine_angle_window
+
+        try:
+            self.coarse_angle_min = float(angle) - float(angle_window)
+            self.coarse_angle_max = float(angle) + float(angle_window)
+            self.refine_angle_window = min(float(self.refine_angle_window), float(angle_window))
+            self.fine_angle_window = min(float(self.fine_angle_window), float(angle_window))
+            return self._match_with_initial_pose(
+                float(center_x),
+                float(center_y),
+                float(angle),
+                float(xy_window),
+                template=template,
+                image=image,
+            )
+        finally:
+            self.coarse_angle_min = old_coarse_min
+            self.coarse_angle_max = old_coarse_max
+            self.refine_angle_window = old_refine_window
+            self.fine_angle_window = old_fine_window
+
+
+    def _match_with_initial_pose(self,
+                                 center_x,
+                                 center_y,
+                                 angle,
+                                 xy_window,
+                                 template=None,
+                                 image=None):
+
+        if template is None:
+            template = self.template
+        if image is None:
+            image = self.image
+
+        self.template = template
+        self.image = image
+
+        t0 = time.perf_counter()
+        img_pyr = self.create_pyramid(image)
+        tmp_pyr = self.create_pyramid(template)
+        pose = None
+        score = None
+
+        for level in range(self.pyramid_levels):
+            if self.verbose:
+                print(f"\nLevel {level+1}/{self.pyramid_levels}")
+
+            img = img_pyr[level]
+            tmp = tmp_pyr[level]
+            distance = self.edge_distance(img)
+            template_pts = self.template_points(tmp)
+            scale = 2**(self.pyramid_levels - level - 1)
+
+            if pose is None:
+                angles = self._inclusive_angle_range(
+                    self.coarse_angle_min,
+                    self.coarse_angle_max,
+                    self.coarse_angle_step
+                )
+                pose, score = self.search_level(
+                    distance,
+                    template_pts,
+                    angles,
+                    xy_step=max(1, min(8, int(np.ceil(float(xy_window) / max(scale, 1) / 8.0)))),
+                    center=(center_x / scale, center_y / scale),
+                    window=max(1.0, xy_window / scale)
+                )
+            else:
+                x, y, a = pose
+                x *= 2
+                y *= 2
+                angles = self._refine_angles(a)
+                pose, score = self.search_level(
+                    distance,
+                    template_pts,
+                    angles,
+                    xy_step=2,
+                    center=(x, y),
+                    window=max(5.0, xy_window / max(scale, 1))
+                )
+
+                x, y, a = pose
+                angles = self._fine_angles(a)
+                pose, score = self.search_level(
+                    distance,
+                    template_pts,
+                    angles,
+                    xy_step=1,
+                    center=(x, y),
+                    window=10
+                )
+
+            if self.verbose:
+                print("position:", pose, "score:", score)
+
+        pose, score = self.refine_pose_subpixel(distance, template_pts, pose)
+
+        if self.verbose:
+            print("subpixel position:", pose, "score:", score)
+
+        result = self._result_from_pose(pose, score, template, image)
+        self.last_result = result
+
+        if self.verbose:
+            print("\nFinished:", result, "time:", time.perf_counter()-t0, "s")
+
+        return result
+
+
+    def _result_from_pose(self, pose, score, template, image):
+
+        x, y, angle = pose
+
+        ih, iw = image.shape[:2]
+        th, tw = template.shape[:2]
+        tpl_cx = tw / 2.0
+        tpl_cy = th / 2.0
+        if self.reference_keypoint is None:
+            keypoint_x = tpl_cx
+            keypoint_y = tpl_cy
+        else:
+            keypoint_x = float(self.reference_keypoint[0])
+            keypoint_y = float(self.reference_keypoint[1])
+
+        keypoint_x = float(np.clip(keypoint_x, 0.0, max(0.0, tw - 1.0)))
+        keypoint_y = float(np.clip(keypoint_y, 0.0, max(0.0, th - 1.0)))
+
+        a = np.deg2rad(angle)
+        dx = keypoint_x - tpl_cx
+        dy = keypoint_y - tpl_cy
+        keypoint_abs_x = float(x) + dx * np.cos(a) - dy * np.sin(a)
+        keypoint_abs_y = float(y) + dx * np.sin(a) + dy * np.cos(a)
+
+        return {
+            "x": keypoint_abs_x,
+            "y": keypoint_abs_y,
+            "angle": float(angle),
+            "score": float(score),
+            "x_abs": keypoint_abs_x,
+            "y_abs": keypoint_abs_y,
+            "template_center_x_abs": float(x),
+            "template_center_y_abs": float(y),
+            "reference_keypoint_x": keypoint_x,
+            "reference_keypoint_y": keypoint_y,
+            "centered": False,
+            "image_size": (int(iw), int(ih)),
+        }
 
 
 
@@ -871,28 +1026,20 @@ class CoarseFineChamferMatcher:
             )
 
 
-        # The result may be center-relative; we draw
-        # at the absolute position, so resolve it.
+        # x_abs/y_abs are the configured reference keypoint. The template image
+        # itself is drawn at the matched template center.
         if "x_abs" in result and "y_abs" in result:
-            x = float(result["x_abs"])
-            y = float(result["y_abs"])
+            key_x = float(result["x_abs"])
+            key_y = float(result["y_abs"])
         else:
-            x = float(result["x"])
-            y = float(result["y"])
+            key_x = float(result["x"])
+            key_y = float(result["y"])
+
+        x = float(result.get("template_center_x_abs", key_x))
+        y = float(result.get("template_center_y_abs", key_y))
 
         angle = float(result["angle"])
         score = float(result["score"])
-
-        # Centered (relative) values, if available
-        rx = result.get("x", x)
-        ry = result.get("y", y)
-        centered = bool(result.get("centered", False))
-        iw_im, ih_im = (
-            result.get("image_size", (None, None))
-            if "image_size" in result
-            else (None, None)
-        )
-
 
         th, tw = template.shape[:2]
         ih, iw = image.shape[:2]
@@ -1000,11 +1147,9 @@ class CoarseFineChamferMatcher:
 
             cx = tw / 2.0
             cy = th / 2.0
-            a = np.deg2rad(-angle)
+            a = np.deg2rad(angle)
             cos_a = np.cos(a)
             sin_a = np.sin(a)
-            tx = x - cx
-            ty = y - cy
 
             for cnt in contours:
                 pts = cnt.reshape(-1, 2).astype(np.float32)
@@ -1013,8 +1158,8 @@ class CoarseFineChamferMatcher:
                 rx = px * cos_a - py * sin_a
                 ry = px * sin_a + py * cos_a
                 shifted = np.column_stack([
-                    rx + tx,
-                    ry + ty
+                    rx + x,
+                    ry + y
                 ]).astype(np.int32)
                 cv2.drawContours(
                     canvas,
@@ -1029,7 +1174,7 @@ class CoarseFineChamferMatcher:
 
             cv2.drawMarker(
                 canvas,
-                (int(round(x)), int(round(y))),
+                (int(round(key_x)), int(round(key_y))),
                 (0, 0, 255),
                 markerType=cv2.MARKER_CROSS,
                 markerSize=20,
@@ -1061,12 +1206,12 @@ class CoarseFineChamferMatcher:
             )
 
 
-            if abs(x - cx_img) > 1 or abs(y - cy_img) > 1:
+            if abs(key_x - cx_img) > 1 or abs(key_y - cy_img) > 1:
 
                 cv2.arrowedLine(
                     canvas,
                     (int(round(cx_img)), int(round(cy_img))),
-                    (int(round(x)), int(round(y))),
+                    (int(round(key_x)), int(round(key_y))),
                     (0, 255, 0),
                     2,
                     tipLength=0.1
@@ -1078,12 +1223,12 @@ class CoarseFineChamferMatcher:
 
             L = 0.35 * max(tw, th)
 
-            a = np.deg2rad(-angle)
-            ex = int(round(x + L * np.cos(a)))
-            ey = int(round(y + L * np.sin(a)))
+            a = np.deg2rad(angle)
+            ex = int(round(key_x + L * np.cos(a)))
+            ey = int(round(key_y + L * np.sin(a)))
             cv2.arrowedLine(
                 canvas,
-                (int(round(x)), int(round(y))),
+                (int(round(key_x)), int(round(key_y))),
                 (ex, ey),
                 (0, 0, 255),
                 2,
@@ -1093,17 +1238,10 @@ class CoarseFineChamferMatcher:
 
         if label:
 
-            if centered:
-                text = (
-                    f"x={float(rx):+.1f} y={float(ry):+.1f} "
-                    f"(rel. to image center {iw_im}x{ih_im})  "
-                    f"angle={angle:+.2f}  score={score:.3f}"
-                )
-            else:
-                text = (
-                    f"x={x:.1f} y={y:.1f} "
-                    f"angle={angle:+.2f}  score={score:.3f}"
-                )
+            text = (
+                f"x={key_x:.1f} y={key_y:.1f} "
+                f"angle={angle:+.2f}  score={score:.3f}"
+            )
             cv2.putText(
                 canvas,
                 text,
@@ -1121,15 +1259,10 @@ class CoarseFineChamferMatcher:
             print(f"  saved verification image to: {save_path}")
 
         if show:
-            conv = (
-                "image center" if centered
-                else "image top-left"
-            )
             print(
                 "  overlay: warped reference at matched pose "
-                f"(x={x:.1f}, y={y:.1f} (abs), "
+                f"(keypoint x={key_x:.1f}, y={key_y:.1f} (abs), "
                 f"angle={angle:+.2f}deg); "
-                f"reported relative to {conv}; "
                 "red arrow = reference +x axis (orientation); "
                 "green arrow = offset from image center to match"
             )
@@ -1147,8 +1280,9 @@ class CoarseFineChamferMatcher:
                               template=None,
                               thickness=2,
                               border_color=(0, 165, 255),
+                              draw_border=False,
                               **_unused_draw_options):
-        """Draw the matched reference patch and its border on a visual canvas."""
+        """Draw the matched reference patch on a visual canvas."""
 
         if result is None:
             result = getattr(self, "last_result", None)
@@ -1165,8 +1299,8 @@ class CoarseFineChamferMatcher:
         else:
             canvas = canvas.copy()
 
-        x = float(result["x_abs"])
-        y = float(result["y_abs"])
+        x = float(result.get("template_center_x_abs", result["x_abs"]))
+        y = float(result.get("template_center_y_abs", result["y_abs"]))
         angle = float(result["angle"])
 
         if template.ndim == 2:
@@ -1207,6 +1341,9 @@ class CoarseFineChamferMatcher:
         patch_pixels = warped_mask > 0
         canvas[patch_pixels] = warped_reference[patch_pixels]
 
+        if not draw_border:
+            return canvas
+
         corners = np.array(
             [[0, 0], [tw - 1, 0], [tw - 1, th - 1], [0, th - 1]],
             dtype=np.float32
@@ -1217,6 +1354,92 @@ class CoarseFineChamferMatcher:
             [transformed_corners],
             True,
             border_color,
+            max(1, int(thickness)),
+            cv2.LINE_AA
+        )
+
+        return canvas
+
+
+    def draw_reference_lines_on_canvas(self,
+                                       canvas,
+                                       result=None,
+                                       template=None,
+                                       thickness=2,
+                                       roi_color=(0, 165, 255),
+                                       x_axis_color=(0, 0, 255),
+                                       y_axis_color=(0, 220, 0),
+                                       **_unused_draw_options):
+        """Draw matched ROI border and full-length keypoint cross."""
+
+        if result is None:
+            result = getattr(self, "last_result", None)
+        if result is None:
+            raise ValueError("No result available. Call match() first.")
+
+        if template is None:
+            template = self.template
+        if template is None:
+            raise ValueError("No template image available.")
+
+        if len(canvas.shape) == 2:
+            canvas = cv2.cvtColor(canvas, cv2.COLOR_GRAY2BGR)
+        else:
+            canvas = canvas.copy()
+
+        x = float(result.get("template_center_x_abs", result["x_abs"]))
+        y = float(result.get("template_center_y_abs", result["y_abs"]))
+        angle = float(result["angle"])
+        th, tw = template.shape[:2]
+
+        keypoint_x = float(result.get("reference_keypoint_x", tw / 2.0))
+        keypoint_y = float(result.get("reference_keypoint_y", th / 2.0))
+        keypoint_x = float(np.clip(keypoint_x, 0.0, max(0.0, tw - 1.0)))
+        keypoint_y = float(np.clip(keypoint_y, 0.0, max(0.0, th - 1.0)))
+
+        center = (tw / 2.0, th / 2.0)
+        transform = cv2.getRotationMatrix2D(center, -angle, 1.0)
+        transform[0, 2] += x - center[0]
+        transform[1, 2] += y - center[1]
+
+        corners = np.array(
+            [[0, 0], [tw - 1, 0], [tw - 1, th - 1], [0, th - 1]],
+            dtype=np.float32
+        ).reshape(-1, 1, 2)
+        transformed_corners = cv2.transform(corners, transform).astype(np.int32)
+        cv2.polylines(
+            canvas,
+            [transformed_corners],
+            True,
+            roi_color,
+            max(1, int(thickness)),
+            cv2.LINE_AA
+        )
+
+        horizontal = np.array(
+            [[0, keypoint_y], [tw - 1, keypoint_y]],
+            dtype=np.float32
+        ).reshape(-1, 1, 2)
+        vertical = np.array(
+            [[keypoint_x, 0], [keypoint_x, th - 1]],
+            dtype=np.float32
+        ).reshape(-1, 1, 2)
+        transformed_horizontal = cv2.transform(horizontal, transform).astype(np.int32)
+        transformed_vertical = cv2.transform(vertical, transform).astype(np.int32)
+
+        cv2.line(
+            canvas,
+            tuple(transformed_horizontal[0, 0]),
+            tuple(transformed_horizontal[1, 0]),
+            x_axis_color,
+            max(1, int(thickness)),
+            cv2.LINE_AA
+        )
+        cv2.line(
+            canvas,
+            tuple(transformed_vertical[0, 0]),
+            tuple(transformed_vertical[1, 0]),
+            y_axis_color,
             max(1, int(thickness)),
             cv2.LINE_AA
         )
@@ -1245,6 +1468,159 @@ def resolve_reference_image_path(process_file_path: str) -> str:
     return reference_path
 
 
+def resolve_reference_metadata_path(process_file_path: str) -> Path | None:
+
+    if process_file_path in (None, ""):
+        return None
+
+    process_path = Path(process_file_path)
+    reference_base = process_path.parent / f"{process_path.stem}_matcher_reference_image"
+    metadata_path = process_path.parent / f"{reference_base.name}_metadata.json"
+    return metadata_path if metadata_path.is_file() else None
+
+
+def load_reference_metadata(process_file_path: str, logger=None) -> dict | None:
+
+    metadata_path = resolve_reference_metadata_path(process_file_path)
+    if metadata_path is None:
+        return None
+
+    try:
+        with open(metadata_path, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except (OSError, json.JSONDecodeError) as exc:
+        if logger:
+            logger.warning(
+                f"Could not read matcher reference metadata '{metadata_path}': {exc}."
+            )
+        return None
+
+
+def load_reference_keypoint(process_file_path: str,
+                            reference_image: np.ndarray,
+                            logger=None) -> tuple[float, float]:
+
+    height, width = reference_image.shape[:2]
+    fallback = (width / 2.0, height / 2.0)
+    metadata = load_reference_metadata(process_file_path, logger=logger)
+
+    if metadata is None:
+        return fallback
+
+    keypoint = metadata.get("reference_keypoint_px")
+    if not isinstance(keypoint, dict):
+        settings = metadata.get("settings")
+        if isinstance(settings, dict) and "keypoint_x_px" in settings and "keypoint_y_px" in settings:
+            keypoint = {
+                "x": settings.get("keypoint_x_px"),
+                "y": settings.get("keypoint_y_px"),
+            }
+
+    if not isinstance(keypoint, dict):
+        return fallback
+
+    try:
+        keypoint_x = float(keypoint["x"])
+        keypoint_y = float(keypoint["y"])
+    except (KeyError, TypeError, ValueError):
+        if logger:
+            logger.warning(
+                "Invalid matcher reference keypoint. "
+                "Using reference image center as keypoint."
+            )
+        return fallback
+
+    return (
+        float(np.clip(keypoint_x, 0.0, max(0.0, width - 1.0))),
+        float(np.clip(keypoint_y, 0.0, max(0.0, height - 1.0))),
+    )
+
+
+def _rotation_matrix_bound(image_shape: tuple[int, ...], angle_deg: float) -> tuple[np.ndarray, tuple[int, int]]:
+
+    h, w = image_shape[:2]
+    center = (w / 2.0, h / 2.0)
+    matrix = cv2.getRotationMatrix2D(center, angle_deg, 1.0)
+
+    cos_v = abs(matrix[0, 0])
+    sin_v = abs(matrix[0, 1])
+    new_w = int((h * sin_v) + (w * cos_v))
+    new_h = int((h * cos_v) + (w * sin_v))
+
+    matrix[0, 2] += (new_w / 2.0) - center[0]
+    matrix[1, 2] += (new_h / 2.0) - center[1]
+
+    return matrix, (new_w, new_h)
+
+
+def _source_shape_from_metadata(metadata: dict) -> tuple[int, int, int] | None:
+
+    shape = metadata.get("source_image_shape")
+    if isinstance(shape, dict) and "height" in shape and "width" in shape:
+        return (
+            int(shape["height"]),
+            int(shape["width"]),
+            int(shape.get("channels", 3)),
+        )
+
+    source_path = metadata.get("source_path")
+    if source_path:
+        image = cv2.imread(str(source_path), cv2.IMREAD_UNCHANGED)
+        if image is not None:
+            return image.shape
+
+    return None
+
+
+def metadata_pose_prior(process_file_path: str,
+                        search_image_shape: tuple[int, ...],
+                        roi_offset: tuple[float, float] = (0.0, 0.0),
+                        logger=None) -> tuple[float, float, float] | None:
+
+    metadata = load_reference_metadata(process_file_path, logger=logger)
+    if metadata is None:
+        return None
+
+    settings = metadata.get("settings")
+    if not isinstance(settings, dict):
+        return None
+
+    try:
+        rotation_angle = float(settings.get("rotation_angle_deg", 0.0))
+        roi_center_x = float(settings["roi_center_x"])
+        roi_center_y = float(settings["roi_center_y"])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+    source_shape = _source_shape_from_metadata(metadata)
+    if source_shape is None:
+        if logger:
+            logger.warning(
+                "Matcher metadata pose prior unavailable: source image shape is missing."
+            )
+        return None
+
+    matrix, _output_size = _rotation_matrix_bound(source_shape, rotation_angle)
+    inverse = cv2.invertAffineTransform(matrix)
+    source_center = inverse @ np.array(
+        [roi_center_x, roi_center_y, 1.0],
+        dtype=np.float64,
+    )
+
+    x = float(source_center[0]) - float(roi_offset[0])
+    y = float(source_center[1]) - float(roi_offset[1])
+
+    if not (0 <= x < search_image_shape[1] and 0 <= y < search_image_shape[0]):
+        if logger:
+            logger.warning(
+                "Matcher metadata pose prior is outside the current search image; "
+                "falling back to full-image search."
+            )
+        return None
+
+    return x, y, -rotation_angle
+
+
 def picture_reference_matcher(image_processing_handler: "ImageProcessingHandler",
                               pyramid_levels: int = 3,
                               canny_low: int = 50,
@@ -1263,11 +1639,22 @@ def picture_reference_matcher(image_processing_handler: "ImageProcessingHandler"
                               min_visible_fraction: float = 0.90,
                               random_seed: int = 0,
                               draw_match: bool = True,
+                              draw_lines: bool = True,
+                              use_metadata_pose_prior: bool = True,
+                              metadata_pose_xy_window_px: float = 60.0,
+                              metadata_pose_angle_window_deg: float = 1.0,
+                              medium_score_threshold: float = 0.0005,
+                              max_score_threshold: float = 0.0020,
                               verbose: bool = False,
                               logger=None):
 
     reference_path = resolve_reference_image_path(image_processing_handler.process_file_path)
     _, reference_image = CoarseFineChamferMatcher.load_image(reference_path, verbose=False)
+    reference_keypoint = load_reference_keypoint(
+        image_processing_handler.process_file_path,
+        reference_image,
+        logger=logger
+    )
     search_image = image_processing_handler.get_processing_image()
     
     matcher = CoarseFineChamferMatcher(
@@ -1287,11 +1674,36 @@ def picture_reference_matcher(image_processing_handler: "ImageProcessingHandler"
         fine_angle_step=float(fine_angle_step),
         min_visible_fraction=float(min_visible_fraction),
         random_seed=int(random_seed),
+        reference_keypoint=reference_keypoint,
         verbose=bool(verbose)
     )
 
     matcher.set_images(reference_image, search_image, template_path=reference_path)
-    result = matcher.match()
+    pose_prior = None
+    if use_metadata_pose_prior:
+        roi_offset = (0.0, 0.0)
+        if getattr(image_processing_handler, "roi_used", False):
+            roi_offset = (
+                float(image_processing_handler.ROI_CS_CV_top_left_x),
+                float(image_processing_handler.ROI_CS_CV_top_left_y),
+            )
+        pose_prior = metadata_pose_prior(
+            image_processing_handler.process_file_path,
+            search_image.shape,
+            roi_offset=roi_offset,
+            logger=logger,
+        )
+
+    if pose_prior is not None:
+        result = matcher.match_near(
+            center_x=pose_prior[0],
+            center_y=pose_prior[1],
+            angle=pose_prior[2],
+            xy_window=float(metadata_pose_xy_window_px),
+            angle_window=float(metadata_pose_angle_window_deg),
+        )
+    else:
+        result = matcher.match()
 
     x = float(result["x_abs"])
     y = float(result["y_abs"])
@@ -1309,19 +1721,63 @@ def picture_reference_matcher(image_processing_handler: "ImageProcessingHandler"
         "PictureReferenceMatcher: "
         f"reference='{Path(reference_path).name}', "
         f"x={x:.2f}px, y={y:.2f}px, "
-        f"angle={result['angle']:.3f}deg, score={result['score']:.6f}"
+        f"angle={result['angle']:.3f}deg, score={result['score']:.6f}, "
+        f"metadata_pose_prior={'used' if pose_prior is not None else 'not used'}"
     )
 
-    if draw_match:
+    score = float(result["score"])
+    match_ok = True
+    fit_quality = "good"
+    if score > float(max_score_threshold):
+        message = (
+            "PictureReferenceMatcher failed: "
+            f"score={score:.6f} exceeds max_score_threshold={float(max_score_threshold):.6f}"
+        )
+        if logger:
+            logger.warn(message)
+        image_processing_handler.append_vision_process_debug(message)
+        match_ok = False
+        fit_quality = "failed"
+
+    elif score > float(medium_score_threshold):
+        message = (
+            "PictureReferenceMatcher medium fit: "
+            f"score={score:.6f} exceeds medium_score_threshold={float(medium_score_threshold):.6f}"
+        )
+        if logger:
+            logger.warn(message)
+        image_processing_handler.append_vision_process_debug(message)
+        fit_quality = "medium"
+
+    image_processing_handler.set_quality_scores(
+        "PictureReferenceMatcher",
+        {
+            "score": score,
+            "medium_score_threshold": float(medium_score_threshold),
+            "max_score_threshold": float(max_score_threshold),
+            "fit_quality": fit_quality,
+            "lower_score_is_better": True,
+        }
+    )
+
+    if draw_match or draw_lines:
         canvas = image_processing_handler.get_visual_elements_canvas()
         thickness = image_processing_handler.img_height // 300 + 1
-        canvas = matcher.draw_result_on_canvas(
-            canvas,
-            result=result,
-            template=reference_image,
-            thickness=thickness
-        )
+        if draw_match:
+            canvas = matcher.draw_result_on_canvas(
+                canvas,
+                result=result,
+                template=reference_image,
+                thickness=thickness
+            )
+        if draw_lines:
+            canvas = matcher.draw_reference_lines_on_canvas(
+                canvas,
+                result=result,
+                template=reference_image,
+                thickness=1
+            )
         image_processing_handler.apply_visual_elements_canvas(canvas)
 
-    image_processing_handler.set_vision_ok(True)
+    image_processing_handler.set_vision_ok(match_ok)
     return result

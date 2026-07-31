@@ -7,7 +7,7 @@ import cv2
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication, QSizePolicy, QFileDialog
 from PyQt6.QtGui import QColor, QTextCursor, QFont, QImage, QPixmap
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
-from threading import Thread, Timer
+from threading import Thread, Timer, RLock
 from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
 import time
 from rclpy.executors import MultiThreadedExecutor, SingleThreadedExecutor
@@ -72,6 +72,8 @@ class VisionNode(Node):
         self.br = CvBridge()
         self.image_list = []
         self.running_vision_assistants = []
+        self._camera_operation_lock = RLock()
+        self._execute_vision_call_counter = 0
 
         self.execute_vision_srv = self.create_service(
             ExecuteVision,
@@ -112,13 +114,36 @@ class VisionNode(Node):
         VisionProcessClass.create_process_folder("Assembly_Manager",logger=self.get_logger())
         VisionProcessClass.create_process_folder("PM_Robot_Calibration",logger=self.get_logger())
 
+    def _wait_for_vision_result(self, vision_instance: VisionProcessClass, timeout_sec: float = 30.0) -> bool:
+        deadline = time.monotonic() + timeout_sec
+        handler = vision_instance.image_processing_handler
+
+        while not handler.vision_routine_done:
+            if time.monotonic() >= deadline:
+                self.get_logger().error("Timed out waiting for final vision result!")
+                return False
+            time.sleep(0.02)
+
+        return True
+
     def execute_vision(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
+        with self._camera_operation_lock:
+            return self._execute_vision_locked(request, response)
+
+    def _execute_vision_locked(self, request: ExecuteVision.Request, response: ExecuteVision.Response):
+        self._execute_vision_call_counter += 1
+        call_id = self._execute_vision_call_counter
+        self.get_logger().info(
+            f"ExecuteVision call {call_id} start: uid='{request.process_uid}', process='{request.process_filename}', "
+            f"camera='{request.camera_config_filename}'"
+        )
 
         input_valid = check_for_valid_inputs(request.process_filename, request.camera_config_filename, self.get_logger())
             
         if not input_valid:
             self.get_logger().error("Invalid input for process or camera config file!")
             response.success = False
+            self.get_logger().info(f"ExecuteVision call {call_id} return: uid='{request.process_uid}', success={response.success}")
             return response
 
         vision_instance = None
@@ -132,16 +157,28 @@ class VisionNode(Node):
                 run_cross_validation=request.run_cross_validation
             )
 
-            # attach the vision instance to the main window
-            self.main_window.start_execution_signal.signal.emit(vision_instance, request.image_display_time)
-            
             vision_instance.execute_vision()
 
-            response.success = vision_instance.image_processing_handler.get_vision_ok()
+            result_available = self._wait_for_vision_result(vision_instance)
+            response.success = (
+                result_available and
+                vision_instance.image_processing_handler.get_vision_ok()
+            )
             response.vision_response = vision_instance.construct_results_metadata(
                 vision_instance.image_processing_handler.get_vision_response()
             )
             response.results_path = str(vision_instance.vision_results_path)
+            self.get_logger().info(
+                f"ExecuteVision call {call_id} result ready: uid='{request.process_uid}', success={response.success}"
+            )
+
+            if response.success:
+                self.main_window.start_execution_signal.signal.emit(
+                    vision_instance,
+                    vision_instance.image_processing_handler.display_image_cls,
+                    vision_instance.save_vision_results(),
+                    request.image_display_time
+                )
 
         except ValueError as e:
             self.get_logger().error(f"Error initializing vision instance: {str(e)}")
@@ -162,14 +199,18 @@ class VisionNode(Node):
                 except Exception as e:
                     self.get_logger().error(f"Error terminating vision instance: {str(e)}")
                 del vision_instance
+                self.get_logger().info(f"ExecuteVision call {call_id} cleanup done: uid='{request.process_uid}'")
         
         if not response.success:
             self.get_logger().error("Vision execution failed! An instance of the vision assistant will be opened")
+            self.main_window.close_execution_signal.signal.emit(request.process_uid)
             self.main_window.start_assistant_signal.signal.emit(
                 request.camera_config_filename,
-                request.process_filename
+                request.process_filename,
+                False
             )
         
+        self.get_logger().info(f"ExecuteVision call {call_id} return: uid='{request.process_uid}', success={response.success}")
         return response
 
     # def start_vision_assistant(self, request: ExecuteVision.Request, response: ExecuteVision.Response):

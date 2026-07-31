@@ -3,7 +3,9 @@ description: >-
   Matches a reference template against the current image using edge-based
   chamfer distance and a coarse-to-fine image pyramid. The matcher extracts
   template edge points, compares them against an image edge-distance map, and
-  refines position and rotation over pyramid levels.
+  refines position and rotation over pyramid levels. The reported point is the
+  reference key point stored in the reference metadata; references without this
+  metadata field use the reference image center for backward compatibility.
 function_category: "Machine Vision"
 
 params:
@@ -67,14 +69,14 @@ params:
     type: "float"
     min_val: -180.0
     max_val: 180.0
-    default_val: -45.0
+    default_val: -10.0
 
   - param_name: "coarse_angle_max"
     description: "Maximum angle in degrees for the first full-image coarse search."
     type: "float"
     min_val: -180.0
     max_val: 180.0
-    default_val: 45.0
+    default_val: 10.0
 
   - param_name: "coarse_angle_step"
     description: "Angle step in degrees for the first full-image coarse search."
@@ -112,9 +114,47 @@ params:
     default_val: 0.2
 
   - param_name: "draw_match"
-    description: "Draw the matched reference image and orange border on the visual-elements canvas."
+    description: "Draw only the matched reference image on the visual-elements canvas."
     type: "bool"
     default_val: true
+
+  - param_name: "draw_lines"
+    description: "Draw the matched ROI border and full-length keypoint cross on the visual-elements canvas."
+    type: "bool"
+    default_val: true
+
+  - param_name: "use_metadata_pose_prior"
+    description: "Use the source pose stored in the reference metadata to constrain the search. Disable for unconstrained full-image matching."
+    type: "bool"
+    default_val: true
+
+  - param_name: "metadata_pose_xy_window_px"
+    description: "Search half-window in pixels around the metadata pose prior."
+    type: "unsigned_int"
+    min_val: 1
+    max_val: 2000
+    default_val: 60
+
+  - param_name: "metadata_pose_angle_window_deg"
+    description: "Search half-window in degrees around the metadata pose prior angle."
+    type: "float"
+    min_val: 0.0
+    max_val: 45.0
+    default_val: 1.0
+
+  - param_name: "medium_score_threshold"
+    description: "Warn when the normalized chamfer distance score exceeds this value. Lower scores are better."
+    type: "float"
+    min_val: 0.0
+    max_val: 1.0
+    default_val: 0.0005
+
+  - param_name: "max_score_threshold"
+    description: "Fail the vision process when the normalized chamfer distance score exceeds this value. Lower scores are better."
+    type: "float"
+    min_val: 0.0
+    max_val: 1.0
+    default_val: 0.0020
 
   - param_name: "verbose"
     description: "Print coarse-to-fine search progress for debugging."
