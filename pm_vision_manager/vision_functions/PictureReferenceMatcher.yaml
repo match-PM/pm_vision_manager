@@ -57,6 +57,25 @@ params:
     max_val: 20000
     default_val: 1500
 
+  - param_name: "use_appearance_score"
+    description: "Add sampled grayscale/color appearance comparison to the edge score. This helps disambiguate repeated edge-only structures."
+    type: "bool"
+    default_val: true
+
+  - param_name: "appearance_weight"
+    description: "Weight of the sampled appearance difference added to the chamfer edge score. Higher values trust image intensity/color more."
+    type: "float"
+    min_val: 0.0
+    max_val: 1.0
+    default_val: 0.02
+
+  - param_name: "max_appearance_points"
+    description: "Maximum number of reference pixels sampled for appearance scoring. Higher values are more stable but slower."
+    type: "unsigned_int"
+    min_val: 0
+    max_val: 20000
+    default_val: 600
+
   - param_name: "ignore_border"
     description: "Template border width in pixels to suppress before collecting template edge points."
     type: "unsigned_int"

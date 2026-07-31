@@ -26,6 +26,10 @@ class StartVisionAssistantSignal(QObject):
     """Signal to start vision assistant."""
     signal = pyqtSignal(str, str, bool)
 
+class StartVisionAssistantDelayedSignal(QObject):
+    """Signal to start vision assistant after an execution result timeout."""
+    signal = pyqtSignal(str, str, bool, int)
+
 class CloseVisionExecutionSignal(QObject):
     """Signal to close a vision execution result tab."""
     signal = pyqtSignal(str)
@@ -44,7 +48,10 @@ class VisionAssistantWorker(QRunnable):
     @pyqtSlot()
     def run(self):
         """Start the vision assistant."""
-        self.vision_instance.start_vision_assistant()
+        try:
+            self.vision_instance.start_vision_assistant()
+        finally:
+            self.vision_instance._assistant_worker_started = False
 
 class CrossValWorker(QRunnable):
     """Worker thread for running cross-validation."""
@@ -137,6 +144,7 @@ class VisionAssistantWindow(QMainWindow):
         """Initialize signal objects."""
         self.start_execution_signal = StartExecutionSignal()
         self.start_assistant_signal = StartVisionAssistantSignal()
+        self.start_assistant_delayed_signal = StartVisionAssistantDelayedSignal()
         self.close_execution_signal = CloseVisionExecutionSignal()
     
     def _init_connections(self):
@@ -150,6 +158,10 @@ class VisionAssistantWindow(QMainWindow):
         )
         self.start_assistant_signal.signal.connect(
             self.start_vision_assistant,
+            Qt.ConnectionType.BlockingQueuedConnection
+        )
+        self.start_assistant_delayed_signal.signal.connect(
+            self.start_vision_assistant_delayed,
             Qt.ConnectionType.BlockingQueuedConnection
         )
         self.close_execution_signal.signal.connect(
@@ -223,6 +235,9 @@ class VisionAssistantWindow(QMainWindow):
         tab_title = self._generate_tab_title(process_file, camera_file)
         existing_tab_index = self._find_tab_by_name(tab_title)
         if existing_tab_index >= 0:
+            existing_widget = self.tab_widget.widget(existing_tab_index)
+            if auto_start_worker and hasattr(existing_widget, 'vi'):
+                self._start_vision_worker(existing_widget.vi)
             self.tab_widget.setCurrentIndex(existing_tab_index)
             return
         
@@ -249,6 +264,23 @@ class VisionAssistantWindow(QMainWindow):
             
         except Exception as e:
             self.ros_logger.error(f"Failed to start vision assistant: {e}")
+
+    def start_vision_assistant_delayed(
+        self,
+        camera_file: str,
+        process_file: str,
+        auto_start_worker: bool,
+        delay_seconds: int,
+    ):
+        """Open the assistant after the timed execution result has closed."""
+        QTimer.singleShot(
+            max(0, int(delay_seconds)) * 1000,
+            lambda: self.start_vision_assistant(
+                camera_file,
+                process_file,
+                auto_start_worker,
+            ),
+        )
 
     def start_vision_execution(
         self,
@@ -323,6 +355,9 @@ class VisionAssistantWindow(QMainWindow):
                                display_widget: ImageDisplayWidget):
         """Connect signals between vision process and display widget."""
         display_widget.image_select_signal.signal.connect(vision_process.set_processing_source)
+        display_widget.sub_topic_button.clicked.connect(
+            lambda: self._start_vision_worker(vision_process)
+        )
         vision_process.results_signal.signal.connect(display_widget.set_image_result)
         display_widget.exit_assistant_signal.signal.connect(vision_process.close_vision_assistant)
         
@@ -341,7 +376,11 @@ class VisionAssistantWindow(QMainWindow):
         return f"VA_{process_name}_{camera_name}"
     
     def _start_vision_worker(self, vision_process: VisionProcessClass):
-        """Start a worker thread for vision processing."""
+        """Start the assistant worker once for this vision process."""
+        if vision_process._assistant_worker_started:
+            return
+
+        vision_process._assistant_worker_started = True
         worker = VisionAssistantWorker(vision_process)
         self.thread_pool.start(worker)
     

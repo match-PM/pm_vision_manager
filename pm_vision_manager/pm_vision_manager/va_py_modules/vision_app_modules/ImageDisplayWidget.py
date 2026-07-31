@@ -1,9 +1,11 @@
-from PyQt6.QtWidgets import QMenu, QWidget, QFileDialog, QVBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QGridLayout, QTreeWidget, QTreeWidgetItem
+from PyQt6.QtWidgets import QMenu, QWidget, QFileDialog, QVBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QGridLayout, QTreeWidget, QTreeWidgetItem, QMessageBox
 from PyQt6.QtGui import QColor, QImage, QPixmap
 from pm_vision_manager.va_py_modules.vision_utils import get_screen_resolution
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, QTimer, QRectF
 import cv2
 import numpy as np
+from datetime import datetime
+from pathlib import Path
 from pm_vision_app.py_modules.vision_builder_widget import VisionBuilderWidget
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene
@@ -83,6 +85,7 @@ class ZoomableImageView(QGraphicsView):
         self.horizontalScrollBar().valueChanged.connect(self._on_scroll)
         self.verticalScrollBar().valueChanged.connect(self._on_scroll)
         self._current_pixmap: QPixmap | None = None
+        self.save_to_database_callback = None
         # Overlay tooltip label
         self._tooltip = QLabel(self)
         self._tooltip.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -250,10 +253,15 @@ class ZoomableImageView(QGraphicsView):
         menu = QMenu(self)
 
         save_action = menu.addAction("💾 Save image...")
+        save_database_action = None
+        if self.save_to_database_callback is not None:
+            save_database_action = menu.addAction("Save raw input image to database")
         action = menu.exec(event.globalPos())
 
         if action == save_action:
             self._save_image()
+        elif action == save_database_action:
+            self.save_to_database_callback()
 
 
     def _save_image(self):
@@ -293,6 +301,7 @@ class ImageDisplayWidget(QWidget):
         self.image_label = ZoomableImageView()          # original / single image (top)
         self.image_result_label = ZoomableImageView()   # processed result (bottom)
         self.image_label.sync_with(self.image_result_label)
+        self.image_label.save_to_database_callback = self.save_raw_input_image_to_database
 
         self.sub_topic_button = QPushButton("Subscribe to topic")
         self.execute_cross_val_button = QPushButton("Execute Crossvalidation")
@@ -324,6 +333,7 @@ class ImageDisplayWidget(QWidget):
         # Store references
         self.camera_topic = camera_topic
         self.vi = None
+        self._raw_input_image: np.ndarray | None = None
 
         if vision_instance is not None:
             self.set_vision_instance(vision_instance)
@@ -364,9 +374,56 @@ class ImageDisplayWidget(QWidget):
     def set_image_result(self, display_images: DisplayImages, result_dict: dict, screen_height=None):
         if display_images.get_original_image() is None or display_images.get_final_image() is None:
             return
+        try:
+            self._raw_input_image = display_images.get_raw_original_image()
+        except ValueError:
+            self._raw_input_image = None
         self.image_label.set_pixmap(self._to_pixmap(display_images.get_original_image()))
         self.image_result_label.set_pixmap(self._to_pixmap(display_images.get_final_image()))
         self.set_result_dict(result_dict)
+
+    def save_raw_input_image_to_database(self):
+        if self._raw_input_image is None:
+            QMessageBox.information(self, "No input image", "No raw input image is available to save.")
+            return
+        if self.vi is None or not getattr(self.vi, "process_db_path", None):
+            QMessageBox.warning(self, "No database path", "The vision process database path is not available.")
+            return
+
+        database_dir = Path(self.vi.process_db_path)
+        try:
+            database_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            QMessageBox.warning(self, "Save failed", f"Could not create database directory:\n{exc}")
+            return
+
+        base_name = self.image_name_widget.text().strip()
+        if base_name == "" or base_name == self.camera_topic:
+            process_name = Path(getattr(self.vi, "process_file_path", "input")).stem or "input"
+            base_name = f"{process_name}_input"
+        safe_name = "".join(ch if ch.isalnum() or ch in ("-", "_") else "_" for ch in base_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = database_dir / f"{safe_name}_{timestamp}.png"
+
+        image = self._raw_input_image
+        if image.ndim == 2:
+            image_to_save = image
+        elif image.shape[2] == 3:
+            image_to_save = image
+        elif image.shape[2] == 4:
+            image_to_save = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+        else:
+            QMessageBox.warning(self, "Save failed", f"Unsupported image shape: {image.shape}")
+            return
+
+        if not cv2.imwrite(str(output_path), image_to_save):
+            QMessageBox.warning(self, "Save failed", f"Could not save image:\n{output_path}")
+            return
+
+        self.refresh_database()
+        QMessageBox.information(self, "Image saved", f"Saved raw input image to:\n{output_path}")
+        if self.logger:
+            self.logger.info(f"Saved raw input image to database: {output_path}")
 
     # ------------------------------------------------------------------
 

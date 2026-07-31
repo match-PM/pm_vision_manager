@@ -5,6 +5,7 @@ import cv2 # OpenCV library
 import numpy as np
 import os
 from math import pi                              
+import traceback
 from pm_vision_manager.va_py_modules.vision_utils import rotate_image
 from pm_vision_manager.va_py_modules.image_processing_handler import ImageProcessingHandler, ImageNotBinaryError, ImageNotGrayScaleError, ImageNotColorError
 from pm_vision_manager.va_py_modules.feature_detect_functions.line_corner_detec import fitLine, cornerDetection
@@ -14,6 +15,8 @@ from pm_vision_manager.va_py_modules.feature_detect_functions.picture_reference_
 from pm_vision_manager.va_py_modules.image_modification_functions.extraction_functions import extract_color_areas
 import time
 from skimage.measure import ransac, CircleModel, label, regionprops
+
+CAMERA_PARAMETER_SETTLE_TIME_SEC = 1.0
 
 def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, maxval:int, type:str) -> None:
   if not image_processing_handler.is_process_image_grayscale():
@@ -120,6 +123,9 @@ def canny(image_processing_handler: ImageProcessingHandler,
 def visionOkOverride(image_processing_handler: ImageProcessingHandler,
                     override_vision_ok:bool,
                     logger = None):
+
+  if logger and not override_vision_ok:
+    logger.warn("VisionOkOverride is active with override_vision_ok=false; this forces the vision process to fail.")
 
   image_processing_handler.set_vision_ok(override_vision_ok)
 
@@ -1278,7 +1284,8 @@ def example_function(image_processing_handler: ImageProcessingHandler):
 
 def set_camera_parameters(vision_node:Node, 
                   image_processing_handler: ImageProcessingHandler, 
-                  pipeline_dict_list:list[dict]) -> bool:
+                  pipeline_dict_list:list[dict],
+                  return_has_changed: bool = False):
   
   #vision_node.get_logger().error("Starting setting parameters")
   has_changed = False
@@ -1299,7 +1306,7 @@ def set_camera_parameters(vision_node:Node,
             #vision_node.get_logger().error("Test0")
 
             if not set_response.success:
-              return False
+              return (False, has_changed) if return_has_changed else False
             
             if set_response.has_changed:
               has_changed = True
@@ -1314,7 +1321,7 @@ def set_camera_parameters(vision_node:Node,
             #vision_node.get_logger().error("Test1")
 
             if not set_response.success:
-              return False
+              return (False, has_changed) if return_has_changed else False
         
             if set_response.has_changed:
               has_changed = True
@@ -1328,7 +1335,7 @@ def set_camera_parameters(vision_node:Node,
             #vision_node.get_logger().error("Test2")
 
             if not set_response.success:
-              return False
+              return (False, has_changed) if return_has_changed else False
 
             if set_response.has_changed:
               has_changed = True
@@ -1350,16 +1357,19 @@ def set_camera_parameters(vision_node:Node,
             set_response = image_processing_handler.set_ring_light(bool_list, rgb_list)  
             #vision_node.get_logger().error("Test3")
             if not set_response.success:
-              return False
+              return (False, has_changed) if return_has_changed else False
             
             if set_response.has_changed:
               has_changed = True
   
   #vision_node.get_logger().error("Ending setting parameters")
   if has_changed:
-    time.sleep(1.0) # Sleep for a short time to ensure that the camera has applied the new settings before starting the image processing
+    vision_node.get_logger().info(
+      f"Camera/light parameters changed. Waiting {CAMERA_PARAMETER_SETTLE_TIME_SEC:.1f}s before image processing."
+    )
+    time.sleep(CAMERA_PARAMETER_SETTLE_TIME_SEC) # Ensure that camera/light changes are visible before image processing starts.
 
-  return True
+  return (True, has_changed) if return_has_changed else True
 
 def process_image(vision_node: Node, 
                   image_processing_handler: ImageProcessingHandler, 
@@ -1371,7 +1381,7 @@ def process_image(vision_node: Node,
 
       #Break the for loop early if vision is not okay.
       if not image_processing_handler.get_vision_ok():
-        # Break the for loop
+        vision_node.get_logger().error("Vision process stopped because vision_ok is already false.")
         break
       
       #vision_node.get_logger().warn(f"Image is binary: {image_processing_handler.is_process_image_binary()}")
@@ -1542,6 +1552,9 @@ def process_image(vision_node: Node,
                 metadata_pose_angle_window_deg=function_parameter.get('metadata_pose_angle_window_deg', 1.0),
                 medium_score_threshold=function_parameter.get('medium_score_threshold', 0.0005),
                 max_score_threshold=function_parameter.get('max_score_threshold', 0.0020),
+                use_appearance_score=function_parameter.get('use_appearance_score', True),
+                appearance_weight=function_parameter.get('appearance_weight', 0.02),
+                max_appearance_points=function_parameter.get('max_appearance_points', 600),
                 verbose=function_parameter.get('verbose', False),
                 logger=vision_node.get_logger()
               )
@@ -1874,14 +1887,17 @@ def process_image(vision_node: Node,
 
   except ImageNotGrayScaleError as e:
     vision_node.get_logger().error(str(e))
+    image_processing_handler.append_vision_process_debug(str(e))
     image_processing_handler.set_vision_ok(False)
 
   except ImageNotBinaryError as e:
     vision_node.get_logger().error(str(e))
+    image_processing_handler.append_vision_process_debug(str(e))
     image_processing_handler.set_vision_ok(False)
 
   except ImageNotColorError as e:
     vision_node.get_logger().error(str(e))
+    image_processing_handler.append_vision_process_debug(str(e))
     image_processing_handler.set_vision_ok(False)
 
   except PictureReferenceMatcherError as e:
@@ -1890,8 +1906,11 @@ def process_image(vision_node: Node,
     image_processing_handler.set_vision_ok(False)
 
   except Exception as e:
-    vision_node.get_logger().fatal("Fatal Error in vision function! Contact maintainer!")
-    vision_node.get_logger().fatal(str(e))
+    error_message = f"Fatal Error in vision function: {type(e).__name__}: {e}"
+    vision_node.get_logger().fatal(error_message)
+    vision_node.get_logger().fatal(traceback.format_exc())
+    image_processing_handler.append_vision_process_debug(error_message)
+    image_processing_handler.append_vision_process_debug(traceback.format_exc())
     image_processing_handler.set_vision_ok(False)
   
   #finally: 

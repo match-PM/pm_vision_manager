@@ -962,6 +962,9 @@ class ReferencePictureCreatorWidget(QWidget):
             min_visible_fraction=float(params.get("min_visible_fraction", 0.90)),
             random_seed=int(params.get("random_seed", 0)),
             reference_keypoint=(self.settings.keypoint_x_px, self.settings.keypoint_y_px),
+            use_appearance_score=bool(params.get("use_appearance_score", True)),
+            appearance_weight=float(params.get("appearance_weight", 0.02)),
+            max_appearance_points=int(params.get("max_appearance_points", 600)),
             verbose=bool(params.get("verbose", False)),
         )
 

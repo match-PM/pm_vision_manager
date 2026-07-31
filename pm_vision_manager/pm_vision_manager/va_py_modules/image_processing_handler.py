@@ -31,8 +31,14 @@ class ImageNotColorError(Exception):
 
 class DisplayImages():
     def __init__(self):
+        self._raw_original_image = None
         self._original_image = None
         self._final_image = None
+
+    def get_raw_original_image(self):
+        if self._raw_original_image is None:
+            raise ValueError("Raw original image is not set!")
+        return self._raw_original_image
     
     def get_original_image(self):
         if self._original_image is None:
@@ -43,6 +49,9 @@ class DisplayImages():
         if self._final_image is None:
             raise ValueError("Final image is not set!")
         return self._final_image
+
+    def set_raw_original_image(self, image: np.ndarray):
+        self._raw_original_image = copy(image)
 
     def set_original_image(self, image: np.ndarray):
         self._original_image = copy(image)
@@ -211,6 +220,7 @@ class ImageProcessingHandler:
         self._vision_results_dict = json.loads(json.dumps(message_to_ordereddict(self.get_vision_response())))
         
         initial_image = self.get_initial_image()
+        self.display_image_cls.set_raw_original_image(initial_image)
 
         # Handle `_initial_image` grayscale case
         if len(initial_image) < 3:

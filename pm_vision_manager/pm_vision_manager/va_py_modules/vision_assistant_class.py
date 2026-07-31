@@ -38,6 +38,11 @@ from pm_vision_manager.va_py_modules.camera_ros_interfaces import CameraRosInter
 from pm_vision_manager.va_py_modules.image_processing_handler import DisplayImages
 SUPPORTED_TYPES = [".png", ".jpg", ".jpeg", ".bmp"]
 
+DARK_FRAME_MAX_MEAN = 3.0
+DARK_FRAME_MAX_PERCENTILE_99 = 10.0
+DARK_FRAME_RETRY_COUNT = 6
+DARK_FRAME_RETRY_TIMEOUT_SEC = 2.0
+
 class VisionCrossvalidation:
     def __init__(self, images_path):
         self.db_path = images_path
@@ -178,6 +183,7 @@ class VisionProcessClass:
         self.timer_active = False
         self._current_frame = None
         self._vision_loop_thread = None
+        self._assistant_worker_started = False
 
         self.br = CvBridge()
         self.ros_camera_interfaces = CameraRosInterfaces(self.vision_node)
@@ -229,6 +235,8 @@ class VisionProcessClass:
         self.process_pipeline_list: list = []
         self.callback_group = MutuallyExclusiveCallbackGroup()
         self.callback_group_RE = ReentrantCallbackGroup()
+        self._current_frame = None
+        self._frame_counter = 0
 
     def set_processing_source(self, source:str):
         # this is set from outside the class, e.g. from the vision assistant app
@@ -291,16 +299,21 @@ class VisionProcessClass:
 
             self._load_process_file()
 
-            set_parameter_success = set_camera_parameters(self.vision_node, 
-                                                        self.image_processing_handler,
-                                                        self.process_pipeline_list)
+            set_parameter_success, camera_parameters_changed = set_camera_parameters(
+                self.vision_node,
+                self.image_processing_handler,
+                self.process_pipeline_list,
+                return_has_changed=True
+            )
             
             if not set_parameter_success:
                 self.image_processing_handler.set_vision_ok(False)
                 return
 
-            self._clear_current_camera_image()
-            image = self._wait_for_current_camera_image()
+            image = self._wait_for_usable_camera_image(
+                max_attempts=DARK_FRAME_RETRY_COUNT if camera_parameters_changed else 2,
+                timeout_sec_per_frame=DARK_FRAME_RETRY_TIMEOUT_SEC,
+            )
 
             if image is None:
                 self.vision_node.get_logger().error(
@@ -382,6 +395,7 @@ class VisionProcessClass:
                 received_frame = cv2.cvtColor(received_frame, cv2.COLOR_RGBA2BGR)
 
         self._current_frame = received_frame
+        self._frame_counter += 1
     
     def _get_current_camera_image(self) -> np.ndarray:
         """
@@ -398,17 +412,114 @@ class VisionProcessClass:
     def _clear_current_camera_image(self):
         self._current_frame = None
 
-    def _wait_for_current_camera_image(self) -> np.ndarray:
+    def _wait_for_current_camera_image(self, timeout_sec: float = 10.0) -> np.ndarray:
+        deadline = time.monotonic() + timeout_sec
         image = self._get_current_camera_image()
 
-        while self.timer_active and image is None:
+        while image is None and time.monotonic() < deadline:
             self.vision_node.get_logger().info(
                 f"No image on topic '/{self.camera_subscription_topic}' available! Waiting..."
             )
-            time.sleep(0.5)
+            time.sleep(0.05)
             image = self._get_current_camera_image()
 
         return image
+
+    def _wait_for_new_camera_frame(self, previous_frame_counter: int, timeout_sec: float = 5.0) -> np.ndarray:
+        deadline = time.monotonic() + timeout_sec
+
+        while time.monotonic() < deadline:
+            if self._frame_counter > previous_frame_counter and self._current_frame is not None:
+                return self._current_frame
+            time.sleep(0.02)
+
+        return None
+
+    @staticmethod
+    def _get_frame_brightness(image: np.ndarray) -> tuple[float, float]:
+        if image is None or image.size == 0:
+            return 0.0, 0.0
+
+        if image.ndim == 3:
+            brightness_image = np.max(image[..., :3], axis=2)
+        else:
+            brightness_image = image
+
+        brightness_image = brightness_image.astype(np.float32, copy=False)
+        if np.issubdtype(image.dtype, np.floating) and np.max(brightness_image) <= 1.0:
+            brightness_image = brightness_image * 255.0
+        elif np.issubdtype(image.dtype, np.integer) and np.iinfo(image.dtype).max > 255:
+            brightness_image = brightness_image * (255.0 / np.iinfo(image.dtype).max)
+
+        return (
+            float(np.mean(brightness_image)),
+            float(np.percentile(brightness_image, 99.0)),
+        )
+
+    @classmethod
+    def _is_frame_too_dark(cls, image: np.ndarray) -> tuple[bool, float, float]:
+        mean_brightness, percentile_99 = cls._get_frame_brightness(image)
+        is_too_dark = (
+            mean_brightness <= DARK_FRAME_MAX_MEAN
+            and percentile_99 <= DARK_FRAME_MAX_PERCENTILE_99
+        )
+        return is_too_dark, mean_brightness, percentile_99
+
+    def _wait_for_usable_camera_image(
+        self,
+        max_attempts: int = DARK_FRAME_RETRY_COUNT,
+        timeout_sec_per_frame: float = DARK_FRAME_RETRY_TIMEOUT_SEC,
+    ) -> np.ndarray:
+        attempts = max(1, int(max_attempts))
+
+        for attempt in range(1, attempts + 1):
+            previous_counter = self._frame_counter
+            self._clear_current_camera_image()
+            frame = self._wait_for_new_camera_frame(
+                previous_counter,
+                timeout_sec=timeout_sec_per_frame,
+            )
+            if frame is None:
+                self.vision_node.get_logger().warn(
+                    f"No fresh camera frame received on attempt {attempt}/{attempts}."
+                )
+                continue
+
+            is_too_dark, mean_brightness, percentile_99 = self._is_frame_too_dark(frame)
+            if not is_too_dark:
+                if attempt > 1:
+                    self.vision_node.get_logger().info(
+                        f"Camera image became usable on attempt {attempt}/{attempts} "
+                        f"(mean={mean_brightness:.1f}, p99={percentile_99:.1f})."
+                    )
+                return frame
+
+            self.vision_node.get_logger().warn(
+                f"Camera frame {attempt}/{attempts} is still effectively black "
+                f"(mean={mean_brightness:.1f}, p99={percentile_99:.1f}); waiting for another frame."
+            )
+
+        self.vision_node.get_logger().error(
+            f"Camera did not provide a usable non-black image after {attempts} fresh frames."
+        )
+        self._clear_current_camera_image()
+        return None
+
+    def _discard_camera_frames(self, count: int = 2, timeout_sec: float = 5.0):
+        for index in range(max(0, int(count))):
+            previous_counter = self._frame_counter
+            self._clear_current_camera_image()
+            frame = self._wait_for_new_camera_frame(previous_counter, timeout_sec=timeout_sec)
+            if frame is None:
+                self.vision_node.get_logger().warn(
+                    f"Could not flush camera frame {index + 1}/{count}; no fresh frame received."
+                )
+                break
+            self.vision_node.get_logger().debug(
+                f"Flushed camera frame {index + 1}/{count} after camera parameter update."
+            )
+
+        self._clear_current_camera_image()
 
 
     def vision_assistant_loop(self):
@@ -421,19 +532,32 @@ class VisionProcessClass:
                 continue
 
             if (self.processing_source == self.camera_subscription_topic):
+                self._load_process_file()
                 camera_lock = getattr(self.vision_node, "_camera_operation_lock", None)
                 lock_context = camera_lock if camera_lock is not None else nullcontext()
 
                 with lock_context:
-                    set_camera_parameter_success = set_camera_parameters(self.vision_node,
-                                                            self.image_processing_handler,
-                                                            self.process_pipeline_list)
+                    set_camera_parameter_success, camera_parameters_changed = set_camera_parameters(
+                        self.vision_node,
+                        self.image_processing_handler,
+                        self.process_pipeline_list,
+                        return_has_changed=True
+                    )
 
                     if not set_camera_parameter_success:
                         self.vision_node.get_logger().error(f"Error occured. Camera parameter could not be set!")
+                        time.sleep(0.5)
                         continue
 
-                    image = self._get_current_camera_image()
+                    if camera_parameters_changed:
+                        previous_counter = self._frame_counter
+                        self._clear_current_camera_image()
+                        image = self._wait_for_new_camera_frame(
+                            previous_counter,
+                            timeout_sec=DARK_FRAME_RETRY_TIMEOUT_SEC,
+                        )
+                    else:
+                        image = self._get_current_camera_image()
 
                     if image is not None:
                         self._process_image_for_widget(image, os.path.splitext(self.processing_source)[0])

@@ -147,6 +147,7 @@ class VisionNode(Node):
             return response
 
         vision_instance = None
+        execution_result_displayed = False
         try:
             vision_instance = VisionProcessClass(
                 self,
@@ -172,13 +173,14 @@ class VisionNode(Node):
                 f"ExecuteVision call {call_id} result ready: uid='{request.process_uid}', success={response.success}"
             )
 
-            if response.success:
+            if result_available:
                 self.main_window.start_execution_signal.signal.emit(
                     vision_instance,
                     vision_instance.image_processing_handler.display_image_cls,
                     vision_instance.save_vision_results(),
                     request.image_display_time
                 )
+                execution_result_displayed = request.image_display_time > 0
 
         except ValueError as e:
             self.get_logger().error(f"Error initializing vision instance: {str(e)}")
@@ -203,12 +205,23 @@ class VisionNode(Node):
         
         if not response.success:
             self.get_logger().error("Vision execution failed! An instance of the vision assistant will be opened")
-            self.main_window.close_execution_signal.signal.emit(request.process_uid)
-            self.main_window.start_assistant_signal.signal.emit(
-                request.camera_config_filename,
-                request.process_filename,
-                False
-            )
+            if execution_result_displayed:
+                self.get_logger().info(
+                    f"Showing failed execution image for {request.image_display_time}s before opening the assistant."
+                )
+                self.main_window.start_assistant_delayed_signal.signal.emit(
+                    request.camera_config_filename,
+                    request.process_filename,
+                    True,
+                    request.image_display_time
+                )
+            else:
+                self.main_window.close_execution_signal.signal.emit(request.process_uid)
+                self.main_window.start_assistant_signal.signal.emit(
+                    request.camera_config_filename,
+                    request.process_filename,
+                    True
+                )
         
         self.get_logger().info(f"ExecuteVision call {call_id} return: uid='{request.process_uid}', success={response.success}")
         return response

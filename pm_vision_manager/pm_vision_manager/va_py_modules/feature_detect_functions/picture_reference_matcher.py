@@ -35,6 +35,9 @@ class CoarseFineChamferMatcher:
                  fine_angle_step=0.2,
                  min_visible_fraction=0.90,
                  random_seed=0,
+                 use_appearance_score=True,
+                 appearance_weight=0.02,
+                 max_appearance_points=600,
                  verbose=False):
 
 
@@ -56,6 +59,9 @@ class CoarseFineChamferMatcher:
         self.fine_angle_step = fine_angle_step
         self.min_visible_fraction = min_visible_fraction
         self.random_seed = random_seed
+        self.use_appearance_score = use_appearance_score
+        self.appearance_weight = appearance_weight
+        self.max_appearance_points = max_appearance_points
         self.verbose = verbose
 
 
@@ -264,6 +270,46 @@ class CoarseFineChamferMatcher:
         return pts - center
 
 
+    def appearance_points(self, template):
+
+        if not self.use_appearance_score or self.appearance_weight <= 0:
+            return None, None
+
+        h, w = template.shape[:2]
+        y0 = int(max(0, self.ignore_border))
+        y1 = int(max(y0 + 1, h - self.ignore_border))
+        x0 = int(max(0, self.ignore_border))
+        x1 = int(max(x0 + 1, w - self.ignore_border))
+
+        yy, xx = np.mgrid[y0:y1, x0:x1]
+        pts = np.column_stack([xx.ravel(), yy.ravel()]).astype(np.float32)
+
+        if len(pts) == 0:
+            return None, None
+
+        max_points = int(max(0, self.max_appearance_points))
+        if max_points <= 0:
+            return None, None
+
+        if len(pts) > max_points:
+            rng = np.random.default_rng(self.random_seed)
+            idx = rng.choice(len(pts), max_points, replace=False)
+            pts = pts[idx]
+
+        if template.ndim == 2:
+            values = template[pts[:, 1].astype(np.int32), pts[:, 0].astype(np.int32)]
+            values = values[:, None]
+        else:
+            values = template[pts[:, 1].astype(np.int32), pts[:, 0].astype(np.int32), :]
+
+        center = np.array([
+            template.shape[1] / 2,
+            template.shape[0] / 2
+        ], dtype=np.float32)
+
+        return pts - center, values.astype(np.float32)
+
+
 
     def rotate_points(self, pts, angle):
 
@@ -326,7 +372,10 @@ class CoarseFineChamferMatcher:
                                distance,
                                points,
                                x,
-                               y):
+                               y,
+                               image=None,
+                               appearance_points=None,
+                               appearance_values=None):
 
         pts = points + np.array(
             [x, y],
@@ -371,24 +420,89 @@ class CoarseFineChamferMatcher:
             v11 * dx * dy
         )
 
-        return float(vals.mean())
+        score = float(vals.mean())
+
+        if (
+            image is not None and
+            appearance_points is not None and
+            appearance_values is not None and
+            self.use_appearance_score and
+            self.appearance_weight > 0
+        ):
+            app_score = self.evaluate_appearance_pose(
+                image,
+                appearance_points,
+                appearance_values,
+                x,
+                y,
+            )
+            if np.isfinite(app_score):
+                score += float(self.appearance_weight) * app_score
+
+        return score
+
+
+    def evaluate_appearance_pose(self,
+                                 image,
+                                 points,
+                                 values,
+                                 x,
+                                 y):
+
+        pts = np.round(points + np.array([x, y])).astype(np.int32)
+        h, w = image.shape[:2]
+        valid = (
+            (pts[:, 0] >= 0) &
+            (pts[:, 0] < w) &
+            (pts[:, 1] >= 0) &
+            (pts[:, 1] < h)
+        )
+
+        min_valid = max(
+            10,
+            int(np.ceil(len(points) * self.min_visible_fraction))
+        )
+        if int(valid.sum()) < min_valid:
+            return np.inf
+
+        pts_valid = pts[valid]
+        values_valid = values[valid]
+
+        if image.ndim == 2:
+            image_values = image[pts_valid[:, 1], pts_valid[:, 0]][:, None]
+        else:
+            image_values = image[pts_valid[:, 1], pts_valid[:, 0], :]
+
+        diff = np.abs(image_values.astype(np.float32) - values_valid.astype(np.float32))
+        return float(np.mean(diff) / 255.0)
 
 
     def refine_pose_subpixel(self,
                              distance,
                              template_pts,
-                             pose):
+                             pose,
+                             image=None,
+                             appearance_pts=None,
+                             appearance_values=None):
 
         best_x, best_y, best_angle = pose
         rotated = self.rotate_points(
             template_pts,
             best_angle
         )
+        rotated_appearance = (
+            self.rotate_points(appearance_pts, best_angle)
+            if appearance_pts is not None
+            else None
+        )
         best_score = self.evaluate_pose_subpixel(
             distance,
             rotated,
             best_x,
-            best_y
+            best_y,
+            image=image,
+            appearance_points=rotated_appearance,
+            appearance_values=appearance_values
         )
 
         passes = [
@@ -423,6 +537,11 @@ class CoarseFineChamferMatcher:
                     template_pts,
                     angle
                 )
+                rotated_appearance = (
+                    self.rotate_points(appearance_pts, angle)
+                    if appearance_pts is not None
+                    else None
+                )
 
                 for y in ys:
                     for x in xs:
@@ -431,7 +550,10 @@ class CoarseFineChamferMatcher:
                             distance,
                             rotated,
                             x,
-                            y
+                            y,
+                            image=image,
+                            appearance_points=rotated_appearance,
+                            appearance_values=appearance_values
                         )
 
                         if score < best_score:
@@ -450,7 +572,10 @@ class CoarseFineChamferMatcher:
                      angles,
                      xy_step,
                      center=None,
-                     window=None):
+                     window=None,
+                     image=None,
+                     appearance_pts=None,
+                     appearance_values=None):
 
 
         h,w = distance.shape
@@ -519,17 +644,42 @@ class CoarseFineChamferMatcher:
         )
         rxs = np.empty((len(angles), N), dtype=np.int32)
         rys = np.empty((len(angles), N), dtype=np.int32)
+        use_appearance = (
+            image is not None and
+            appearance_pts is not None and
+            appearance_values is not None and
+            self.use_appearance_score and
+            self.appearance_weight > 0
+        )
+        if use_appearance:
+            A = appearance_pts.shape[0]
+            app_min_valid = max(
+                10,
+                int(np.ceil(A * self.min_visible_fraction))
+            )
+            arxs = np.empty((len(angles), A), dtype=np.int32)
+            arys = np.empty((len(angles), A), dtype=np.int32)
+        else:
+            A = 0
+            app_min_valid = 0
+            arxs = None
+            arys = None
+
         for i, a in enumerate(angles):
             r = self.rotate_points(template_pts, a)
             rxs[i] = np.round(r[:, 0]).astype(np.int32)
             rys[i] = np.round(r[:, 1]).astype(np.int32)
+            if use_appearance:
+                ar = self.rotate_points(appearance_pts, a)
+                arxs[i] = np.round(ar[:, 0]).astype(np.int32)
+                arys[i] = np.round(ar[:, 1]).astype(np.int32)
 
 
         best_score = np.inf
         best_pose = None
 
 
-        BLOCK = 16384
+        BLOCK = 2048 if use_appearance else 16384
 
 
         for i in range(len(angles)):
@@ -571,6 +721,41 @@ class CoarseFineChamferMatcher:
                     sums / np.maximum(counts, 1),
                     np.inf
                 )
+
+                if use_appearance:
+                    ax = arxs[i]
+                    ay = arys[i]
+
+                    app_xs_idx = gx + ax[None, :]
+                    app_ys_idx = gy + ay[None, :]
+
+                    app_valid = (
+                        (app_xs_idx >= 0) & (app_xs_idx < w) &
+                        (app_ys_idx >= 0) & (app_ys_idx < h)
+                    )
+
+                    app_xs_c = np.clip(app_xs_idx, 0, w - 1)
+                    app_ys_c = np.clip(app_ys_idx, 0, h - 1)
+
+                    if image.ndim == 2:
+                        image_values = image[app_ys_c, app_xs_c][..., None]
+                    else:
+                        image_values = image[app_ys_c, app_xs_c, :]
+
+                    diff = np.abs(
+                        image_values.astype(np.float32) -
+                        appearance_values[None, :, :].astype(np.float32)
+                    )
+                    app_vals = diff.mean(axis=2) / 255.0
+                    app_vals = np.where(app_valid, app_vals, 0.0)
+                    app_counts = app_valid.sum(axis=1)
+                    app_enough_visible = app_counts >= app_min_valid
+                    app_scores = np.where(
+                        app_enough_visible,
+                        app_vals.sum(axis=1) / np.maximum(app_counts, 1),
+                        np.inf
+                    )
+                    scores = scores + float(self.appearance_weight) * app_scores
 
 
                 idx_local = int(np.argmin(scores))
@@ -691,6 +876,7 @@ class CoarseFineChamferMatcher:
             template_pts = self.template_points(
                 tmp
             )
+            appearance_pts, appearance_values = self.appearance_points(tmp)
 
 
             scale = 2**(
@@ -710,7 +896,10 @@ class CoarseFineChamferMatcher:
                     distance,
                     template_pts,
                     angles,
-                    xy_step=8
+                    xy_step=8,
+                    image=img,
+                    appearance_pts=appearance_pts,
+                    appearance_values=appearance_values
                 )
 
 
@@ -738,7 +927,10 @@ class CoarseFineChamferMatcher:
                     angles,
                     xy_step=2,
                     center=(x,y),
-                    window=40
+                    window=40,
+                    image=img,
+                    appearance_pts=appearance_pts,
+                    appearance_values=appearance_values
                 )
 
 
@@ -756,7 +948,10 @@ class CoarseFineChamferMatcher:
                     angles,
                     xy_step=1,
                     center=(x,y),
-                    window=10
+                    window=10,
+                    image=img,
+                    appearance_pts=appearance_pts,
+                    appearance_values=appearance_values
                 )
 
 
@@ -772,7 +967,10 @@ class CoarseFineChamferMatcher:
         pose, score = self.refine_pose_subpixel(
             distance,
             template_pts,
-            pose
+            pose,
+            image=img,
+            appearance_pts=appearance_pts,
+            appearance_values=appearance_values
         )
 
         if self.verbose:
@@ -877,6 +1075,7 @@ class CoarseFineChamferMatcher:
             tmp = tmp_pyr[level]
             distance = self.edge_distance(img)
             template_pts = self.template_points(tmp)
+            appearance_pts, appearance_values = self.appearance_points(tmp)
             scale = 2**(self.pyramid_levels - level - 1)
 
             if pose is None:
@@ -891,7 +1090,10 @@ class CoarseFineChamferMatcher:
                     angles,
                     xy_step=max(1, min(8, int(np.ceil(float(xy_window) / max(scale, 1) / 8.0)))),
                     center=(center_x / scale, center_y / scale),
-                    window=max(1.0, xy_window / scale)
+                    window=max(1.0, xy_window / scale),
+                    image=img,
+                    appearance_pts=appearance_pts,
+                    appearance_values=appearance_values
                 )
             else:
                 x, y, a = pose
@@ -904,7 +1106,10 @@ class CoarseFineChamferMatcher:
                     angles,
                     xy_step=2,
                     center=(x, y),
-                    window=max(5.0, xy_window / max(scale, 1))
+                    window=max(5.0, xy_window / max(scale, 1)),
+                    image=img,
+                    appearance_pts=appearance_pts,
+                    appearance_values=appearance_values
                 )
 
                 x, y, a = pose
@@ -915,13 +1120,23 @@ class CoarseFineChamferMatcher:
                     angles,
                     xy_step=1,
                     center=(x, y),
-                    window=10
+                    window=10,
+                    image=img,
+                    appearance_pts=appearance_pts,
+                    appearance_values=appearance_values
                 )
 
             if self.verbose:
                 print("position:", pose, "score:", score)
 
-        pose, score = self.refine_pose_subpixel(distance, template_pts, pose)
+        pose, score = self.refine_pose_subpixel(
+            distance,
+            template_pts,
+            pose,
+            image=img,
+            appearance_pts=appearance_pts,
+            appearance_values=appearance_values
+        )
 
         if self.verbose:
             print("subpixel position:", pose, "score:", score)
@@ -1645,6 +1860,9 @@ def picture_reference_matcher(image_processing_handler: "ImageProcessingHandler"
                               metadata_pose_angle_window_deg: float = 1.0,
                               medium_score_threshold: float = 0.0005,
                               max_score_threshold: float = 0.0020,
+                              use_appearance_score: bool = True,
+                              appearance_weight: float = 0.02,
+                              max_appearance_points: int = 600,
                               verbose: bool = False,
                               logger=None):
 
@@ -1675,6 +1893,9 @@ def picture_reference_matcher(image_processing_handler: "ImageProcessingHandler"
         min_visible_fraction=float(min_visible_fraction),
         random_seed=int(random_seed),
         reference_keypoint=reference_keypoint,
+        use_appearance_score=bool(use_appearance_score),
+        appearance_weight=float(appearance_weight),
+        max_appearance_points=int(max_appearance_points),
         verbose=bool(verbose)
     )
 
