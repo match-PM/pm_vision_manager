@@ -120,12 +120,13 @@ class ImageProcessingHandler:
         """
         Set the mode of the image processing handler.
         """
-        if mode == self.MODE_EXECUTE:
-            self._mode = self.MODE_EXECUTE
-        elif mode == self.MODE_LOOP:
-            self._mode = self.MODE_LOOP
-        else:
-            self._mode = self.MODE_EXECUTE
+        valid_modes = {
+            self.MODE_EXECUTE, self.MODE_LOOP,
+            self.MODE_CROSSVAL, self.MODE_IMAGE_LOOP,
+        }
+        if mode not in valid_modes:
+            raise ValueError(f"Unsupported image processing mode: {mode}")
+        self._mode = mode
 
     def get_mode(self)->int:
         """

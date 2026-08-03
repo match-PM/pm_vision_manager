@@ -52,9 +52,9 @@
         {
             "Save_Image": {
                 "active": true,
-                "with_vision_elements": true,
-                "save_in_cross_val": true,
-                "prefix": ""
+                "save_input_image": false,
+                "save_input_image_with_results": false,
+                "save_current_image": true
             }
         }
     ]

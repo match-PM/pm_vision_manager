@@ -1,181 +1,45 @@
 function_name: "PictureReferenceMatcher"
 description: >-
-  Matches a reference template against the current image using edge-based
-  chamfer distance and a coarse-to-fine image pyramid. The matcher extracts
-  template edge points, compares them against an image edge-distance map, and
-  refines position and rotation over pyramid levels. The reported point is the
-  reference key point stored in the reference metadata; references without this
-  metadata field use the reference image center for backward compatibility.
+  Finds an annotated feature from a reference image anywhere in the current
+  image. Position is located globally and refined with focused chamfer matching;
+  rotation is estimated independently from the reference context. Search
+  pyramid, feature size, point sampling, coarse angle steps, and refinement
+  windows are derived automatically from the reference and requested accuracy.
 function_category: "Machine Vision"
 
 params:
   - param_name: "active"
-    description: "Parameter to activate or deactivate this function."
+    description: "Activate or deactivate this function."
     type: "bool"
     default_val: true
 
-  - param_name: "pyramid_levels"
-    description: "Number of coarse-to-fine image pyramid levels. Higher values improve tolerance to large offsets but can lose small detail."
-    type: "unsigned_int"
-    min_val: 1
-    max_val: 6
-    default_val: 3
-
-  - param_name: "edge_mode"
-    description: "Edge extraction method. 'gradient' keeps strongest Sobel-gradient pixels; 'canny' uses Canny thresholds."
-    type: "string_list"
-    default_val: "gradient"
-    values:
-      - "gradient"
-      - "canny"
-
-  - param_name: "edge_percentile"
-    description: "Gradient edge threshold percentile used when edge_mode is 'gradient'. Higher values keep fewer, stronger edges."
-    type: "float"
-    min_val: 50.0
-    max_val: 99.9
-    default_val: 92.0
-
-  - param_name: "canny_low"
-    description: "Lower Canny threshold used only when edge_mode is 'canny'."
-    type: "unsigned_int"
-    min_val: 0
-    max_val: 255
-    default_val: 50
-
-  - param_name: "canny_high"
-    description: "Upper Canny threshold used only when edge_mode is 'canny'."
-    type: "unsigned_int"
-    min_val: 1
-    max_val: 255
-    default_val: 150
-
-  - param_name: "max_template_points"
-    description: "Maximum number of template edge points sampled for scoring. Higher values are more stable but slower."
-    type: "unsigned_int"
-    min_val: 50
-    max_val: 20000
-    default_val: 1500
-
-  - param_name: "use_appearance_score"
-    description: "Add sampled grayscale/color appearance comparison to the edge score. This helps disambiguate repeated edge-only structures."
-    type: "bool"
-    default_val: true
-
-  - param_name: "appearance_weight"
-    description: "Weight of the sampled appearance difference added to the chamfer edge score. Higher values trust image intensity/color more."
+  - param_name: "max_rotation_deg"
+    description: "Largest expected absolute rotation from the reference, in degrees."
     type: "float"
     min_val: 0.0
-    max_val: 1.0
-    default_val: 0.02
-
-  - param_name: "max_appearance_points"
-    description: "Maximum number of reference pixels sampled for appearance scoring. Higher values are more stable but slower."
-    type: "unsigned_int"
-    min_val: 0
-    max_val: 20000
-    default_val: 600
-
-  - param_name: "ignore_border"
-    description: "Template border width in pixels to suppress before collecting template edge points."
-    type: "unsigned_int"
-    min_val: 0
-    max_val: 100
-    default_val: 2
-
-  - param_name: "coarse_angle_min"
-    description: "Minimum angle in degrees for the first full-image coarse search."
-    type: "float"
-    min_val: -180.0
-    max_val: 180.0
-    default_val: -10.0
-
-  - param_name: "coarse_angle_max"
-    description: "Maximum angle in degrees for the first full-image coarse search."
-    type: "float"
-    min_val: -180.0
     max_val: 180.0
     default_val: 10.0
 
-  - param_name: "coarse_angle_step"
-    description: "Angle step in degrees for the first full-image coarse search."
+  - param_name: "angle_accuracy_deg"
+    description: "Final angular search resolution. Coarser search steps are derived automatically."
     type: "float"
-    min_val: 0.1
-    max_val: 45.0
-    default_val: 5.0
+    min_val: 0.001
+    max_val: 1.0
+    default_val: 0.01
 
-  - param_name: "refine_angle_window"
-    description: "Half-width in degrees of the intermediate angular refinement window around the previous best angle."
-    type: "float"
-    min_val: 0.0
-    max_val: 45.0
-    default_val: 5.0
-
-  - param_name: "refine_angle_step"
-    description: "Angle step in degrees for the intermediate refinement search."
-    type: "float"
-    min_val: 0.05
-    max_val: 10.0
-    default_val: 1.0
-
-  - param_name: "fine_angle_window"
-    description: "Half-width in degrees of the final fine angular refinement window around the previous best angle."
+  - param_name: "max_score_threshold"
+    description: "Fail above this normalized chamfer score. The medium threshold is derived as one quarter of this value."
     type: "float"
     min_val: 0.0
-    max_val: 10.0
-    default_val: 1.0
+    max_val: 1.0
+    default_val: 0.002
 
-  - param_name: "fine_angle_step"
-    description: "Angle step in degrees for the final fine refinement search."
-    type: "float"
-    min_val: 0.01
-    max_val: 2.0
-    default_val: 0.2
-
-  - param_name: "draw_match"
-    description: "Draw only the matched reference image on the visual-elements canvas."
+  - param_name: "draw_reference"
+    description: "Blend the matched reference over the image at a fixed readable opacity."
     type: "bool"
     default_val: true
 
   - param_name: "draw_lines"
-    description: "Draw the matched ROI border and full-length keypoint cross on the visual-elements canvas."
+    description: "Draw the matched reference border and keypoint axes."
     type: "bool"
     default_val: true
-
-  - param_name: "use_metadata_pose_prior"
-    description: "Use the source pose stored in the reference metadata to constrain the search. Disable for unconstrained full-image matching."
-    type: "bool"
-    default_val: true
-
-  - param_name: "metadata_pose_xy_window_px"
-    description: "Search half-window in pixels around the metadata pose prior."
-    type: "unsigned_int"
-    min_val: 1
-    max_val: 2000
-    default_val: 60
-
-  - param_name: "metadata_pose_angle_window_deg"
-    description: "Search half-window in degrees around the metadata pose prior angle."
-    type: "float"
-    min_val: 0.0
-    max_val: 45.0
-    default_val: 1.0
-
-  - param_name: "medium_score_threshold"
-    description: "Warn when the normalized chamfer distance score exceeds this value. Lower scores are better."
-    type: "float"
-    min_val: 0.0
-    max_val: 1.0
-    default_val: 0.0005
-
-  - param_name: "max_score_threshold"
-    description: "Fail the vision process when the normalized chamfer distance score exceeds this value. Lower scores are better."
-    type: "float"
-    min_val: 0.0
-    max_val: 1.0
-    default_val: 0.0020
-
-  - param_name: "verbose"
-    description: "Print coarse-to-fine search progress for debugging."
-    type: "bool"
-    default_val: false

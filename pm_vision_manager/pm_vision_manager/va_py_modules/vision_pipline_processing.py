@@ -1113,63 +1113,47 @@ def drawGrid(image_processing_handler: ImageProcessingHandler, grid_spacing):
   image_processing_handler.frame_visual_elements = image_processing_handler.create_vision_element_overlay(image_processing_handler.frame_visual_elements,crop_img)
   cv2.putText(img=image_processing_handler.frame_visual_elements,text="Grid: "+ str(grid_spacing) + "um", org=(5,30), fontFace=cv2.FONT_HERSHEY_SIMPLEX,fontScale=1,color=(255,0,0), thickness=1)
 
-def saveImage(image_processing_handler: ImageProcessingHandler, 
-              prefix: str, 
-              with_vision_elements: bool, 
-              save_initial_image: bool, 
-              logger = None):
-
-  if not os.path.exists(image_processing_handler.process_db_path):
-    os.makedirs(image_processing_handler.process_db_path)
-  
-  # image_processing_handler.image_name comes from (image_name = f"{self.vision_process_id}_{image_in_folder}")
-  # in "vision_assistant_class.py" line 250. Maybe good to know... --> Don't use "/" in your process_uid
-  # get time_stamp
-  time_stamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-  
-  if image_processing_handler.get_mode() != ImageProcessingHandler.MODE_EXECUTE:
-    if logger:
-      #logger.warn("Skipping")
-      pass
+def saveImage(image_processing_handler: ImageProcessingHandler,
+              save_input_image: bool,
+              save_input_image_with_results: bool,
+              save_current_image: bool,
+              save_function_prefix: str,
+              execution_timestamp: str,
+              logger=None):
+  """Save selected pipeline images during normal execution only."""
+  if (image_processing_handler.get_mode() != ImageProcessingHandler.MODE_EXECUTE
+      or image_processing_handler.cross_val_running):
     return
-  
-  file_ending = ""
 
-  if prefix != "":
-    file_ending = "_" + prefix
+  if not any((save_input_image, save_input_image_with_results, save_current_image)):
+    return
 
-  image_name=f"{image_processing_handler.process_db_path}/{time_stamp}{file_ending}.png"
-  image_name_initial=f"{image_processing_handler.process_db_path}/{time_stamp}_INITIAL_{file_ending}.png"
+  os.makedirs(image_processing_handler.process_db_path, exist_ok=True)
+  saved_images = image_processing_handler.get_vision_response().results.saved_images
 
-  # if image_processing_handler.get_mode() == ImageProcessingHandler.MODE_EXECUTE:
-  #   image_name=f"{image_processing_handler.process_db_path}/{time_stamp}{file_ending}.png"
-  #   image_name_initial=f"{image_processing_handler.process_db_path}/{time_stamp}_INITIAL_{file_ending}.png"
+  def write_image(filename, image):
+    image_path = os.path.join(image_processing_handler.process_db_path, filename)
+    if cv2.imwrite(image_path, image):
+      if image_path not in saved_images:
+        saved_images.append(image_path)
+    elif logger:
+      logger.error(f"Could not save image '{image_path}'.")
 
-  # elif image_processing_handler.get_mode() == ImageProcessingHandler.MODE_LOOP:
-  #   image_name=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}_{file_ending}.png"
-  #   image_name_initial=f"{image_processing_handler.process_db_path}/{image_processing_handler.current_image_name}_INITIAL{file_ending}.png"
+  # Input filenames are deliberately shared by all Save_Image steps. Later
+  # steps overwrite the same files instead of producing redundant copies.
+  if save_input_image:
+    write_image(f"{execution_timestamp}_input.png",
+                image_processing_handler.get_initial_image())
 
-  # else:
-  #   return
+  if save_input_image_with_results:
+    input_with_results = image_processing_handler.create_vision_element_overlay(
+      image_processing_handler.get_initial_image(),
+      image_processing_handler.frame_visual_elements)
+    write_image(f"{execution_timestamp}_input_with_results.png", input_with_results)
 
-  if save_initial_image:
-    initial_image = image_processing_handler.create_vision_element_overlay(image_processing_handler.get_initial_image(),
-                                                                              image_processing_handler.frame_visual_elements)
-    
-    cv2.imwrite(image_name_initial, initial_image)
-
-  #if not os.path.isfile(image_name) and (not image_processing_handler.cross_val_running or save_in_cross_val):
-  if with_vision_elements:
-    image_to_save = image_processing_handler.create_vision_element_overlay(image_processing_handler.get_display_image(),
-                                                                              image_processing_handler.frame_visual_elements)
-  
-  else:
-    image_to_save = image_processing_handler.get_processing_image()
-
-  cv2.imwrite(image_name, image_to_save)
-  
-  # append saved image name to results for logging
-  image_processing_handler.get_vision_response().results.saved_images.append(image_name)
+  if save_current_image:
+    write_image(f"{execution_timestamp}_{save_function_prefix}_current.png",
+                image_processing_handler.get_processing_image())
 
 def reduce_saturation(image_processing_handler: ImageProcessingHandler, 
                       HueMin: int, HueMax: int, f_reduce_s: int):
@@ -1376,6 +1360,8 @@ def process_image(vision_node: Node,
                   pipeline_dict_list:list[dict])->np.ndarray:
   
   image_processing_handler.init_begin()
+  execution_timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
+  save_image_index = 0
   try:
     for list_item in pipeline_dict_list:
 
@@ -1531,31 +1517,11 @@ def process_image(vision_node: Node,
             if active:
               picture_reference_matcher(
                 image_processing_handler=image_processing_handler,
-                pyramid_levels=function_parameter.get('pyramid_levels', 3),
-                canny_low=function_parameter.get('canny_low', 50),
-                canny_high=function_parameter.get('canny_high', 150),
-                max_template_points=function_parameter.get('max_template_points', 1500),
-                edge_mode=function_parameter.get('edge_mode', 'gradient'),
-                edge_percentile=function_parameter.get('edge_percentile', 92.0),
-                ignore_border=function_parameter.get('ignore_border', 2),
-                coarse_angle_min=function_parameter.get('coarse_angle_min', -45.0),
-                coarse_angle_max=function_parameter.get('coarse_angle_max', 45.0),
-                coarse_angle_step=function_parameter.get('coarse_angle_step', 5.0),
-                refine_angle_window=function_parameter.get('refine_angle_window', 5.0),
-                refine_angle_step=function_parameter.get('refine_angle_step', 1.0),
-                fine_angle_window=function_parameter.get('fine_angle_window', 1.0),
-                fine_angle_step=function_parameter.get('fine_angle_step', 0.2),
-                draw_match=function_parameter.get('draw_match', True),
+                max_rotation_deg=function_parameter.get('max_rotation_deg', 10.0),
+                angle_accuracy_deg=function_parameter.get('angle_accuracy_deg', 0.01),
+                max_score_threshold=function_parameter.get('max_score_threshold', 0.002),
+                draw_reference=function_parameter.get('draw_reference', True),
                 draw_lines=function_parameter.get('draw_lines', True),
-                use_metadata_pose_prior=function_parameter.get('use_metadata_pose_prior', True),
-                metadata_pose_xy_window_px=function_parameter.get('metadata_pose_xy_window_px', 60.0),
-                metadata_pose_angle_window_deg=function_parameter.get('metadata_pose_angle_window_deg', 1.0),
-                medium_score_threshold=function_parameter.get('medium_score_threshold', 0.0005),
-                max_score_threshold=function_parameter.get('max_score_threshold', 0.0020),
-                use_appearance_score=function_parameter.get('use_appearance_score', True),
-                appearance_weight=function_parameter.get('appearance_weight', 0.02),
-                max_appearance_points=function_parameter.get('max_appearance_points', 600),
-                verbose=function_parameter.get('verbose', False),
                 logger=vision_node.get_logger()
               )
 
@@ -1663,17 +1629,18 @@ def process_image(vision_node: Node,
                        iterations=p_iterations)
 
           case "Save_Image":
-            active = function_parameter['active']
-            p_prefix = function_parameter['prefix']
-            p_with_vision_elements = function_parameter['with_vision_elements']
-            p_save_initial_image = function_parameter.get('save_initial_image',False)
+            save_image_index += 1
+            active = function_parameter.get('active', False)
 
             if active:
               saveImage(image_processing_handler=image_processing_handler,
-                        prefix = p_prefix,
-                        with_vision_elements = p_with_vision_elements,
-                        save_initial_image = p_save_initial_image,
-                        logger = vision_node.get_logger())
+                        save_input_image=function_parameter.get('save_input_image', False),
+                        save_input_image_with_results=function_parameter.get(
+                          'save_input_image_with_results', False),
+                        save_current_image=function_parameter.get('save_current_image', False),
+                        save_function_prefix=f"save_image_{save_image_index}",
+                        execution_timestamp=execution_timestamp,
+                        logger=vision_node.get_logger())
               
           case "SelectHomogenousArea":
             active = function_parameter['active']

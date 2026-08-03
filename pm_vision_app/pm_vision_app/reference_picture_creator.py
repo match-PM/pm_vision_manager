@@ -6,6 +6,8 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+import yaml
+from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
 from PyQt6.QtCore import QEvent, QPointF, QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QDragEnterEvent, QDropEvent, QImage, QPainter, QPen, QPixmap
 from PyQt6.QtWidgets import (
@@ -37,6 +39,24 @@ from PyQt6.QtWidgets import (
 
 SUPPORTED_IMAGE_EXTENSIONS = {".bmp", ".png", ".jpg", ".jpeg", ".tif", ".tiff"}
 SUPPORTED_METADATA_EXTENSIONS = {".json"}
+
+
+def reference_creator_start_path() -> str:
+    """Return the configured initial directory for reference-creator dialogs."""
+    try:
+        config_path = (
+            Path(get_package_share_directory("pm_vision_manager"))
+            / "vision_assistant_path_config.yaml"
+        )
+        with open(config_path, "r", encoding="utf-8") as config_file:
+            config = yaml.safe_load(config_file) or {}
+        path_config = config.get("vision_assistant_path_config", {})
+        configured_path = path_config.get("reference_picture_creator_start_path")
+        if configured_path:
+            return str(Path(configured_path).expanduser())
+    except (OSError, KeyError, TypeError, PackageNotFoundError, yaml.YAMLError):
+        pass
+    return str(Path.cwd())
 
 
 @dataclass
@@ -518,6 +538,7 @@ class ReferencePictureCreatorWidget(QWidget):
         self.extractor = ReferenceImageExtractor()
         self.settings = ReferenceExtractionSettings()
         self._updating_controls = False
+        self.file_dialog_start_path = reference_creator_start_path()
 
         self.image_view = ReferenceImageView()
         self.preview_label = QLabel()
@@ -648,7 +669,7 @@ class ReferencePictureCreatorWidget(QWidget):
         path, _ = QFileDialog.getOpenFileName(
             self,
             "Open source image",
-            "",
+            self.file_dialog_start_path,
             "Images (*.bmp *.png *.jpg *.jpeg *.tif *.tiff)",
         )
         if path:
@@ -730,7 +751,7 @@ class ReferencePictureCreatorWidget(QWidget):
         path, _ = QFileDialog.getOpenFileName(
             self,
             "Load reference metadata",
-            "",
+            self.file_dialog_start_path,
             "Metadata (*.json)",
         )
         if not path:
@@ -785,7 +806,8 @@ class ReferencePictureCreatorWidget(QWidget):
             chosen, _ = QFileDialog.getOpenFileName(
                 self,
                 "Select source image",
-                str(source_path.parent) if source_path is not None else "",
+                (str(source_path.parent) if source_path is not None
+                 else self.file_dialog_start_path),
                 "Images (*.bmp *.png *.jpg *.jpeg *.tif *.tiff)",
             )
             if not chosen:
@@ -896,33 +918,6 @@ class ReferencePictureCreatorWidget(QWidget):
                 return params
         return {}
 
-    def _expected_source_pose(self) -> tuple[float, float, float]:
-        if self.extractor.source_image is None:
-            return (
-                float(self.settings.roi_center_x),
-                float(self.settings.roi_center_y),
-                0.0,
-            )
-
-        matrix, _output_size = self.extractor.rotation_matrix_bound(
-            self.extractor.source_image.shape,
-            self.settings.rotation_angle_deg,
-        )
-        inverse = cv2.invertAffineTransform(matrix)
-        source_center = inverse @ np.array(
-            [
-                float(self.settings.roi_center_x),
-                float(self.settings.roi_center_y),
-                1.0,
-            ],
-            dtype=np.float64,
-        )
-        return (
-            float(source_center[0]),
-            float(source_center[1]),
-            -float(self.settings.rotation_angle_deg),
-        )
-
     def test_matcher(self):
         if self.extractor.source_image is None:
             QMessageBox.information(self, "No image", "Load an image before testing the matcher.")
@@ -944,50 +939,27 @@ class ReferencePictureCreatorWidget(QWidget):
             return
 
         params = self._matcher_parameters_from_process()
-        matcher = CoarseFineChamferMatcher(
-            pyramid_levels=int(params.get("pyramid_levels", 3)),
-            canny_low=int(params.get("canny_low", 50)),
-            canny_high=int(params.get("canny_high", 150)),
-            max_template_points=int(params.get("max_template_points", 1500)),
-            edge_mode=params.get("edge_mode", "gradient"),
-            edge_percentile=float(params.get("edge_percentile", 92.0)),
-            ignore_border=int(params.get("ignore_border", 2)),
-            coarse_angle_min=float(params.get("coarse_angle_min", -45.0)),
-            coarse_angle_max=float(params.get("coarse_angle_max", 45.0)),
-            coarse_angle_step=float(params.get("coarse_angle_step", 5.0)),
-            refine_angle_window=float(params.get("refine_angle_window", 5.0)),
-            refine_angle_step=float(params.get("refine_angle_step", 1.0)),
-            fine_angle_window=float(params.get("fine_angle_window", 1.0)),
-            fine_angle_step=float(params.get("fine_angle_step", 0.2)),
-            min_visible_fraction=float(params.get("min_visible_fraction", 0.90)),
-            random_seed=int(params.get("random_seed", 0)),
-            reference_keypoint=(self.settings.keypoint_x_px, self.settings.keypoint_y_px),
-            use_appearance_score=bool(params.get("use_appearance_score", True)),
-            appearance_weight=float(params.get("appearance_weight", 0.02)),
-            max_appearance_points=int(params.get("max_appearance_points", 600)),
-            verbose=bool(params.get("verbose", False)),
-        )
+        matcher = CoarseFineChamferMatcher()
 
         try:
-            matcher.set_images(reference_image, self.extractor.source_image)
-            expected_x, expected_y, expected_angle = self._expected_source_pose()
-            xy_window = max(20.0, min(self.settings.roi_width_px, self.settings.roi_height_px) * 0.15)
-            angle_window = 1.0
-            result = matcher.match_near(
-                center_x=expected_x,
-                center_y=expected_y,
-                angle=expected_angle,
-                xy_window=xy_window,
-                angle_window=angle_window,
+            matcher.set_images(
+                reference_image,
+                self.extractor.source_image,
+                reference_keypoint=(
+                    self.settings.keypoint_x_px,
+                    self.settings.keypoint_y_px,
+                ),
             )
-            overlay = matcher.verify(
-                result=result,
-                template=reference_image,
-                image=self.extractor.source_image,
-                show=False,
-                draw_contour=True,
-                tint=(0, 255, 255),
-                alpha=0.25,
+            result = matcher.match(
+                max_rotation_deg=float(params.get("max_rotation_deg", 10.0)),
+                angle_accuracy_deg=float(params.get("angle_accuracy_deg", 0.01)),
+            )
+            overlay = matcher.draw_result_on_canvas(
+                self.extractor.source_image, result=result,
+                template=reference_image, alpha=0.35,
+            )
+            overlay = matcher.draw_reference_lines_on_canvas(
+                overlay, result=result, template=reference_image, thickness=4,
             )
         except Exception as exc:
             QMessageBox.warning(self, "Matcher test failed", str(exc))
@@ -1002,7 +974,6 @@ class ReferencePictureCreatorWidget(QWidget):
             "Matcher: "
             f"x={result['x_abs']:.2f}px, y={result['y_abs']:.2f}px, "
             f"angle={result['angle']:.3f}deg, score={result['score']:.6f}; "
-            f"local search around x={expected_x:.1f}, y={expected_y:.1f}; "
             f"overlay: {output_path}"
         )
         self._show_matcher_result_dialog(overlay, result, output_path)
@@ -1121,10 +1092,11 @@ class ReferencePictureCreatorWidget(QWidget):
         self._refresh_preview()
 
     def select_vision_process_file(self):
+        current_process_path = self.process_file_edit.text().strip()
         path, _ = QFileDialog.getOpenFileName(
             self,
             "Select vision process",
-            self.process_file_edit.text(),
+            current_process_path or self.file_dialog_start_path,
             "Vision process (*.json)",
         )
         if path:
