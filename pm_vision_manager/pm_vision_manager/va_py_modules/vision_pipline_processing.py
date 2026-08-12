@@ -4,6 +4,7 @@ from rclpy.node import Node # Handles the creation of nodes
 import cv2 # OpenCV library
 import numpy as np
 import os
+import re
 from math import pi                              
 import traceback
 from pm_vision_manager.va_py_modules.vision_utils import rotate_image
@@ -17,6 +18,28 @@ import time
 from skimage.measure import ransac, CircleModel, label, regionprops
 
 CAMERA_PARAMETER_SETTLE_TIME_SEC = 1.0
+
+COMPONENT_UUID_PATTERN = re.compile(
+  r"(?:^|[,;])\s*component\s+(?:id|uuid)\s*[:=]\s*([^,;\s]+)",
+  re.IGNORECASE,
+)
+
+
+def extract_component_uuid(process_uid: str) -> str | None:
+  """Extract a filename-safe component UUID marker from a vision process UID."""
+  if not process_uid:
+    return None
+
+  match = COMPONENT_UUID_PATTERN.search(str(process_uid))
+  if match is None:
+    return None
+
+  component_uuid = match.group(1)
+  if not re.fullmatch(r"[A-Za-z0-9_-]+", component_uuid):
+    return None
+
+  return component_uuid
+
 
 def threshold(image_processing_handler: ImageProcessingHandler, thresh: int, maxval:int, type:str) -> None:
   if not image_processing_handler.is_process_image_grayscale():
@@ -1119,6 +1142,7 @@ def saveImage(image_processing_handler: ImageProcessingHandler,
               save_current_image: bool,
               save_function_prefix: str,
               execution_timestamp: str,
+              process_uid: str = "",
               logger=None):
   """Save selected pipeline images during normal execution only."""
   if (image_processing_handler.get_mode() != ImageProcessingHandler.MODE_EXECUTE
@@ -1130,6 +1154,10 @@ def saveImage(image_processing_handler: ImageProcessingHandler,
 
   os.makedirs(image_processing_handler.process_db_path, exist_ok=True)
   saved_images = image_processing_handler.get_vision_response().results.saved_images
+  component_uuid = extract_component_uuid(process_uid)
+  filename_prefix = execution_timestamp
+  if component_uuid is not None:
+    filename_prefix = f"{execution_timestamp}_{component_uuid}"
 
   def write_image(filename, image):
     image_path = os.path.join(image_processing_handler.process_db_path, filename)
@@ -1142,17 +1170,17 @@ def saveImage(image_processing_handler: ImageProcessingHandler,
   # Input filenames are deliberately shared by all Save_Image steps. Later
   # steps overwrite the same files instead of producing redundant copies.
   if save_input_image:
-    write_image(f"{execution_timestamp}_input.png",
+    write_image(f"{filename_prefix}_input.png",
                 image_processing_handler.get_initial_image())
 
   if save_input_image_with_results:
     input_with_results = image_processing_handler.create_vision_element_overlay(
       image_processing_handler.get_initial_image(),
       image_processing_handler.frame_visual_elements)
-    write_image(f"{execution_timestamp}_input_with_results.png", input_with_results)
+    write_image(f"{filename_prefix}_input_with_results.png", input_with_results)
 
   if save_current_image:
-    write_image(f"{execution_timestamp}_{save_function_prefix}_current.png",
+    write_image(f"{filename_prefix}_{save_function_prefix}_current.png",
                 image_processing_handler.get_processing_image())
 
 def reduce_saturation(image_processing_handler: ImageProcessingHandler, 
@@ -1357,7 +1385,8 @@ def set_camera_parameters(vision_node:Node,
 
 def process_image(vision_node: Node, 
                   image_processing_handler: ImageProcessingHandler, 
-                  pipeline_dict_list:list[dict])->np.ndarray:
+                  pipeline_dict_list:list[dict],
+                  process_uid: str = "")->np.ndarray:
   
   image_processing_handler.init_begin()
   execution_timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
@@ -1640,6 +1669,7 @@ def process_image(vision_node: Node,
                         save_current_image=function_parameter.get('save_current_image', False),
                         save_function_prefix=f"save_image_{save_image_index}",
                         execution_timestamp=execution_timestamp,
+                        process_uid=process_uid,
                         logger=vision_node.get_logger())
               
           case "SelectHomogenousArea":

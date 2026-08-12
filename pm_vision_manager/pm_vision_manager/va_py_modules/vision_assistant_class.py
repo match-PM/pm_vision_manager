@@ -326,7 +326,12 @@ class VisionProcessClass:
             self.image_processing_handler.set_image_metatdata(self.process_db_path, image_name, self.process_file_path)
             self.image_processing_handler.set_initial_image(image)
 
-            process_image(self.vision_node, self.image_processing_handler, self.process_pipeline_list)
+            process_image(
+                self.vision_node,
+                self.image_processing_handler,
+                self.process_pipeline_list,
+                process_uid=self.process_UID,
+            )
 
             # save to json file
             _results = self.save_vision_results()
