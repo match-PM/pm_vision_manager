@@ -4,7 +4,7 @@ from typing import Optional
 from pathlib import Path
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QTabWidget, QTabBar)
-from PyQt6.QtGui import QCloseEvent, QGuiApplication, QIcon, QPixmap
+from PyQt6.QtGui import QCloseEvent, QGuiApplication, QIcon, QPixmap, QAction
 from PyQt6.QtCore import Qt, QThreadPool, QRunnable, QObject, pyqtSignal, pyqtSlot, QTimer, QDir, QSize
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
@@ -12,6 +12,7 @@ from rclpy.node import Node
 
 from pm_vision_manager.va_py_modules.vision_app_modules.ImageDisplayWidget import ImageDisplayWidget
 from pm_vision_manager.va_py_modules.vision_app_modules.MainMenuWidget import MainMenuWidget
+from pm_vision_manager.va_py_modules.vision_app_modules.PathConfigDialog import PathConfigDialog
 from pm_vision_manager.va_py_modules.vision_assistant_class import VisionProcessClass
 
 # ============================================================================
@@ -118,6 +119,12 @@ class VisionAssistantWindow(QMainWindow):
     def _init_ui(self):
         
         self.setWindowTitle("Vision Assistant")
+
+        # ---- Menu bar ----
+        settings_menu = self.menuBar().addMenu("Settings")
+        path_config_action = QAction("Paths...", self)
+        path_config_action.triggered.connect(self._open_path_config_dialog)
+        settings_menu.addAction(path_config_action)
 
         # ---- Central widget ----
         central_widget = QWidget()
@@ -404,6 +411,14 @@ class VisionAssistantWindow(QMainWindow):
         camera_file = self.main_menu.get_selected_camera()
         process_file = self.main_menu.get_selected_process()
         self.start_vision_assistant(camera_file, process_file)
+    
+    def _open_path_config_dialog(self):
+        """Open the dialog to change the folders of the vision manager."""
+        dialog = PathConfigDialog(self.ros_logger, self)
+        if dialog.exec():
+            VisionProcessClass.create_process_folder("Assembly_Manager", logger=self.ros_logger)
+            VisionProcessClass.create_process_folder("PM_Robot_Calibration", logger=self.ros_logger)
+            self.main_menu.update_files()
     
     def closeEvent(self, event: QCloseEvent):
         """Handle window close event."""

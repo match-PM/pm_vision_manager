@@ -4,12 +4,13 @@ from rclpy.node import Node  # Handles the creation of nodes
 from sensor_msgs.msg import Image  # Image is the message type
 from cv_bridge import CvBridge  # Package to convert between ROS and OpenCV Images
 import cv2
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication, QSizePolicy, QFileDialog
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QApplication, QSizePolicy, QFileDialog, QMessageBox
 from PyQt6.QtGui import QColor, QTextCursor, QFont, QImage, QPixmap
 from PyQt6.QtCore import Qt, QByteArray, pyqtSignal, QObject
 from threading import Thread, Timer, RLock
 from rclpy.callback_groups import ReentrantCallbackGroup, MutuallyExclusiveCallbackGroup
 import time
+import os
 from rclpy.executors import MultiThreadedExecutor, SingleThreadedExecutor
 import sys
 import numpy as np
@@ -29,6 +30,7 @@ from pm_vision_manager.va_py_modules.vision_app_modules.VisionAssistantWindow im
 from pm_vision_manager.va_py_modules.vision_app_modules.ImageDisplayWidget import ImageDisplayWidget
 
 from pm_vision_manager.va_py_modules.manager_configuration import (check_for_valid_path_config, 
+                                                                   get_invalid_path_config_keys,
                                                                    set_process_library_path, 
                                                                    set_camera_config_path, 
                                                                    set_vision_database_path, 
@@ -270,39 +272,47 @@ class VisionNode(Node):
 
 
     def init_app_config(self):
+        invalid_keys = get_invalid_path_config_keys(self.get_logger())
+        if not invalid_keys:
+            return
+
+        self.get_logger().error("Invalid path configuration!")
+
+        path_setters = {
+            "process_library_path": ("Process Library", set_process_library_path),
+            "camera_config_path": ("Camera Config", set_camera_config_path),
+            "vision_database_path": ("Vision Database", set_vision_database_path),
+        }
+
+        # Ask only for the paths that are missing or not reachable
+        for key in invalid_keys:
+            name, setter = path_setters[key]
+            answer = QMessageBox.warning(
+                None,
+                "Vision Manager - Path not available",
+                f"The {name} folder is not available (missing or network share not reachable).\n\n"
+                f"Do you want to select a new folder for the {name}?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                self.get_logger().error(f"No path selected for {name}!")
+                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+
+            # Start in the home folder, so the dialog does not open inside a not reachable network share
+            folder_path = QFileDialog.getExistingDirectory(None,
+                                                           f"Select Folder for the {name}",
+                                                           os.path.expanduser("~"))
+            if folder_path == "":
+                self.get_logger().error(f"No path selected for {name}!")
+                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            setter(folder_path+"/", self.get_logger())
+
+        # Set config for function library path
+        function_library_path = f"{get_package_share_directory('pm_vision_manager')}/vision_functions"
+        set_function_library_path(function_library_path+"/", self.get_logger())
+        
         if not check_for_valid_path_config(self.get_logger()):
-            self.get_logger().error("Invalid path configuration!")
-            # Set config for process library path
-            process_folder_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Process Library")
-            if process_folder_path == "":
-                self.get_logger().error("No path selected for process library!")
-                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
-            set_process_library_path(process_folder_path+"/", self.get_logger())
-            # Set config for camera config path
-            camera_folder_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Camera Config")
-            if camera_folder_path == "":
-                self.get_logger().error("No path selected for camera config!")
-                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
-            set_camera_config_path(camera_folder_path+"/", self.get_logger())
-            # Set config for vision database path
-            vision_db_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Vision Database")
-            if vision_db_path == "":
-                self.get_logger().error("No path selected for vision database!")
-                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
-            set_vision_database_path(vision_db_path+"/", self.get_logger())
-            # Set config for function library path
-
-            function_library_path = f"{get_package_share_directory('pm_vision_manager')}/vision_functions"
-
-            # function_library_path = QFileDialog.getExistingDirectory(None, "Select Folder for the Function Library")
-            # if function_library_path == "":
-            #     self.get_logger().error("No path selected for function library!")
-            #     raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
-            
-            set_function_library_path(function_library_path+"/", self.get_logger())
-            
-            if not check_for_valid_path_config(self.get_logger()):
-                raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
+            raise AppConfigError("Vision Mangager not configured correctly! Exiting...")
             
     def set_camera_pixel_per_um(self,request: CalibratePixelPerUm.Request, response: CalibratePixelPerUm.Response):
         """
@@ -341,35 +351,36 @@ def main(args=None):
 
     rclpy.init(args=args)
     executor = MultiThreadedExecutor(num_threads=6) 
+    app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(f"{get_package_share_directory('pm_vision_manager')}/app_icon.png"))
+    vision_node = None
+    exit_code = 0
     try:
-        app = QApplication(sys.argv)
-        app.setWindowIcon(QIcon(f"{get_package_share_directory('pm_vision_manager')}/app_icon.png"))
-
         vision_node = VisionNode()
 
         executor.add_node(vision_node)
         
-        thread = Thread(target=executor.spin)
+        thread = Thread(target=executor.spin, daemon=True)
         thread.start()       
 
-        sys.exit(app.exec())
+        exit_code = app.exec()
 
     except AppConfigError as e:
-        app.closeAllWindows()
-        executor.shutdown()
-        rclpy.shutdown()
+        print(str(e))
+        exit_code = 1
 
     except KeyboardInterrupt as e:
-        app.closeAllWindows()
-        vision_node.destroy_node()
-        executor.shutdown()
-        rclpy.shutdown()
+        pass
         
     finally:
         app.closeAllWindows()
-        vision_node.destroy_node()
+        if vision_node is not None:
+            vision_node.destroy_node()
         executor.shutdown()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+    sys.exit(exit_code)
 
 if __name__ == "__main__":
     main()
